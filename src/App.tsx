@@ -7,6 +7,13 @@ import EditAnnouncement from './pages/EditAnnoucment';
 import CreateNewsCategory from './pages/CreateNewsCategory';
 import NewsCategories from './pages/NewsCategories';
 import CreateNews from './pages/CreateNews';
+import FeedbackList from './pages/FeedbackList';
+import FeedbackForm from './pages/FeedbackForm';
+import { LinksPage } from './pages/Links';
+import { MenusPage } from './pages/MenusPage';
+import { FacultyPage } from './pages/FacultyPage';
+import { DepartmentPage } from './pages/DepartmentPage';
+import { DocumentPage } from './pages/DocumentPage';
 
 function App() {
   return (
@@ -26,6 +33,14 @@ function App() {
             <Route path="/create-news-category" element={<CreateNewsCategory />} />
             <Route path="/news-categories" element={<NewsCategories />} />
             <Route path="/create-news" element={<CreateNews />} />
+            <Route path="/feedback" element={<FeedbackList />} />
+            <Route path="/feedback/create" element={<FeedbackForm />} />
+            <Route path="/feedback/edit/:id" element={<FeedbackForm />} />
+            <Route path="/links" element={<LinksPage />} />
+            <Route path="/menus" element={<MenusPage />} />
+            <Route path="/faculty" element={<FacultyPage />} />
+            <Route path="/department" element={<DepartmentPage />} />
+            <Route path="/document" element={<DocumentPage />} /> 
           </Routes>
         </div>
       </div>

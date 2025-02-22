@@ -3,9 +3,12 @@
 import { useState } from "react"
 import { useNavigate, Link, Outlet } from "react-router-dom"
 import {
+  Building,
   FileText,
+  GraduationCap,
   LayoutGrid,
   LogOut,
+  Menu,
   Settings,
   Users,
 } from "lucide-react"
@@ -83,10 +86,14 @@ export default function Layout() {
             <h2 className="mb-2 px-2 text-sm font-medium text-gray-500">BOSHQALAR</h2>
             <div className="space-y-1">
               {[
-                { icon: Settings, text: "Feedback", href: "/news-categories" },
+                { icon: Settings, text: "Feedback", href: "/feedback" },
                 { icon: FileText, text: "News", href: "/create-news" },
-                { icon: LayoutGrid, text: "Posts", href: "/create-news" },
-                { icon: Users, text: "Useful Links", href: "/news-categories" },
+                { icon: LayoutGrid, text: "CategoryNews", href: "/news-categories" },
+                { icon: Users, text: "Useful Links", href: "/links" },
+                { icon: Menu, text: "Menus", href: "/menus" },
+                { icon: GraduationCap, text: "Faculties", href: "/faculty" },
+                { icon: Building, text: "Department", href: "/department" },
+                { icon: FileText, text: "Documents", href: "/document" },
               ].map((item, index) => (
                 <Link
                   key={index}

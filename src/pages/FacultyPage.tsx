@@ -1,0 +1,226 @@
+import { useState, useEffect } from 'react'
+import { useLanguage } from '../hooks/useLanguage'
+import { PageHeader } from '../helpers/PageHeader'
+import { DataTable } from '../helpers/DataTable'
+import { Dialog, DialogContent } from '../components/ui/dialog'
+import { TranslatedForm } from '../helpers/TranslatedForm'
+import { Pencil } from 'lucide-react'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+
+interface FacultyTranslation {
+  name: string
+  slug: string
+  description: string
+  history_of_faculty: string | null
+}
+
+interface Faculty {
+  id: number
+  email: string
+  logo: string
+  translations: {
+    [key: string]: FacultyTranslation
+  }
+}
+
+const translatedFields = [
+  { name: 'name', label: 'Name', type: 'text' as const, required: true },
+  { name: 'description', label: 'Description', type: 'textarea' as const, required: true },
+  { name: 'history_of_faculty', label: 'History of Faculty', type: 'textarea' as const },
+]
+
+export function FacultyPage() {
+  const [faculties, setFaculties] = useState<Faculty[]>([])
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingFaculty, setEditingFaculty] = useState<Faculty | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [selectedLogo, setSelectedLogo] = useState<File | null>(null)
+  const [email, setEmail] = useState('')
+  const currentLanguage = useLanguage()
+
+  const fetchFaculties = async () => {
+    try {
+      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/faculty/`)
+      if (!response.ok) throw new Error('Failed to fetch faculties')
+      const data = await response.json()
+      setFaculties(data)
+    } catch (error) {
+      console.error('Error fetching faculties:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchFaculties()
+  }, [currentLanguage])
+
+  const handleSubmit = async (translationData: any) => {
+    setIsLoading(true)
+    try {
+      const formData = new FormData()
+      
+      // Add logo if selected
+      if (selectedLogo) {
+        formData.append('logo', selectedLogo)
+      }
+      
+      // Add email
+      formData.append('email', email)
+      
+      // Add translations
+      formData.append('translations', JSON.stringify(translationData))
+
+      const url = editingFaculty 
+        ? `https://debttracker.uz/${currentLanguage}/menus/faculty/${editingFaculty.translations[currentLanguage].slug}/`
+        : `https://debttracker.uz/${currentLanguage}/menus/faculty/`
+
+      const response = await fetch(url, {
+        method: editingFaculty ? 'PUT' : 'POST',
+        headers: {
+          'Accept': 'application/json',
+        },
+        body: formData,
+        credentials: 'include',
+      })
+
+      if (!response.ok) throw new Error('Failed to save faculty')
+      
+      await fetchFaculties()
+      setIsDialogOpen(false)
+      setEditingFaculty(null)
+      setSelectedLogo(null)
+      setEmail('')
+    } catch (error) {
+      console.error('Error saving faculty:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+//   const handleDelete = async (faculty: Faculty) => {
+//     if (!window.confirm('Are you sure you want to delete this faculty?')) return
+
+//     try {
+//       const response = await fetch(
+//         `https://debttracker.uz/${currentLanguage}/menus/faculty/${faculty.translations[currentLanguage].slug}`,
+//         { method: 'DELETE' }
+//       )
+      
+//       if (!response.ok) throw new Error('Failed to delete faculty')
+//       await fetchFaculties()
+//     } catch (error) {
+//       console.error('Error deleting faculty:', error)
+//     }
+//   }
+
+  const columns = [
+    { 
+      header: 'Logo',
+      accessor: 'logo',
+      cell: (item: Faculty) => (
+        <img src={item.logo} alt="Faculty logo" className="h-10 w-10 object-cover rounded" />
+      )
+    },
+    { 
+      header: 'Name',
+      accessor: 'translations',
+      cell: (item: Faculty) => item.translations[currentLanguage]?.name
+    },
+    { header: 'Email', accessor: 'email' },
+    { 
+      header: 'Description',
+      accessor: 'translations',
+      cell: (item: Faculty) => item.translations[currentLanguage]?.description
+    },
+  ]
+
+  const handleEdit = (faculty: Faculty) => {
+    setEditingFaculty(faculty)
+    setEmail(faculty.email)
+    setSelectedLogo(null)
+    setIsDialogOpen(true)
+  }
+
+  return (
+    <div className="p-6 mt-[50px]">
+      <PageHeader
+        title="Faculties"
+        createButtonLabel="Add Faculty"
+        onCreateClick={() => {
+          setEditingFaculty(null)
+          setSelectedLogo(null)
+          setEmail('')
+          setIsDialogOpen(true)
+        }}
+      />
+
+      <DataTable
+        data={faculties}
+        columns={columns}
+        currentLanguage={currentLanguage}
+        actions={(item: Faculty) => (
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleEdit(item)
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            {/* <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDelete(item)
+              }}
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </Button> */}
+          </div>
+        )}
+      />
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <h2 className="text-lg font-semibold mb-4">
+            {editingFaculty ? 'Edit Faculty' : 'Create Faculty'}
+          </h2>
+          
+          <div className="space-y-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Logo</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setSelectedLogo(e.target.files?.[0] || null)}
+                className="w-full"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">Email</label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <TranslatedForm
+            fields={translatedFields}
+            languages={['en', 'ru', 'uz', 'kk']}
+            onSubmit={handleSubmit}
+            initialData={editingFaculty?.translations}
+            isLoading={isLoading}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
