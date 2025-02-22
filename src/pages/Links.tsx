@@ -24,6 +24,7 @@ export function LinksPage() {
   const [editingLink, setEditingLink] = useState<Link | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
   const currentLanguage = useLanguage()
 
   const fetchLinks = async () => {
@@ -74,7 +75,15 @@ export function LinksPage() {
       header: 'Image', 
       accessor: 'img',
       cell: (item: Link) => (
-        <img src={typeof item.img === 'string' ? item.img : URL.createObjectURL(item.img as File)} alt={typeof item.img === 'string' ? item.name : ''} className="h-10 w-10 object-cover rounded" />
+        <img 
+          src={typeof item.img === 'string' ? item.img : URL.createObjectURL(item.img as File)} 
+          alt={typeof item.img === 'string' ? item.name : ''} 
+          className="h-10 w-10 object-cover rounded cursor-pointer" 
+          onClick={(e) => {
+            e.stopPropagation();
+            setPreviewImage(typeof item.img === 'string' ? item.img : URL.createObjectURL(item.img as File));
+          }}
+        />
       )
     },
   ]
@@ -121,6 +130,15 @@ export function LinksPage() {
           </h2>
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2">Image</label>
+            {editingLink && (
+              <div className="mb-2">
+                <img 
+                  src={editingLink.img as string}
+                  alt={editingLink.name}
+                  className="h-20 w-20 object-cover rounded mb-2"
+                />
+              </div>
+            )}
             <input
               type="file"
               accept="image/*"
@@ -135,6 +153,18 @@ export function LinksPage() {
             initialData={editingLink ? { [currentLanguage]: editingLink } : undefined}
             isLoading={isLoading}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
+        <DialogContent className="sm:max-w-[600px]">
+          <div className="flex justify-center">
+            <img 
+              src={previewImage || ''} 
+              alt="Preview" 
+              className="max-h-[80vh] max-w-full object-contain"
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

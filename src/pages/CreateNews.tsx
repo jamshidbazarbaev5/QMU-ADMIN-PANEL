@@ -210,7 +210,7 @@ export default function CreateNews() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 mt-[50px]">
       <Card>
         <CardHeader>
           <CardTitle>Create News Post - Step {STEPS.indexOf(currentStep) + 1}</CardTitle>

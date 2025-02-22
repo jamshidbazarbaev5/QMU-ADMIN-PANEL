@@ -76,7 +76,7 @@ export default function FeedbackList() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 mt-[50px]">
       <PageHeader
         title="Feedback Management"
         createButtonLabel="Create Feedback"
