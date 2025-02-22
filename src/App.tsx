@@ -14,6 +14,9 @@ import { MenusPage } from './pages/MenusPage';
 import { FacultyPage } from './pages/FacultyPage';
 import { DepartmentPage } from './pages/DepartmentPage';
 import { DocumentPage } from './pages/DocumentPage';
+import { MenuAdminsPage } from './pages/MenuAdminsPage';
+import { AgencyPage } from './pages/AgencyPage';
+import { PositionPage } from './pages/PositionPage';
 
 function App() {
   return (
@@ -41,6 +44,9 @@ function App() {
             <Route path="/faculty" element={<FacultyPage />} />
             <Route path="/department" element={<DepartmentPage />} />
             <Route path="/document" element={<DocumentPage />} /> 
+            <Route path="/menu-admins" element={<MenuAdminsPage />} />
+            <Route path="/agency" element={<AgencyPage />} />
+            <Route path="/position" element={<PositionPage />} />
           </Routes>
         </div>
       </div>
