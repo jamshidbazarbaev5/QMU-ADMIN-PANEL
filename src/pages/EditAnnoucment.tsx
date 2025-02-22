@@ -20,7 +20,7 @@ interface Announcement {
   }
 }
 
-
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://debttracker.uz';
 
 export default function EditAnnouncement() {
   const { slug } = useParams()
@@ -55,24 +55,38 @@ export default function EditAnnouncement() {
       
       try {
         setIsLoading(true)
-        const response = await fetch(`https://debttracker.uz/${layoutLanguage}/announcements/${slug}/`)
+        const urlSearchParams = new URLSearchParams(window.location.search);
+        const id = urlSearchParams.get('id');
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch announcement')
+        if (!id) {
+          throw new Error('Announcement ID is required');
         }
 
-        const data: Announcement = await response.json()
-        setAnnouncement(data)
-      } catch (error) {
-        console.error('Error fetching announcement:', error)
-        alert('Failed to fetch announcement')
-      } finally {
-        setIsLoading(false)
-      }
-    }
+        const response = await fetch(`${API_BASE_URL}/api/announcements/${id}`, {
+          headers: {
+            'Accept-Language': layoutLanguage,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-    fetchAnnouncement()
-  }, [slug, layoutLanguage])
+        const data: Announcement = await response.json();
+        setAnnouncement(data);
+      } catch (error) {
+        console.error('Error fetching announcement:', error);
+        // Show user-friendly error message
+        alert('Unable to load announcement. Please try again later.');
+        navigate('/annoucment-list'); // Redirect back to list on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAnnouncement();
+  }, [slug, layoutLanguage, navigate]);
 
   // Listen for language changes from layout
   useEffect(() => {
@@ -107,7 +121,14 @@ export default function EditAnnouncement() {
 
   async function onSubmit(formData: any) {
     try {
-      if (!announcement || !slug) return
+      if (!announcement) return;
+
+      const urlSearchParams = new URLSearchParams(window.location.search);
+      const id = urlSearchParams.get('id');
+
+      if (!id) {
+        throw new Error('Announcement ID is required');
+      }
 
       const updatedTranslations = { ...announcement.translations }
       
@@ -130,22 +151,24 @@ export default function EditAnnouncement() {
         translations: updatedTranslations
       }
 
-      const response = await fetch(`https://debttracker.uz/${layoutLanguage}/announcements/${slug}/`, {
+      const response = await fetch(`${API_BASE_URL}/api/announcements/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Accept-Language': layoutLanguage,
         },
         body: JSON.stringify(payload),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to update announcement')
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to update announcement');
       }
 
-      navigate('/annoucment-list')
+      navigate('/annoucment-list');
     } catch (error) {
-      console.error('Error updating announcement:', error)
-      alert('Failed to update announcement')
+      console.error('Error updating announcement:', error);
+      alert('Failed to update announcement. Please try again.');
     }
   }
 
