@@ -17,6 +17,7 @@ import { DocumentPage } from './pages/DocumentPage';
 import { MenuAdminsPage } from './pages/MenuAdminsPage';
 import { AgencyPage } from './pages/AgencyPage';
 import { PositionPage } from './pages/PositionPage';
+import { MenuAdminFormPage } from './pages/MenuAdminFormPage';
 
 function App() {
   return (
@@ -47,6 +48,9 @@ function App() {
             <Route path="/menu-admins" element={<MenuAdminsPage />} />
             <Route path="/agency" element={<AgencyPage />} />
             <Route path="/position" element={<PositionPage />} />
+            <Route path="/menu-admins" element={<MenuAdminsPage />} />
+            <Route path="/menu-admins/create" element={<MenuAdminFormPage />} />
+            <Route path="/menu-admins/:id/edit" element={<MenuAdminFormPage />} />
           </Routes>
         </div>
       </div>

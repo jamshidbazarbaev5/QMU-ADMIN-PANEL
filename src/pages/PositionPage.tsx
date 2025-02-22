@@ -14,6 +14,7 @@ interface PositionTranslation {
 interface Position {
   id: number
   email: string
+  position: number
   translations: {
     [key: string]: PositionTranslation
   }
@@ -29,6 +30,8 @@ export function PositionPage() {
   const [editingPosition, setEditingPosition] = useState<Position | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const currentLanguage = useLanguage()
+  const [email, setEmail] = useState('')
+  const [position, setPosition] = useState('')
 
   const fetchPositions = async () => {
     try {
@@ -46,10 +49,16 @@ export function PositionPage() {
   }, [currentLanguage])
 
   const handleSubmit = async (translationData: any) => {
+    if (!position) {
+      alert('Please enter a position number')
+      return
+    }
+
     setIsLoading(true)
     try {
       const payload = {
-        email: editingPosition?.email || 'blabla@gmail.com', // You might want to make this configurable
+        email: editingPosition?.email || email,
+        position: parseInt(position),
         translations: translationData
       }
 
@@ -70,6 +79,8 @@ export function PositionPage() {
       await fetchPositions()
       setIsDialogOpen(false)
       setEditingPosition(null)
+      setEmail('')
+      setPosition('')
     } catch (error) {
       console.error('Error saving position:', error)
     } finally {
@@ -152,6 +163,42 @@ export function PositionPage() {
           <h2 className="text-lg font-semibold mb-4">
             {editingPosition ? 'Edit Position' : 'Create Position'}
           </h2>
+
+          <div className="space-y-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Position Number</label>
+              <input
+                type="number"
+                className="w-full rounded-md border border-gray-300 p-2"
+                value={editingPosition?.position || position}
+                onChange={(e) => {
+                  if (editingPosition) {
+                    setEditingPosition(prev => prev ? {...prev, position: parseInt(e.target.value)} : null)
+                  } else {
+                    setPosition(e.target.value)
+                  }
+                }}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Email</label>
+              <input
+                type="email"
+                className="w-full rounded-md border border-gray-300 p-2"
+                value={editingPosition?.email || email}
+                onChange={(e) => {
+                  if (editingPosition) {
+                    setEditingPosition(prev => prev ? {...prev, email: e.target.value} : null)
+                  } else {
+                    setEmail(e.target.value)
+                  }
+                }}
+                required
+              />
+            </div>
+          </div>
 
           <TranslatedForm
             fields={translatedFields}
