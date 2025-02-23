@@ -18,6 +18,10 @@ import { MenuAdminsPage } from './pages/MenuAdminsPage';
 import { AgencyPage } from './pages/AgencyPage';
 import { PositionPage } from './pages/PositionPage';
 import { MenuAdminFormPage } from './pages/MenuAdminFormPage';
+import './styles/ckeditor.css'
+import FacultyForm from './pages/FacultForm';
+import AgencyForm from './pages/AgencyForm';
+import PositionForm from './pages/PositionForm';
 
 function App() {
   return (
@@ -51,6 +55,12 @@ function App() {
             <Route path="/menu-admins" element={<MenuAdminsPage />} />
             <Route path="/menu-admins/create" element={<MenuAdminFormPage />} />
             <Route path="/menu-admins/:id/edit" element={<MenuAdminFormPage />} />
+            <Route path="/faculties/new" element={<FacultyForm />} />
+            <Route path="/faculties/:id/edit" element={<FacultyForm />} />
+            <Route path="/agencies/new" element={<AgencyForm />} />
+            <Route path="/agencies/:id/edit" element={<AgencyForm />} />
+            <Route path="/positions/new" element={<PositionForm />} />
+            <Route path="/positions/:id/edit" element={<PositionForm />} />
           </Routes>
         </div>
       </div>

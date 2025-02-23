@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react'
 import { useLanguage } from '../hooks/useLanguage'
 import { PageHeader } from '../helpers/PageHeader'
 import { DataTable } from '../helpers/DataTable'
-import { Dialog, DialogContent } from '../components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '../components/ui/dialog'
 import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Pencil } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { useNavigate } from 'react-router-dom'
 
 interface FacultyTranslation {
   name: string
@@ -26,8 +27,17 @@ interface Faculty {
 
 const translatedFields = [
   { name: 'name', label: 'Name', type: 'text' as const, required: true },
-  { name: 'description', label: 'Description', type: 'textarea' as const, required: true },
-  { name: 'history_of_faculty', label: 'History of Faculty', type: 'textarea' as const },
+  { 
+    name: 'description', 
+    label: 'Description', 
+    type: 'richtext' as const, 
+    required: true
+  },
+  { 
+    name: 'history_of_faculty', 
+    label: 'History of Faculty', 
+    type: 'richtext' as const
+  }
 ]
 
 export function FacultyPage() {
@@ -38,6 +48,7 @@ export function FacultyPage() {
   const [selectedLogo, setSelectedLogo] = useState<File | null>(null)
   const [email, setEmail] = useState('')
   const currentLanguage = useLanguage()
+  const navigate = useNavigate()
 
   const fetchFaculties = async () => {
     try {
@@ -146,12 +157,7 @@ export function FacultyPage() {
       <PageHeader
         title="Faculties"
         createButtonLabel="Add Faculty"
-        onCreateClick={() => {
-          setEditingFaculty(null)
-          setSelectedLogo(null)
-          setEmail('')
-          setIsDialogOpen(true)
-        }}
+        onCreateClick={() => navigate('/faculties/new')}
       />
 
       <DataTable
@@ -165,7 +171,7 @@ export function FacultyPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                handleEdit(item)
+                navigate(`/faculties/${item.id}/edit`)
               }}
             >
               <Pencil className="h-4 w-4" />
@@ -186,9 +192,9 @@ export function FacultyPage() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
-          <h2 className="text-lg font-semibold mb-4">
+          <DialogTitle className="text-lg font-semibold mb-4">
             {editingFaculty ? 'Edit Faculty' : 'Create Faculty'}
-          </h2>
+          </DialogTitle>
           
           <div className="space-y-4 mb-4">
             <div>

@@ -7,6 +7,7 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
+import { useNavigate } from 'react-router-dom'
 
 interface AgencyTranslation {
   name: string
@@ -37,7 +38,7 @@ interface Menu {
 
 const translatedFields = [
   { name: 'name', label: 'Name', type: 'text' as const, required: true },
-  { name: 'description', label: 'Description', type: 'textarea' as const, required: true },
+  { name: 'description', label: 'Description', type: 'richtext' as const, required: true },
   { name: 'slug', label: 'Slug', type: 'text' as const, required: true }
 ]
 
@@ -50,6 +51,7 @@ export function AgencyPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const currentLanguage = useLanguage()
+  const navigate = useNavigate()
 
   const fetchAgencies = async () => {
     try {
@@ -143,9 +145,12 @@ export function AgencyPage() {
       header: 'Description',
       accessor: 'translations',
       cell: (item: Agency) => (
-        <div className="max-w-md truncate">
-          {item.translations[currentLanguage]?.description || '-'}
-        </div>
+        <div 
+          className="max-w-md truncate"
+          dangerouslySetInnerHTML={{ 
+            __html: item.translations[currentLanguage]?.description || '-'
+          }}
+        />
       )
     },
     {
@@ -166,12 +171,7 @@ export function AgencyPage() {
       <PageHeader
         title="Agencies"
         createButtonLabel="Add Agency"
-        onCreateClick={() => {
-          setEditingAgency(null)
-          setSelectedImage(null)
-          setSelectedMenu(null)
-          setIsDialogOpen(true)
-        }}
+        onCreateClick={() => navigate('/agencies/new')}
       />
 
       <DataTable
@@ -185,9 +185,7 @@ export function AgencyPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                setEditingAgency(item)
-                setSelectedMenu(item.menu)
-                setIsDialogOpen(true)
+                navigate(`/agencies/${item.id}/edit`)
               }}
             >
               <Pencil className="h-4 w-4" />

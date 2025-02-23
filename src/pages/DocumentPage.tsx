@@ -26,7 +26,7 @@ interface Document {
 
 const translatedFields = [
   { name: 'title', label: 'Title', type: 'text' as const, required: true },
-  { name: 'description', label: 'Description', type: 'textarea' as const, required: true },
+  { name: 'description', label: 'Description', type: 'richtext' as const, required: true },
 ]
 
 export function DocumentPage() {
@@ -116,7 +116,12 @@ export function DocumentPage() {
     { 
       header: 'Description',
       accessor: 'translations',
-      cell: (item: Document) => item.translations[currentLanguage]?.description
+      cell: (item: Document) =>  <div 
+      className="max-w-md truncate"
+      dangerouslySetInnerHTML={{ 
+        __html: item.translations[currentLanguage]?.description || '-'
+      }}
+    />
     },
     {
       header: 'File',
@@ -131,7 +136,9 @@ export function DocumentPage() {
         >
           View File
         </a>
+        
       )
+      
     },
     {
       header: 'Date',

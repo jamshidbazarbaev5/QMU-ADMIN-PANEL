@@ -23,7 +23,7 @@ interface Department {
 
 const translatedFields = [
   { name: 'name', label: 'Name', type: 'text' as const, required: true },
-  { name: 'description', label: 'Description', type: 'textarea' as const, required: true },
+  { name: 'description', label: 'Description', type: 'richtext' as const, required: true },
 ]
 
 export function DepartmentPage() {
@@ -108,7 +108,12 @@ export function DepartmentPage() {
     { 
       header: 'Description',
       accessor: 'translations',
-      cell: (item: Department) => item.translations[currentLanguage]?.description
+      cell: (item: Department) =>  <div 
+      className="max-w-md truncate"
+      dangerouslySetInnerHTML={{ 
+        __html: item.translations[currentLanguage]?.description || '-'
+      }}
+    />
     },
   ]
 

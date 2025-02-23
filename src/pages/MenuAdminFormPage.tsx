@@ -78,7 +78,7 @@ interface MenuAdmin {
 
 const translatedFields = [
   { name: 'full_name', label: 'Full Name', type: 'text' as const, required: true },
-  { name: 'biography', label: 'Biography', type: 'textarea' as const, required: true },
+  { name: 'biography', label: 'Biography', type: 'richtext' as const, required: true },
 ]
 
 export function MenuAdminFormPage() {

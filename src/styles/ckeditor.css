@@ -1,0 +1,12 @@
+.ck-editor__editable {
+    min-height: 200px;
+    max-height: 400px;
+  }
+  
+  .ck.ck-editor__editable > .ck-editor__nested-editable {
+    border: 1px solid var(--ck-color-base-border);
+  }
+  
+  .ck.ck-editor {
+    width: 100%;
+  }

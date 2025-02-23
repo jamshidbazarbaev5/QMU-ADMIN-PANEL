@@ -6,9 +6,11 @@ import { Dialog, DialogContent } from '../components/ui/dialog'
 import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
+import { useNavigate } from 'react-router-dom'
 
 interface PositionTranslation {
   name: string
+  description: string
 }
 
 interface Position {
@@ -21,7 +23,8 @@ interface Position {
 }
 
 const translatedFields = [
-  { name: 'name', label: 'Name', type: 'text' as const, required: true }
+  { name: 'name', label: 'Name', type: 'text' as const, required: true },
+  { name: 'description', label: 'Description', type: 'richtext' as const, required: true }
 ]
 
 export function PositionPage() {
@@ -32,10 +35,11 @@ export function PositionPage() {
   const currentLanguage = useLanguage()
   const [email, setEmail] = useState('')
   const [position, setPosition] = useState('')
+  const navigate = useNavigate()
 
   const fetchPositions = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/position/`)
+      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/position/`, )
       if (!response.ok) throw new Error('Failed to fetch positions')
       const data = await response.json()
       setPositions(Array.isArray(data) ? data : [data])
@@ -104,32 +108,43 @@ export function PositionPage() {
     }
   }
 
-  const columns = [
-    { 
-      header: 'Name',
-      accessor: 'translations',
-      cell: (item: Position) => item.translations[currentLanguage]?.name || '-'
-    },
-    { 
-      header: 'Email',
-      accessor: 'email',
-    }
-  ]
-
   return (
     <div className="p-6 mt-[50px]">
       <PageHeader
         title="Positions"
         createButtonLabel="Add Position"
-        onCreateClick={() => {
-          setEditingPosition(null)
-          setIsDialogOpen(true)
-        }}
+        onCreateClick={() => navigate('/positions/new')}
       />
 
       <DataTable
         data={positions}
-        columns={columns}
+        columns={[
+          { 
+            header: 'Name',
+            accessor: 'translations',
+            cell: (item: Position) => item.translations[currentLanguage]?.name || '-'
+          },
+          { 
+            header: 'Description',
+            accessor: 'translations',
+            cell: (item: Position) => (
+              <div 
+                className="max-w-md truncate"
+                dangerouslySetInnerHTML={{ 
+                  __html: item.translations[currentLanguage]?.description || '-'
+                }}
+              />
+            )
+          },
+          { 
+            header: 'Email',
+            accessor: 'email',
+          },
+          {
+            header: 'Position',
+            accessor: 'position',
+          }
+        ]}
         currentLanguage={currentLanguage}
         actions={(item: Position) => (
           <div className="flex gap-2">
@@ -138,8 +153,7 @@ export function PositionPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                setEditingPosition(item)
-                setIsDialogOpen(true)
+                navigate(`/positions/${item.id}/edit`)
               }}
             >
               <Pencil className="h-4 w-4" />

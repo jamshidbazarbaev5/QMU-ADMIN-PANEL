@@ -41,7 +41,7 @@ export default function EditAnnouncement() {
     {
       name: 'description',
       label: 'Description',
-      type: 'textarea' as const,
+      type: 'richtext' as const,
       required: true
     }
   ]

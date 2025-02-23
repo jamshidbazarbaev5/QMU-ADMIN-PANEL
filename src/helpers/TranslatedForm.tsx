@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
+import { Editor } from '@tinymce/tinymce-react'
 
 interface TranslatedField {
     name: string
     label: string
-    type: 'text' | 'textarea'
+    type: 'text' | 'textarea' | 'richtext'
     required?: boolean
+    editorConfig?: any
   }
   
   interface TranslatedFormProps {
@@ -37,27 +39,56 @@ interface TranslatedField {
           </TabsList>
 
           {languages.map(lang => (
-            <TabsContent key={lang} value={lang}>
-              <div className="space-y-4">
+            <TabsContent key={lang} value={lang} className="mt-4">
+              <div className="space-y-6">
                 {fields.map(field => (
-                  <div key={field.name} className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">
+                  <div key={field.name} className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       {field.label}
+                      {field.required && <span className="text-red-500 ml-1">*</span>}
                     </label>
-                    {field.type === 'textarea' ? (
+                    {field.type === 'richtext' ? (
+                      <div className="min-h-[200px] border rounded-md">
+                        <Editor
+                          apiKey="fu6z5mrrefbmryy7w66yyh4653o1rh9pxrukdby6v1nlozuj"
+                          init={{
+                            height: 300,
+                            menubar: false,
+                            plugins: [
+                              'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
+                              'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                              'insertdatetime', 'table', 'code', 'help', 'wordcount'
+                            ],
+                            toolbar: 'undo redo | formatselect | ' +
+                              'bold italic | alignleft aligncenter ' +
+                              'alignright alignjustify | bullist numlist | ' +
+                              'removeformat | help',
+                            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                          }}
+                          value={formData[lang]?.[field.name] || ''}
+                          onEditorChange={(content) => {
+                            setFormData({
+                              ...formData,
+                              [lang]: { ...formData[lang], [field.name]: content }
+                            })
+                          }}
+                        />
+                      </div>
+                    ) : field.type === 'textarea' ? (
                       <textarea
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
                         value={formData[lang]?.[field.name] || ''}
                         onChange={(e) => setFormData({
                           ...formData,
                           [lang]: { ...formData[lang], [field.name]: e.target.value }
                         })}
                         required={field.required}
+                        rows={4}
                       />
                     ) : (
                       <input
-                        type={field.type}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                        type="text"
+                        className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
                         value={formData[lang]?.[field.name] || ''}
                         onChange={(e) => setFormData({
                           ...formData,
