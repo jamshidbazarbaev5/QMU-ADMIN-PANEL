@@ -107,7 +107,7 @@ export default function Layout() {
             <div className="space-y-1">
               {[
                 { icon: MessageSquare, text: "Feedback", href: "/feedback" },
-                { icon: Newspaper, text: "News", href: "/create-news" },
+                { icon: Newspaper, text: "News", href: "/news" },
                 { icon: Grid, text: "CategoryNews", href: "/news-categories" },
                 { icon: LinkIcon, text: "Useful Links", href: "/links" },
                 { icon: List, text: "Menus", href: "/menus" },

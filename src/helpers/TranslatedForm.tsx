@@ -16,9 +16,10 @@ interface TranslatedField {
     onSubmit: (data: any) => void
     initialData?: any
     isLoading?: boolean
+    submitButton?: React.ReactNode
   }
   
-  export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoading }: TranslatedFormProps) {
+  export function TranslatedForm({ fields, languages, onSubmit, initialData, submitButton }: TranslatedFormProps) {
     const [formData, setFormData] = useState(initialData || {})
     const [currentTab, setCurrentTab] = useState(languages[0])
   
@@ -104,13 +105,7 @@ interface TranslatedField {
           ))}
         </Tabs>
         
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#6C5DD3] hover:bg-[#5b4eb8] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6C5DD3]"
-        >
-          {isLoading ? 'Saving...' : 'Save'}
-        </button>
+        {submitButton}
       </form>
     )
   }

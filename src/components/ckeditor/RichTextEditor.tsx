@@ -6,7 +6,7 @@ interface RichTextEditorProps {
   placeholder?: string
 }
 
-export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
+export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
   return (
     <Editor
       apiKey="fu6z5mrrefbmryy7w66yyh4653o1rh9pxrukdby6v1nlozuj" // You can get a free API key from TinyMCE website
@@ -26,7 +26,6 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
       }}
       value={value}
       onEditorChange={(content) => onChange(content)}
-      placeholder={placeholder}
     />
   )
 }

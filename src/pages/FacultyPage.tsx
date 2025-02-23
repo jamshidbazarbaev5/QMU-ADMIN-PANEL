@@ -145,12 +145,7 @@ export function FacultyPage() {
     },
   ]
 
-  const handleEdit = (faculty: Faculty) => {
-    setEditingFaculty(faculty)
-    setEmail(faculty.email)
-    setSelectedLogo(null)
-    setIsDialogOpen(true)
-  }
+  
 
   return (
     <div className="p-6 mt-[50px]">

@@ -22,6 +22,7 @@ import './styles/ckeditor.css'
 import FacultyForm from './pages/FacultForm';
 import AgencyForm from './pages/AgencyForm';
 import PositionForm from './pages/PositionForm';
+import NewsList from './pages/NewsList';
 
 function App() {
   return (
@@ -61,6 +62,7 @@ function App() {
             <Route path="/agencies/:id/edit" element={<AgencyForm />} />
             <Route path="/positions/new" element={<PositionForm />} />
             <Route path="/positions/:id/edit" element={<PositionForm />} />
+            <Route path="/news" element={<NewsList />} />
           </Routes>
         </div>
       </div>
