@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './layout/layout';
 import CreateAnnouncement from './pages/CreateAnnouncment';
 import './App.css';
@@ -23,10 +23,23 @@ import FacultyForm from './pages/FacultForm';
 import AgencyForm from './pages/AgencyForm';
 import PositionForm from './pages/PositionForm';
 import NewsList from './pages/NewsList';
+import { PostForm } from './pages/PostForm';
+import { Posts } from './pages/PostList';
+import { Login } from './pages/Login';
+import { ChangePassword } from './pages/ChangePassword';
+import { VideoForm } from './pages/VideoForm';
+import { Videos } from './pages/Videos';
+import { QuantityForm } from './pages/QuantityForm';
+import { QuantityList } from './pages/QuantittyList';
+
+function PrivateRoute({ children }: { children: React.ReactNode }) {
+  const token = localStorage.getItem('accessToken');
+  return token ? children : <Navigate to="/login" />;
+}
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <div className="flex h-screen bg-gray-100">
         <Layout />
         <div className="flex-1 overflow-auto">
@@ -63,10 +76,28 @@ function App() {
             <Route path="/positions/new" element={<PositionForm />} />
             <Route path="/positions/:id/edit" element={<PositionForm />} />
             <Route path="/news" element={<NewsList />} />
+            <Route path="/posts" element={<Posts />} />
+            <Route path="/posts/new" element={<PostForm />} />
+            <Route path="/posts/:slug/edit" element={<PostForm isEditing={true} />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/videos" element={<Videos />} />
+            <Route path="/videos/new" element={<VideoForm />} />
+            <Route path="/videos/:id/edit" element={<VideoForm isEditing={true} />} />
+            <Route path="/quantities" element={<QuantityList />} />
+            <Route path="/quantities/new" element={<QuantityForm />} />
+            <Route path="/quantities/:id/edit" element={<QuantityForm isEditing={true} />} />
+            <Route
+              path="/change-password"
+              element={
+                <PrivateRoute>
+                  <ChangePassword />
+                </PrivateRoute>
+              }
+            />
           </Routes>
         </div>
       </div>
-    </Router>
+    </BrowserRouter>
   );
 }
 

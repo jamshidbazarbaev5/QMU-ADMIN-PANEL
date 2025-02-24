@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate, Link, Outlet } from "react-router-dom"
+import { changePassword } from '../api/api';
 import {
   LogOut,
   Menu,
@@ -17,6 +18,8 @@ import {
   UserCog,
   Building as BuildingIcon,
   UserSquare2,
+  Video,
+  KeyRound,
 } from "lucide-react"
 import {
   Select,
@@ -34,6 +37,13 @@ export default function Layout() {
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(true)
 
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken")
+    if (!token) {
+      navigate("/login")
+    }
+  }, [navigate])
+
   const handleLanguageChange = (value: Language) => {
     setCurrentLanguage(value)
     localStorage.setItem('language', value)
@@ -41,7 +51,8 @@ export default function Layout() {
     }
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
+    localStorage.removeItem("accessToken")
+    localStorage.removeItem("refreshToken")
     navigate("/login")
   }
 
@@ -82,8 +93,8 @@ export default function Layout() {
           {isMenuOpen && <h1 className="text-xl font-bold">Admin Panel</h1>}
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 space-y-6 p-4">
+        {/* Navigation - Added overflow-y-auto */}
+        <nav className="flex-1 space-y-6 p-4 overflow-y-auto">
           {/* Main Menu */}
           <div>
             {isMenuOpen && (
@@ -117,6 +128,10 @@ export default function Layout() {
                 { icon: UserCog, text: "Menu Admins", href: "/menu-admins" },
                 { icon: BuildingIcon, text: "Agency", href: "/agency" },
                 { icon: UserSquare2, text: "Position", href: "/position" },
+                { icon: Newspaper, text: "Posts", href: "/posts" },
+                { icon: Video, text: "Videos", href: "/videos" },
+                { icon: List, text: "Quantities", href: "/quantities" },
+                { icon: KeyRound, text: "Change Password", href: "/change-password" },
               ].map((item, index) => (
                 <Link
                   key={index}
