@@ -8,6 +8,7 @@ import { Input } from '../components/ui/input'
 import { Textarea } from '../components/ui/textarea'
 import { Button } from '../components/ui/button'
 import { useForm } from 'react-hook-form'
+import { getAuthHeader } from '../api/api'
 
 interface FeedbackFormValues {
   full_name: string
@@ -60,6 +61,7 @@ export default function FeedbackForm() {
         method,
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeader()
         },
         body: JSON.stringify(values),
       })

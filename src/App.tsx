@@ -44,56 +44,52 @@ function App() {
         <Layout />
         <div className="flex-1 overflow-auto">
           <Routes>
-            <Route path="/" element={
-              <div className="p-6">
-                <h1 className="text-2xl font-bold text-gray-800">Welcome to Admin Panel</h1>
-              </div>
-            } />
-            <Route path="/create-announcement" element={<CreateAnnouncement />} />
-            <Route path="/annoucment-list" element={<AnnoucmentList />} />
-            <Route path="/edit-announcement/:slug" element={<EditAnnouncement />} />
-            <Route path="/create-news-category" element={<CreateNewsCategory />} />
-            <Route path="/news-categories" element={<NewsCategories />} />
-            <Route path="/create-news" element={<CreateNews />} />
-            <Route path="/feedback" element={<FeedbackList />} />
-            <Route path="/feedback/create" element={<FeedbackForm />} />
-            <Route path="/feedback/edit/:id" element={<FeedbackForm />} />
-            <Route path="/links" element={<LinksPage />} />
-            <Route path="/menus" element={<MenusPage />} />
-            <Route path="/faculty" element={<FacultyPage />} />
-            <Route path="/department" element={<DepartmentPage />} />
-            <Route path="/document" element={<DocumentPage />} /> 
-            <Route path="/menu-admins" element={<MenuAdminsPage />} />
-            <Route path="/agency" element={<AgencyPage />} />
-            <Route path="/position" element={<PositionPage />} />
-            <Route path="/menu-admins" element={<MenuAdminsPage />} />
-            <Route path="/menu-admins/create" element={<MenuAdminFormPage />} />
-            <Route path="/menu-admins/:id/edit" element={<MenuAdminFormPage />} />
-            <Route path="/faculties/new" element={<FacultyForm />} />
-            <Route path="/faculties/:id/edit" element={<FacultyForm />} />
-            <Route path="/agencies/new" element={<AgencyForm />} />
-            <Route path="/agencies/:id/edit" element={<AgencyForm />} />
-            <Route path="/positions/new" element={<PositionForm />} />
-            <Route path="/positions/:id/edit" element={<PositionForm />} />
-            <Route path="/news" element={<NewsList />} />
-            <Route path="/posts" element={<Posts />} />
-            <Route path="/posts/new" element={<PostForm />} />
-            <Route path="/posts/:slug/edit" element={<PostForm isEditing={true} />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/videos" element={<Videos />} />
-            <Route path="/videos/new" element={<VideoForm />} />
-            <Route path="/videos/:id/edit" element={<VideoForm isEditing={true} />} />
-            <Route path="/quantities" element={<QuantityList />} />
-            <Route path="/quantities/new" element={<QuantityForm />} />
-            <Route path="/quantities/:id/edit" element={<QuantityForm isEditing={true} />} />
-            <Route
-              path="/change-password"
-              element={
-                <PrivateRoute>
-                  <ChangePassword />
-                </PrivateRoute>
-              }
-            />
+            
+            {/* All other routes wrapped in PrivateRoute */}
+            <Route path="/" element={
+              <PrivateRoute>
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold text-gray-800">Welcome to Admin Panel</h1>
+                </div>
+              </PrivateRoute>
+            } />
+            <Route path="/create-announcement" element={<PrivateRoute><CreateAnnouncement /></PrivateRoute>} />
+            <Route path="/annoucment-list" element={<PrivateRoute><AnnoucmentList /></PrivateRoute>} />
+            <Route path="/edit-announcement/:slug" element={<PrivateRoute><EditAnnouncement /></PrivateRoute>} />
+            <Route path="/create-news-category" element={<PrivateRoute><CreateNewsCategory /></PrivateRoute>} />
+            <Route path="/news-categories" element={<PrivateRoute><NewsCategories /></PrivateRoute>} />
+            <Route path="/create-news" element={<PrivateRoute><CreateNews /></PrivateRoute>} />
+            <Route path="/feedback" element={<PrivateRoute><FeedbackList /></PrivateRoute>} />
+            <Route path="/feedback/create" element={<PrivateRoute><FeedbackForm /></PrivateRoute>} />
+            <Route path="/feedback/edit/:id" element={<PrivateRoute><FeedbackForm /></PrivateRoute>} />
+            <Route path="/links" element={<PrivateRoute><LinksPage /></PrivateRoute>} />
+            <Route path="/menus" element={<PrivateRoute><MenusPage /></PrivateRoute>} />
+            <Route path="/faculty" element={<PrivateRoute><FacultyPage /></PrivateRoute>} />
+            <Route path="/department" element={<PrivateRoute><DepartmentPage /></PrivateRoute>} />
+            <Route path="/document" element={<PrivateRoute><DocumentPage /></PrivateRoute>} />
+            <Route path="/menu-admins" element={<PrivateRoute><MenuAdminsPage /></PrivateRoute>} />
+            <Route path="/agency" element={<PrivateRoute><AgencyPage /></PrivateRoute>} />
+            <Route path="/position" element={<PrivateRoute><PositionPage /></PrivateRoute>} />
+            <Route path="/menu-admins/create" element={<PrivateRoute><MenuAdminFormPage /></PrivateRoute>} />
+            <Route path="/menu-admins/:id/edit" element={<PrivateRoute><MenuAdminFormPage /></PrivateRoute>} />
+            <Route path="/faculties/new" element={<PrivateRoute><FacultyForm /></PrivateRoute>} />
+            <Route path="/faculties/:id/edit" element={<PrivateRoute><FacultyForm /></PrivateRoute>} />
+            <Route path="/agencies/new" element={<PrivateRoute><AgencyForm /></PrivateRoute>} />
+            <Route path="/agencies/:id/edit" element={<PrivateRoute><AgencyForm /></PrivateRoute>} />
+            <Route path="/positions/new" element={<PrivateRoute><PositionForm /></PrivateRoute>} />
+            <Route path="/positions/:id/edit" element={<PrivateRoute><PositionForm /></PrivateRoute>} />
+            <Route path="/news" element={<PrivateRoute><NewsList /></PrivateRoute>} />
+            <Route path="/posts" element={<PrivateRoute><Posts /></PrivateRoute>} />
+            <Route path="/posts/new" element={<PrivateRoute><PostForm /></PrivateRoute>} />
+            <Route path="/posts/:slug/edit" element={<PrivateRoute><PostForm isEditing={true} /></PrivateRoute>} />
+            <Route path="/videos" element={<PrivateRoute><Videos /></PrivateRoute>} />
+            <Route path="/videos/new" element={<PrivateRoute><VideoForm /></PrivateRoute>} />
+            <Route path="/videos/:id/edit" element={<PrivateRoute><VideoForm isEditing={true} /></PrivateRoute>} />
+            <Route path="/quantities" element={<PrivateRoute><QuantityList /></PrivateRoute>} />
+            <Route path="/quantities/new" element={<PrivateRoute><QuantityForm /></PrivateRoute>} />
+            <Route path="/quantities/:id/edit" element={<PrivateRoute><QuantityForm isEditing={true} /></PrivateRoute>} />
+            <Route path="/change-password" element={<PrivateRoute><ChangePassword /></PrivateRoute>} />
           </Routes>
         </div>
       </div>

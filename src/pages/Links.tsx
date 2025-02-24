@@ -5,6 +5,7 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { useLanguage } from '../hooks/useLanguage'
 import { Dialog, DialogContent } from '../components/ui/dialog'
 import { Pencil } from 'lucide-react'
+import { getAuthHeader } from '../api/api'
 
 interface Link {
   id: number
@@ -54,7 +55,10 @@ export function LinksPage() {
       
       const response = await fetch(url, {
         method: editingLink ? 'PUT' : 'POST',
-        body: submitData
+        body: submitData,
+        headers: {
+          ...getAuthHeader()
+        }
       })
 
       if (response.ok) {

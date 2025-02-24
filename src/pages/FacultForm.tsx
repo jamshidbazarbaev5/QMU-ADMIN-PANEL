@@ -6,6 +6,7 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Loader2 } from 'lucide-react'
+import { getAuthHeader } from '../api/api'
 
 const translatedFields = [
   { name: 'name', label: 'Name', type: 'text' as const, required: true },
@@ -72,9 +73,9 @@ export default function FacultyForm() {
         method: id ? 'PUT' : 'POST',
         headers: {
           'Accept': 'application/json',
+          ...getAuthHeader()
         },
         body: formData,
-        credentials: 'include',
       })
 
       if (!response.ok) throw new Error('Failed to save faculty')

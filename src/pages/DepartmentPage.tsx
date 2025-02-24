@@ -6,6 +6,7 @@ import { Dialog, DialogContent } from '../components/ui/dialog'
 import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
+import { getAuthHeader } from '../api/api'
 
 interface DepartmentTranslation {
   name: string
@@ -89,7 +90,7 @@ export function DepartmentPage() {
     try {
       const response = await fetch(
         `https://debttracker.uz/${currentLanguage}/menus/department/${department.translations[currentLanguage].slug}/`,
-        { method: 'DELETE' }
+        { method: 'DELETE', headers: getAuthHeader() }
       )
       
       if (!response.ok) throw new Error('Failed to delete department')

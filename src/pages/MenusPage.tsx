@@ -7,6 +7,7 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
+import { getAuthHeader } from '../api/api'
 
 interface MenuTranslation {
   name: string
@@ -86,7 +87,7 @@ export function MenusPage() {
     try {
       const response = await fetch(
         `https://debttracker.uz/${currentLanguage}/menus/${menuType}/${menu.translations[currentLanguage].slug}/`,
-        { method: 'DELETE' }
+        { method: 'DELETE', headers: getAuthHeader() }
       )
       
       if (!response.ok) throw new Error('Failed to delete menu')

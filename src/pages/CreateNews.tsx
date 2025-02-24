@@ -8,6 +8,7 @@ import { Input } from '../components/ui/input'
 import { Textarea } from '../components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
+import { getAuthHeader } from "../api/api"
 
 interface Translation {
   name: string
@@ -185,6 +186,9 @@ export default function CreateNews() {
       const response = await fetch(`https://debttracker.uz/${currentLanguage}/news/posts/`, {
         method: 'POST',
         body: formData,
+        headers:{
+          ...getAuthHeader()
+        }
       })
 
       if (!response.ok) {

@@ -6,6 +6,7 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Loader2 } from 'lucide-react'
+import { getAuthHeader } from '../api/api'
 
 interface PositionTranslation {
   name: string;
@@ -110,6 +111,7 @@ export default function PositionForm() {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          ...getAuthHeader()  
         },
         body: JSON.stringify(payload)
       })

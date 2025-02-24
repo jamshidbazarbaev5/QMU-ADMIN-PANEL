@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate, Link, Outlet } from "react-router-dom"
-import { changePassword } from '../api/api';
 import {
   LogOut,
   Menu,

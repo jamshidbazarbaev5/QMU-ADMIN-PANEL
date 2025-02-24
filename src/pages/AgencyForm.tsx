@@ -6,6 +6,7 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Loader2 } from 'lucide-react'
+import { getAuthHeader } from '../api/api';
 
 interface Menu {
   id: number
@@ -93,6 +94,7 @@ export default function AgencyForm() {
         method: id ? 'PUT' : 'POST',
         headers: {
           'Accept': 'application/json',
+          ...getAuthHeader()
         },
         body: formData,
         credentials: 'include',

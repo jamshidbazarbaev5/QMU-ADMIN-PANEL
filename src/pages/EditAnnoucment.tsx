@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { Loader2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { TranslatedForm } from '../helpers/TranslatedForm'
+import { getAuthHeader } from "../api/api"
 
 type Language = 'en' | 'ru' | 'uz' | 'kk'
 
@@ -134,6 +135,7 @@ export default function EditAnnouncement() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeader()
         },
         body: JSON.stringify(payload),
       })

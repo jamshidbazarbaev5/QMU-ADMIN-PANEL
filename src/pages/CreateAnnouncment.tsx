@@ -9,6 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '../components/ui/input'
 import { Textarea } from '../components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { getAuthHeader } from "../api/api"
 
 
 
@@ -56,6 +57,7 @@ export default function CreateAnnouncement() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...getAuthHeader()
           },
           body: JSON.stringify(payload),
         })

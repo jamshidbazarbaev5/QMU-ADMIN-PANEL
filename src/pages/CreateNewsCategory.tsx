@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../components/ui/form'
 import { Input } from '../components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { getAuthHeader } from "../api/api"
 
 interface FormValues {
   name_ru: string
@@ -54,6 +55,7 @@ export default function CreateNewsCategory() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeader()
         },
         body: JSON.stringify({ translations }),
       })

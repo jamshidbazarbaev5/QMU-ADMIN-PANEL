@@ -4,6 +4,7 @@ import { useLanguage } from '../hooks/useLanguage'
 import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
+import { getAuthHeader } from '../api/api'
 // ... import other necessary types and components
 
 // Add all interfaces from MenuAdminsPage
@@ -195,7 +196,10 @@ export function MenuAdminFormPage() {
 
       const response = await fetch(url, {
         method: id ? 'PUT' : 'POST',
-        body: formData
+        body: formData,
+        headers: {
+          ...getAuthHeader()
+        }
       })
 
       if (!response.ok) throw new Error('Failed to save admin')
