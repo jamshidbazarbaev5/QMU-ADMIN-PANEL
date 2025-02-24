@@ -31,20 +31,38 @@ import { VideoForm } from './pages/VideoForm';
 import { Videos } from './pages/Videos';
 import { QuantityForm } from './pages/QuantityForm';
 import { QuantityList } from './pages/QuantittyList';
-
-function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('accessToken');
-  return token ? children : <Navigate to="/login" />;
-}
+import { useState, useEffect } from 'react';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('accessToken'));
+
+  const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
+    return isAuthenticated ? children : <Navigate to="/login" />;
+  };
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setIsAuthenticated(!!localStorage.getItem('accessToken'));
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('auth-change', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('auth-change', handleStorageChange);
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <div className="flex h-screen bg-gray-100">
-        <Layout />
-        <div className="flex-1 overflow-auto">
+        {isAuthenticated && <Layout />}
+        <div className={`flex-1 overflow-auto ${isAuthenticated ? '' : 'w-full'}`}>
           <Routes>
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={
+              isAuthenticated ? <Navigate to="/" /> : <Login setIsAuthenticated={setIsAuthenticated} />
+            } />
             
             {/* All other routes wrapped in PrivateRoute */}
             <Route path="/" element={

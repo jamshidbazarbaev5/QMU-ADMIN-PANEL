@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../api/api';
 
-export function Login() {
+interface LoginProps {
+  setIsAuthenticated: (value: boolean) => void;
+}
+
+export const Login = ({ setIsAuthenticated }: LoginProps) => {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -15,8 +19,12 @@ export function Login() {
     setIsLoading(true);
 
     try {
-      await login({ username, password });
-      navigate('/posts');
+      const response = await login({ username, password });
+      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('refreshToken', response.refreshToken);
+      setIsAuthenticated(true);
+      window.dispatchEvent(new Event('auth-change'));
+      navigate('/');
     } catch (error: any) {
       setError(error.detail || 'Invalid username or password');
     } finally {
@@ -74,4 +82,4 @@ export function Login() {
       </div>
     </div>
   );
-}
+};

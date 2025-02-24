@@ -23,8 +23,8 @@ interface LoginCredentials {
   }
   
   interface AuthResponse {
-    access: string;
-    refresh: string;
+    accessToken: string;
+    refreshToken: string;
   }
   
   export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {

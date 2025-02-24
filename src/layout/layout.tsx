@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useNavigate, Link, Outlet } from "react-router-dom"
 import {
   LogOut,
@@ -36,13 +36,6 @@ export default function Layout() {
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(true)
 
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken")
-    if (!token) {
-      navigate("/login")
-    }
-  }, [navigate])
-
   const handleLanguageChange = (value: Language) => {
     setCurrentLanguage(value)
     localStorage.setItem('language', value)
@@ -52,6 +45,7 @@ export default function Layout() {
   const handleLogout = () => {
     localStorage.removeItem("accessToken")
     localStorage.removeItem("refreshToken")
+    window.dispatchEvent(new Event('auth-change'))
     navigate("/login")
   }
 
