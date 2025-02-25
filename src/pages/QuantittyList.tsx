@@ -16,13 +16,14 @@ export function QuantityList() {
 
   const fetchQuantities = async () => {
     try {
-      const response = await fetch('https://debttracker.uz/publications/quantities', {
+      const response = await fetch('https://debttracker.uz/en/publications/quantities', {
         headers: {
           'Authorization': `Bearer ${token}`,
         }
       })
       if (!response.ok) throw new Error('Failed to fetch')
       const data = await response.json()
+      console.log('Fetched quantities:', data)
       setQuantities(data)
     } catch (error) {
       console.error('Error:', error)
@@ -35,7 +36,7 @@ export function QuantityList() {
     if (!window.confirm('Are you sure you want to delete this item?')) return
 
     try {
-      const response = await fetch(`https://debttracker.uz/publications/quantities/${id}`, {
+      const response = await fetch(`https://debttracker.uz/en/publications/quantities/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -49,7 +50,10 @@ export function QuantityList() {
   }
 
   const columns = [
-    { header: 'Title', accessor: 'title' },
+    { 
+      header: 'Title', 
+      accessor: (row: any) => row.translations?.en?.title || 'No title' 
+    },
     { header: 'Quantity', accessor: 'quantity' },
   ]
 
@@ -85,7 +89,7 @@ export function QuantityList() {
         data={quantities}
         columns={columns}
         actions={renderActions}
-        onRowClick={(item) => navigate(`/quantities/edit/${item.id}`)}
+        onRowClick={(item) => navigate(`/quantities/${item.id}/edit`)}
       />
     </div>
   )

@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { Loader2 } from "lucide-react"
 import { Button } from '../components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../components/ui/form'
 import { Input } from '../components/ui/input'
-import { Textarea } from '../components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { getAuthHeader } from "../api/api"
+import { RichTextEditor } from '../components/ckeditor/RichTextEditor'
 
 interface Translation {
   name: string
@@ -33,7 +33,7 @@ interface Goal {
 
 interface FormValues {
   category: string
-  goals: string
+  goals: string[]
   main_image: FileList
   uploaded_images: FileList
   title_ru: string
@@ -51,6 +51,9 @@ type Step = typeof STEPS[number]
 
 export default function CreateNews() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const newsId = searchParams.get('id')
+  const isEditing = !!newsId
   const [currentStep, setCurrentStep] = useState<Step>("images")
   const [currentLanguage] = useState<string>(() => {
     return localStorage.getItem('language') || 'ru'
@@ -58,6 +61,8 @@ export default function CreateNews() {
   const [categories, setCategories] = useState<Category[]>([])
   const [goals, setGoals] = useState<Goal[]>([])
   const [uploadedImages, setUploadedImages] = useState<File[]>([])
+  const [isLoadingInitialData, setIsLoadingInitialData] = useState(isEditing)
+  const [isGoalsDropdownOpen, setIsGoalsDropdownOpen] = useState(false)
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -87,10 +92,55 @@ export default function CreateNews() {
     fetchGoals()
   }, [currentLanguage])
 
+  useEffect(() => {
+    const fetchNewsData = async () => {
+      if (!newsId) return
+
+      try {
+        const response = await fetch(`https://debttracker.uz/${currentLanguage}/news/posts/${newsId}/`, {
+          headers: {
+            ...getAuthHeader()
+          }
+        })
+        
+        if (!response.ok) throw new Error('Failed to fetch news data')
+        
+        const data = await response.json()
+        
+        form.reset({
+          category: data.category?.toString() || "",
+          goals: data.goals?.map(g => g.toString()) || [],
+          title_ru: data.translations?.ru?.title || "",
+          title_en: data.translations?.en?.title || "",
+          title_uz: data.translations?.uz?.title || "",
+          title_kk: data.translations?.kk?.title || "",
+          description_ru: data.translations?.ru?.description || "",
+          description_en: data.translations?.en?.description || "",
+          description_uz: data.translations?.uz?.description || "",
+          description_kk: data.translations?.kk?.description || "",
+        })
+
+        if (data.uploaded_images) {
+          // You might need to handle displaying existing images differently
+          // depending on how your backend returns them
+        }
+      } catch (error) {
+        console.error('Error fetching news data:', error)
+        alert('Failed to load news data')
+      } finally {
+        setIsLoadingInitialData(false)
+      }
+    }
+
+    if (isEditing) {
+      fetchNewsData()
+    }
+  }, [newsId, currentLanguage])
+
   const form = useForm<FormValues>({
     defaultValues: {
       category: "",
-      goals: "",
+      goals: [],
       title_ru: "",
       title_en: "",
       title_uz: "",
@@ -140,21 +190,18 @@ export default function CreateNews() {
     try {
       const formData = new FormData()
       
-      console.log('Form Values:', values)
-      console.log('Uploaded Images:', uploadedImages)
-
       formData.append('category', values.category)
-      formData.append('goals', values.goals)
+      values.goals.forEach(goalId => {
+        formData.append('goals', goalId)
+      })
       
       if (values.main_image?.[0]) {
         formData.append('main_image', values.main_image[0])
-        console.log('Main Image:', values.main_image[0])
       }
 
       if (values.uploaded_images) {
-        Array.from(values.uploaded_images).forEach((file, index) => {
+        Array.from(values.uploaded_images).forEach((file) => {
           formData.append(`uploaded_images`, file)
-          console.log(`Adding uploaded image ${index}:`, file)
         })
       }
 
@@ -179,14 +226,14 @@ export default function CreateNews() {
 
       formData.append('translations', JSON.stringify(translations))
 
-      for (let pair of formData.entries()) {
-        console.log('FormData Entry:', pair[0], pair[1])
-      }
+      const url = isEditing 
+        ? `https://debttracker.uz/${currentLanguage}/news/posts/${newsId}/`
+        : `https://debttracker.uz/${currentLanguage}/news/posts/`
 
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/news/posts/`, {
-        method: 'POST',
+      const response = await fetch(url, {
+        method: isEditing ? 'PUT' : 'POST',
         body: formData,
-        headers:{
+        headers: {
           ...getAuthHeader()
         }
       })
@@ -194,16 +241,13 @@ export default function CreateNews() {
       if (!response.ok) {
         const errorData = await response.json()
         console.error('Server Error Response:', errorData)
-        throw new Error('Failed to create news post')
+        throw new Error(`Failed to ${isEditing ? 'update' : 'create'} news post`)
       }
-
-      const responseData = await response.json()
-      console.log('Success Response:', responseData)
 
       navigate('/news')
     } catch (error) {
-      console.error('Error creating news post:', error)
-      alert('Failed to create news post')
+      console.error(`Error ${isEditing ? 'updating' : 'creating'} news post:`, error)
+      alert(`Failed to ${isEditing ? 'update' : 'create'} news post`)
     }
   }
 
@@ -213,11 +257,21 @@ export default function CreateNews() {
     }
   }
 
+  if (isLoadingInitialData) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6C5DD3]"></div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto p-6 mt-[50px]">
       <Card>
         <CardHeader>
-          <CardTitle>Create News Post - Step {STEPS.indexOf(currentStep) + 1}</CardTitle>
+          <CardTitle>{isEditing ? 'Edit News Post' : 'Create News Post'} - Step {STEPS.indexOf(currentStep) + 1}</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -265,22 +319,52 @@ export default function CreateNews() {
                       control={form.control}
                       name="goals"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="relative">
                           <FormLabel>Goals</FormLabel>
                           <FormControl>
-                            <select
-                              className="w-full rounded-md border border-input bg-background px-3 py-2"
-                              {...field}
-                            >
-                              <option value="">Select a goal</option>
-                              {goals.map((goal) => (
-                                <option key={goal.id} value={goal.id}>
-                                  {goal.translations[currentLanguage]?.name || 
-                                   goal.translations.en?.name ||
-                                   'Unnamed Goal'}
-                                </option>
-                              ))}
-                            </select>
+                            <div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full justify-between"
+                                onClick={() => setIsGoalsDropdownOpen(!isGoalsDropdownOpen)}
+                              >
+                                {field.value.length > 0 
+                                  ? `${field.value.length} goals selected`
+                                  : "Select goals"}
+                                <span className="ml-2">▼</span>
+                              </Button>
+                              
+                              {isGoalsDropdownOpen && (
+                                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                                  {goals.map((goal) => (
+                                    <div
+                                      key={goal.id}
+                                      className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                                      onClick={() => {
+                                        const goalId = goal.id.toString()
+                                        const newValue = field.value.includes(goalId)
+                                          ? field.value.filter(id => id !== goalId)
+                                          : [...field.value, goalId]
+                                        field.onChange(newValue)
+                                      }}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={field.value.includes(goal.id.toString())}
+                                        onChange={() => {}}
+                                        className="mr-2"
+                                      />
+                                      <span>
+                                        {goal.translations[currentLanguage]?.name || 
+                                         goal.translations.en?.name ||
+                                         'Unnamed Goal'}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -389,7 +473,10 @@ export default function CreateNews() {
                         <FormItem>
                           <FormLabel>Description (RU)</FormLabel>
                           <FormControl>
-                            <Textarea {...field} />
+                            <RichTextEditor
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -421,7 +508,10 @@ export default function CreateNews() {
                         <FormItem>
                           <FormLabel>Description (EN)</FormLabel>
                           <FormControl>
-                            <Textarea {...field} />
+                            <RichTextEditor
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -453,7 +543,10 @@ export default function CreateNews() {
                         <FormItem>
                           <FormLabel>Description (UZ)</FormLabel>
                           <FormControl>
-                            <Textarea {...field} />
+                            <RichTextEditor
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -485,7 +578,10 @@ export default function CreateNews() {
                         <FormItem>
                           <FormLabel>Description (KK)</FormLabel>
                           <FormControl>
-                            <Textarea {...field} />
+                            <RichTextEditor
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

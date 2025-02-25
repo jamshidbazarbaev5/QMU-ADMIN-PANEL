@@ -68,6 +68,7 @@ export function DepartmentPage() {
         method: editingDepartment ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeader()
         },
         body: JSON.stringify(submitData)
       })

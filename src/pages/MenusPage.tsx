@@ -62,6 +62,7 @@ export function MenusPage() {
         method: editingMenu ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeader()
         },
         body: JSON.stringify({
           parent: null,

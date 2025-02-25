@@ -3,28 +3,32 @@ import { useNavigate } from 'react-router-dom'
 import { DataTable } from '../helpers/DataTable'
 import { PageHeader } from '../helpers/PageHeader'
 import { useLanguage } from '../hooks/useLanguage'
+import { fetchWithAuth } from '../api/api'
 
 export function Videos() {
   const navigate = useNavigate()
   const [videos, setVideos] = useState([])
   const [, setLoading] = useState(true)
   const currentLanguage = useLanguage()
-  const token = localStorage.getItem('accessToken')
 
   const fetchVideos = async () => {
+    console.log('Fetching videos for language:', currentLanguage)
     try {
       setLoading(true)
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/publications/videos/`, {
+      const response = await fetchWithAuth(`https://debttracker.uz/publications/videos/`, {
         headers: {
-          'Authorization': `Token ${token}`,
-        }
+          'Accept': 'application/json',
+        },
+        redirect: 'follow'
       })
       
       if (!response.ok) {
+        console.error('Failed to fetch videos:', response.status, response.statusText)
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const data = await response.json()
+      console.log('Fetched videos:', data)
       setVideos(data || [])
     } catch (error) {
       console.error('Error fetching videos:', error)
@@ -67,18 +71,22 @@ export function Videos() {
   ]
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this video?')) return
+    console.log('Attempting to delete video:', id)
+    if (!confirm('Are you sure you want to delete this video?')) {
+      console.log('Delete cancelled by user')
+      return
+    }
 
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/publications/videos/${id}/`, {
+      const response = await fetchWithAuth(`https://debttracker.uz/publications/videos/${id}/`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Token ${token}`,
-        }
       })
 
       if (response.ok) {
+        console.log('Successfully deleted video:', id)
         fetchVideos()
+      } else {
+        console.error('Failed to delete video:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error deleting video:', error)

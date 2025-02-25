@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import { Editor } from '@tinymce/tinymce-react'
+import { Button } from "../components/ui/button"
+import { Loader2 } from "lucide-react"
+import { RichTextEditor } from '../components/ckeditor/RichTextEditor'
 
 interface TranslatedField {
     name: string
@@ -17,15 +19,67 @@ interface TranslatedField {
     initialData?: any
     isLoading?: boolean
     submitButton?: React.ReactNode
+    sharedFields?: string[]
   }
   
-  export function TranslatedForm({ fields, languages, onSubmit, initialData, submitButton }: TranslatedFormProps) {
+  export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoading, sharedFields = [] }: TranslatedFormProps) {
     const [formData, setFormData] = useState(initialData || {})
     const [currentTab, setCurrentTab] = useState(languages[0])
   
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault()
       onSubmit(formData)
+    }
+  
+    const handleFieldChange = (language: string, fieldName: string, value: string) => {
+      if (sharedFields.includes(fieldName)) {
+        const newFormData = { ...formData }
+        languages.forEach(lang => {
+          newFormData[lang] = {
+            ...newFormData[lang],
+            [fieldName]: value
+          }
+        })
+        setFormData(newFormData)
+      } else {
+        setFormData({
+          ...formData,
+          [language]: { ...formData[language], [fieldName]: value }
+        })
+      }
+    }
+  
+    const renderField = (field: TranslatedField, language: string) => {
+      if (field.type === 'richtext') {
+        return (
+          <RichTextEditor
+            value={formData[language]?.[field.name] || ''}
+            onChange={(content) => handleFieldChange(language, field.name, content)}
+          />
+        )
+      }
+      
+      if (field.type === 'textarea') {
+        return (
+          <textarea
+            className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+            value={formData[language]?.[field.name] || ''}
+            onChange={(e) => handleFieldChange(language, field.name, e.target.value)}
+            required={field.required}
+            rows={4}
+          />
+        )
+      }
+      
+      return (
+        <input
+          type="text"
+          className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+          value={formData[language]?.[field.name] || ''}
+          onChange={(e) => handleFieldChange(language, field.name, e.target.value)}
+          required={field.required}
+        />
+      )
     }
   
     return (
@@ -48,56 +102,7 @@ interface TranslatedField {
                       {field.label}
                       {field.required && <span className="text-red-500 ml-1">*</span>}
                     </label>
-                    {field.type === 'richtext' ? (
-                      <div className="min-h-[200px] border rounded-md">
-                        <Editor
-                          apiKey="fu6z5mrrefbmryy7w66yyh4653o1rh9pxrukdby6v1nlozuj"
-                          init={{
-                            height: 300,
-                            menubar: false,
-                            plugins: [
-                              'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
-                              'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                              'insertdatetime', 'table', 'code', 'help', 'wordcount'
-                            ],
-                            toolbar: 'undo redo | formatselect | ' +
-                              'bold italic | alignleft aligncenter ' +
-                              'alignright alignjustify | bullist numlist | ' +
-                              'removeformat | help',
-                            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
-                          }}
-                          value={formData[lang]?.[field.name] || ''}
-                          onEditorChange={(content) => {
-                            setFormData({
-                              ...formData,
-                              [lang]: { ...formData[lang], [field.name]: content }
-                            })
-                          }}
-                        />
-                      </div>
-                    ) : field.type === 'textarea' ? (
-                      <textarea
-                        className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                        value={formData[lang]?.[field.name] || ''}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          [lang]: { ...formData[lang], [field.name]: e.target.value }
-                        })}
-                        required={field.required}
-                        rows={4}
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                        value={formData[lang]?.[field.name] || ''}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          [lang]: { ...formData[lang], [field.name]: e.target.value }
-                        })}
-                        required={field.required}
-                      />
-                    )}
+                    {renderField(field, lang)}
                   </div>
                 ))}
               </div>
@@ -105,7 +110,22 @@ interface TranslatedField {
           ))}
         </Tabs>
         
-        {submitButton}
+        <div className="flex justify-end gap-4 mt-6">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="bg-[#6C5DD3] text-white hover:bg-[#5b4eb8]"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save'
+            )}
+          </Button>
+        </div>
       </form>
     )
   }

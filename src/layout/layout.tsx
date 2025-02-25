@@ -91,14 +91,14 @@ export default function Layout() {
           {/* Main Menu */}
           <div>
             {isMenuOpen && (
-              <h2 className="mb-2 px-2 text-sm font-medium text-gray-500">ASOSIY MENYU</h2>
+              <h2 className="mb-2 px-2 text-sm font-medium text-gray-500">ГЛАВНОЕ МЕНЮ</h2>
             )}
             <Link to="/annoucment-list">
               <button className={`w-full flex items-center ${
                 isMenuOpen ? 'gap-3 px-4' : 'justify-center'
               } py-2 rounded-xl  font-medium hover:bg-gray-100 `}>
                 <Plus className="h-5 w-5" />
-                {isMenuOpen && "Create Announcement"}
+                {isMenuOpen && "Создать объявление"}
               </button>
             </Link>
           </div>
@@ -106,25 +106,25 @@ export default function Layout() {
           {/* Others - Settings Section */}
           <div>
             {isMenuOpen && (
-              <h2 className="mb-2 px-2 text-sm font-medium text-gray-500">BOSHQALAR</h2>
+              <h2 className="mb-2 px-2 text-sm font-medium text-gray-500">ДРУГОЕ</h2>
             )}
             <div className="space-y-1">
               {[
-                { icon: MessageSquare, text: "Feedback", href: "/feedback" },
-                { icon: Newspaper, text: "News", href: "/news" },
-                { icon: Grid, text: "CategoryNews", href: "/news-categories" },
-                { icon: LinkIcon, text: "Useful Links", href: "/links" },
-                { icon: List, text: "Menus", href: "/menus" },
-                { icon: School, text: "Faculties", href: "/faculty" },
-                { icon: Building2, text: "Department", href: "/department" },
-                { icon: FileSpreadsheet, text: "Documents", href: "/document" },
-                { icon: UserCog, text: "Menu Admins", href: "/menu-admins" },
-                { icon: BuildingIcon, text: "Agency", href: "/agency" },
-                { icon: UserSquare2, text: "Position", href: "/position" },
-                { icon: Newspaper, text: "Posts", href: "/posts" },
-                { icon: Video, text: "Videos", href: "/videos" },
-                { icon: List, text: "Quantities", href: "/quantities" },
-                { icon: KeyRound, text: "Change Password", href: "/change-password" },
+                { icon: MessageSquare, text: "Обратная связь", href: "/feedback" },
+                { icon: Newspaper, text: "Новости", href: "/news" },
+                { icon: Grid, text: "Категории новостей", href: "/news-categories" },
+                { icon: LinkIcon, text: "Полезные ссылки", href: "/links" },
+                { icon: List, text: "Меню", href: "/menus" },
+                { icon: School, text: "Факультеты", href: "/faculty" },
+                { icon: Building2, text: "Кафедры", href: "/department" },
+                { icon: FileSpreadsheet, text: "Документы", href: "/document" },
+                { icon: UserCog, text: "Администраторы меню", href: "/menu-admins" },
+                { icon: BuildingIcon, text: "Агентство", href: "/agency" },
+                { icon: UserSquare2, text: "Должности", href: "/position" },
+                { icon: Newspaper, text: "Публикации", href: "/posts" },
+                { icon: Video, text: "Видео", href: "/videos" },
+                { icon: List, text: "Количество", href: "/quantities" },
+                { icon: KeyRound, text: "Изменить пароль", href: "/change-password" },
               ].map((item, index) => (
                 <Link
                   key={index}
@@ -151,7 +151,7 @@ export default function Layout() {
             title={!isMenuOpen ? "Logout" : undefined}
           >
             <LogOut className="h-5 w-5" />
-            {isMenuOpen && "Chiqish"}
+            {isMenuOpen && "Выход"}
           </button>
         </div>
       </div>

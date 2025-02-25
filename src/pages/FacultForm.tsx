@@ -29,6 +29,7 @@ export default function FacultyForm() {
   const currentLanguage = useLanguage()
   const [isLoading, setIsLoading] = useState(false)
   const [selectedLogo, setSelectedLogo] = useState<File | null>(null)
+  const [currentLogo, setCurrentLogo] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [initialData, setInitialData] = useState(null)
 
@@ -46,6 +47,7 @@ export default function FacultyForm() {
       const data = await response.json()
       setEmail(data.email)
       setInitialData(data.translations)
+      setCurrentLogo(data.logo)
     } catch (error) {
       console.error('Error fetching faculty:', error)
     } finally {
@@ -106,6 +108,15 @@ export default function FacultyForm() {
           <div className="space-y-4 mb-4">
             <div>
               <label className="block text-sm font-medium mb-2">Logo</label>
+              {currentLogo && (
+                <div className="mb-4">
+                  <img 
+                    src={currentLogo} 
+                    alt="Current logo" 
+                    className="max-w-[200px] h-auto"
+                  />
+                </div>
+              )}
               <input
                 type="file"
                 accept="image/*"

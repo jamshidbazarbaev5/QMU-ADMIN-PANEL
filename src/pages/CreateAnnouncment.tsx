@@ -7,9 +7,9 @@ import { useState } from "react"
 import { Button } from '../components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../components/ui/form'
 import { Input } from '../components/ui/input'
-import { Textarea } from '../components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { getAuthHeader } from "../api/api"
+import { RichTextEditor } from '../components/ckeditor/RichTextEditor'
 
 
 
@@ -110,7 +110,11 @@ export default function CreateAnnouncement() {
                       <FormItem>
                         <FormLabel>Tavsif (RU)</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Enter description in Russian" className="min-h-[120px]" {...field} />
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Enter description in Russian"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -141,7 +145,11 @@ export default function CreateAnnouncement() {
                       <FormItem>
                         <FormLabel>Description (EN)</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Enter description in English" className="min-h-[120px]" {...field} />
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Enter description in English"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -172,7 +180,11 @@ export default function CreateAnnouncement() {
                       <FormItem>
                         <FormLabel>Tavsif (UZ)</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Enter description in Uzbek" className="min-h-[120px]" {...field} />
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Enter description in Uzbek"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -203,7 +215,11 @@ export default function CreateAnnouncement() {
                       <FormItem>
                         <FormLabel>Сипаттама (KK)</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Enter description in Kazakh" className="min-h-[120px]" {...field} />
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Enter description in Kazakh"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

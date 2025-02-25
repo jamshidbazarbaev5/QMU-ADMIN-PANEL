@@ -20,8 +20,8 @@ export const Login = ({ setIsAuthenticated }: LoginProps) => {
 
     try {
       const response = await login({ username, password });
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
+      localStorage.setItem('accessToken', response.access);
+      localStorage.setItem('refreshToken', response.refresh || '');
       setIsAuthenticated(true);
       window.dispatchEvent(new Event('auth-change'));
       navigate('/');

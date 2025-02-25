@@ -3,6 +3,7 @@ import { PageHeader } from '../helpers/PageHeader'
 import { TranslatedForm } from '../helpers/TranslatedForm'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
+import { fetchWithAuth, getAuthHeader } from '../api/api';
 
 interface PostFormProps {
   initialData?: any
@@ -23,9 +24,11 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
   const token = localStorage.getItem('accessToken')
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [selectedMenu, setSelectedMenu] = useState(initialData?.menu || '')
+  const [selectedFooterMenu, setSelectedFooterMenu] = useState(initialData?.footer_menu || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [postData, setPostData] = useState(initialData)
   const [isLoading, setIsLoading] = useState(isEditing)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -38,11 +41,11 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
 
       try {
         setIsLoading(true)
-        const response = await fetch(
-          `https://debttracker.uz/${currentLanguage}/publications/posts/${slug}/`,
+        const response = await fetchWithAuth(
+          `https://debttracker.uz/en/publications/posts/${slug}/`,
           {
             headers: {
-              'Authorization': `Token ${token}`,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
           }
@@ -60,6 +63,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
         const data = await response.json()
         setPostData(data)
         setSelectedMenu(data.menu || '')
+        setSelectedFooterMenu(data.footer_menu || '')
       } catch (error) {
         console.error('Error fetching post:', error)
         navigate('/posts')
@@ -81,6 +85,8 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
   ]
 
   const handleSubmit = async (translations: any) => {
+    setErrorMessage(null)
+    
     if (!token) {
       console.error('No token found')
       navigate('/login')
@@ -93,7 +99,8 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       if (selectedImage) {
         formData.append('main_image', selectedImage)
       }
-      formData.append('menu', selectedMenu)
+      formData.append('menu', selectedMenu || '')
+      formData.append('footer_menu', selectedFooterMenu || '')
       formData.append('translations', JSON.stringify(translations))
 
       const url = isEditing 
@@ -104,23 +111,27 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
         method: isEditing ? 'PUT' : 'POST',
         body: formData,
         headers: {
-          'Authorization': `Token ${token}`,
+            ...getAuthHeader(),
         },
       })
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'An unknown error occurred' }))
         if (response.status === 401) {
           console.error('Unauthorized access')
           navigate('/login')
           return
         }
-        const errorData = await response.json().catch(() => null)
-        throw new Error(errorData?.message || 'Failed to save post')
+        setErrorMessage(errorData.detail || 'Failed to save post')
+        throw new Error(errorData.detail || 'Failed to save post')
       }
 
       navigate('/posts')
     } catch (error) {
       console.error('Error saving post:', error)
+      if (!errorMessage) {
+        setErrorMessage('An error occurred while saving the post')
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -135,6 +146,12 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       />
 
       <div className="bg-white rounded-lg shadow p-6">
+        {errorMessage && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {errorMessage}
+          </div>
+        )}
+
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Main Image
@@ -152,16 +169,28 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
 
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Menu
+            Header Menu
           </label>
           <select
             value={selectedMenu}
             onChange={(e) => setSelectedMenu(e.target.value)}
             className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-            required
           >
-            <option value="">Select Menu</option>
+            <option value="">Not in Header Menu</option>
             <option value="1">Header Menu</option>
+          </select>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Footer Menu
+          </label>
+          <select
+            value={selectedFooterMenu}
+            onChange={(e) => setSelectedFooterMenu(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+          >
+            <option value="">Not in Footer Menu</option>
             <option value="2">Footer Menu</option>
           </select>
         </div>

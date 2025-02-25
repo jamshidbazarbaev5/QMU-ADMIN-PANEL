@@ -39,10 +39,18 @@ export default function FeedbackForm() {
   const fetchFeedback = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/feedback/${id}/`)
+      const response = await fetch(`https://debttracker.uz/${currentLanguage}/feedback/${id}/`, {
+        headers: {
+          ...getAuthHeader()
+        }
+      })
       if (!response.ok) throw new Error('Failed to fetch feedback')
       const data = await response.json()
-      form.reset(data)
+      form.reset({
+        full_name: data.full_name,
+        email: data.email,
+        message: data.message
+      })
     } catch (error) {
       console.error('Error fetching feedback:', error)
       alert('Failed to fetch feedback')

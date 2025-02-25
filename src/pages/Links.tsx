@@ -5,13 +5,14 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { useLanguage } from '../hooks/useLanguage'
 import { Dialog, DialogContent } from '../components/ui/dialog'
 import { Pencil } from 'lucide-react'
-import { getAuthHeader } from '../api/api'
+import { getAuthHeader, fetchWithAuth } from '../api/api'
 
 interface Link {
   id: number
   name: string
   url: string
   img: string | File
+  translations?: Record<string, { name: string }>
 }
 
 const fields = [
@@ -29,9 +30,11 @@ export function LinksPage() {
   const currentLanguage = useLanguage()
 
   const fetchLinks = async () => {
-    const response = await fetch('https://debttracker.uz/ru/references/links/')
-    const data = await response.json()
-    setLinks(data)
+    const response = await fetchWithAuth('https://debttracker.uz/ru/references/links/', {
+      headers: getAuthHeader()
+    });
+    const data = await response.json();
+    setLinks(data);
   }
 
   useEffect(() => {
@@ -46,19 +49,25 @@ export function LinksPage() {
         : 'https://debttracker.uz/ru/references/links/'
       
       const submitData = new FormData()
-      submitData.append('name', formData[currentLanguage].name)
+      
+      // Add translations for each language
+      const translations: Record<string, { name: string }> = {}
+      Object.entries(formData).forEach(([lang, data]: [string, any]) => {
+        translations[lang] = { name: data.name }
+      })
+      
+      // Use URL from the current language form
       submitData.append('url', formData[currentLanguage].url)
+      submitData.append('translations', JSON.stringify(translations))
       
       if (selectedImage) {
         submitData.append('img', selectedImage)
       }
       
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method: editingLink ? 'PUT' : 'POST',
         body: submitData,
-        headers: {
-          ...getAuthHeader()
-        }
+        headers: getAuthHeader()
       })
 
       if (response.ok) {
@@ -66,7 +75,13 @@ export function LinksPage() {
         setIsDialogOpen(false)
         setEditingLink(null)
         setSelectedImage(null)
+      } else {
+        const error = await response.json()
+        throw new Error(error.detail || 'Failed to save link')
       }
+    } catch (error) {
+      console.error('Error saving link:', error)
+      // You might want to show an error message to the user here
     } finally {
       setIsLoading(false)
     }
@@ -92,10 +107,27 @@ export function LinksPage() {
     },
   ]
 
-  const handleEdit = (link: Link) => {
+  const handleEdit = async (link: Link) => {
     setEditingLink(link)
     setSelectedImage(null)
     setIsDialogOpen(true)
+    
+    // Fetch translations for the link
+    const response = await fetchWithAuth(`https://debttracker.uz/ru/references/links/${link.id}/`, {
+      headers: getAuthHeader()
+    });
+    const linkData = await response.json();
+    
+    // Prepare initial data with translations for all languages
+    const translatedData = Object.keys(linkData.translations).reduce((acc, lang) => {
+      acc[lang] = {
+        name: linkData.translations[lang].name,
+        url: linkData.url // URL is shared across all languages
+      };
+      return acc;
+    }, {} as Record<string, any>);
+    
+    setEditingLink({ ...link, translations: translatedData });
   }
 
   return (
@@ -152,10 +184,11 @@ export function LinksPage() {
           </div>
           <TranslatedForm
             fields={fields}
-            languages={[currentLanguage]}
+            languages={['uz', 'ru', 'en', 'kk']}
             onSubmit={handleSubmit}
-            initialData={editingLink ? { [currentLanguage]: editingLink } : undefined}
+            initialData={editingLink?.translations || undefined}
             isLoading={isLoading}
+            sharedFields={['url']}
           />
         </DialogContent>
       </Dialog>

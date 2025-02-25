@@ -15,6 +15,7 @@ interface Announcement {
       title: string
       description: string
       slug: string
+      content?: string
     }
   }
 }
@@ -83,7 +84,14 @@ export default function Announcements() {
     {
       header: 'Description',
       accessor: 'description',
-      cell: (item: Announcement) => item.translations[currentLanguage]?.description || '-'
+      cell: (item: Announcement) => (
+        <div 
+          dangerouslySetInnerHTML={{ 
+            __html: item.translations[currentLanguage]?.description || '-'
+          }}
+          className="max-w-md truncate"
+        />
+      )
     },
     {
       header: 'Slug',

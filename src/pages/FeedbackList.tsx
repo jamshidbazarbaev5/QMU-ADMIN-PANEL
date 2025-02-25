@@ -5,6 +5,7 @@ import { useLanguage } from '../hooks/useLanguage'
 import { PageHeader } from '../helpers/PageHeader'
 import { DataTable } from '../helpers/DataTable'
 import { Card } from '../components/ui/card'
+import { getAuthHeader } from '../api/api'
 
 interface Feedback {
   id: number
@@ -26,7 +27,11 @@ export default function FeedbackList() {
   const fetchFeedbacks = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/feedback/`)
+      const response = await fetch(`https://debttracker.uz/${currentLanguage}/feedback/`,
+        {
+          headers: getAuthHeader()
+        }
+      )
       if (!response.ok) throw new Error('Failed to fetch feedbacks')
       const data = await response.json()
       setFeedbacks(data)

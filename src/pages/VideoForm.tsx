@@ -3,6 +3,7 @@ import { PageHeader } from '../helpers/PageHeader'
 import { TranslatedForm } from '../helpers/TranslatedForm'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
+import { fetchWithAuth } from '../api/api'
 
 interface VideoFormProps {
   initialData?: any
@@ -36,7 +37,7 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
 
       try {
         setIsLoading(true)
-        const response = await fetch(
+        const response = await fetchWithAuth(
           `https://debttracker.uz/publications/videos/${id}`,
           {
             headers: {
@@ -105,40 +106,54 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
   }
 
   const handleSubmit = async (translations: any) => {
+    console.log('Starting submission with translations:', translations)
+    console.log('Current video URL:', videoUrl)
+    
     if (!token) {
+      console.log('No token found, redirecting to login')
       navigate('/login')
       return
     }
 
     try {
       setIsSubmitting(true)
+      const transformedUrl = transformYouTubeUrl(videoUrl)
+      console.log('Transformed URL:', transformedUrl)
 
       const payload = {
-        video_url: transformYouTubeUrl(videoUrl),
+        video_url: transformedUrl,
         translations: translations
       }
+      console.log('Submitting payload:', payload)
 
       const url = isEditing 
         ? `https://debttracker.uz/publications/videos/${id}`
         : `https://debttracker.uz/publications/videos`
+      console.log('Submitting to URL:', url)
       
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method: isEditing ? 'PUT' : 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       })
 
+      console.log('Response status:', response.status)
+      console.log('Response headers:', Object.fromEntries(response.headers))
+
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Error response body:', errorText)
         throw new Error(`Failed to save video: ${response.status}`)
       }
 
       navigate('/videos')
     } catch (error) {
-      console.error('Error saving video:', error)
+      console.error('Detailed error:', error)
       if ((error as any)?.response?.status === 403) {
+        console.log('403 error detected, clearing token')
         localStorage.removeItem('accessToken')
         navigate('/login')
       }

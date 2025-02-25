@@ -6,6 +6,7 @@ import { DataTable } from '../helpers/DataTable'
 import { useLanguage } from '../hooks/useLanguage'
 import { Input } from '../components/ui/input'
 import debounce from 'lodash/debounce'
+import { getAuthHeader } from '../api/api'
 
 interface NewsPost {
   id: number
@@ -36,7 +37,12 @@ export default function NewsList() {
       if (title) queryParams.append('title', title)
       
       const response = await fetch(
-        `https://debttracker.uz/${currentLanguage}/news/posts/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+        `https://debttracker.uz/en/news/posts/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
+        {
+          headers: {
+            ...getAuthHeader()
+          }
+        }
       )
       if (!response.ok) throw new Error('Failed to fetch news')
       const data = await response.json()
