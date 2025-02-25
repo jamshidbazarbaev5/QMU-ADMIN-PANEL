@@ -4,6 +4,13 @@ import { DataTable } from '../helpers/DataTable'
 import { PageHeader } from '../helpers/PageHeader'
 import { Edit, Trash2 } from 'lucide-react'
 
+// Add this type definition at the top of the file, after the imports
+type Column = {
+  header: string;
+  accessor: string;
+  render?: (row: any) => React.ReactNode;
+}
+
 export function QuantityList() {
   const navigate = useNavigate()
   const [quantities, setQuantities] = useState([])
@@ -49,10 +56,11 @@ export function QuantityList() {
     }
   }
 
-  const columns = [
+  const columns: Column[] = [
     { 
-      header: 'Title', 
-      accessor: (row: any) => row.translations?.en?.title || 'No title' 
+      header: 'Title',
+      accessor: 'translations',
+      render: (row: any) => row.translations?.en?.title || 'No title'
     },
     { header: 'Quantity', accessor: 'quantity' },
   ]

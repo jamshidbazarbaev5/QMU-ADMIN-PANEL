@@ -109,7 +109,7 @@ export default function CreateNews() {
         
         form.reset({
           category: data.category?.toString() || "",
-          goals: data.goals?.map(g => g.toString()) || [],
+          goals: data.goals?.map((g:any )=> g.toString()) || [],
           title_ru: data.translations?.ru?.title || "",
           title_en: data.translations?.en?.title || "",
           title_uz: data.translations?.uz?.title || "",
