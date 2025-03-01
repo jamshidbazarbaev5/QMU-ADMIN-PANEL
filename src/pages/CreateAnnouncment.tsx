@@ -10,6 +10,7 @@ import { Input } from '../components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import {fetchWithAuth, getAuthHeader} from "../api/api"
 import { RichTextEditor } from '../components/ckeditor/RichTextEditor'
+import {useNavigate} from "react-router-dom";
 
 
 
@@ -26,6 +27,8 @@ export default function CreateAnnouncement() {
       description_kk: "",
     },
   })
+
+  const navigate = useNavigate()
 
   const [currentLanguage, setCurrentLanguage] = useState<'ru' | 'en' | 'uz' | 'kk'>('ru')
 
