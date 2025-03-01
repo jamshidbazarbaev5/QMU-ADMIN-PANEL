@@ -32,6 +32,8 @@ import { Videos } from './pages/Videos';
 import { QuantityForm } from './pages/QuantityForm';
 import { QuantityList } from './pages/QuantittyList';
 import { useState, useEffect } from 'react';
+import { ServicesPage } from './pages/ServicesPage';
+import { GoalsPage } from './pages/GoalsPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('accessToken'));
@@ -108,7 +110,10 @@ function App() {
             <Route path="/quantities/new" element={<PrivateRoute><QuantityForm /></PrivateRoute>} />
             <Route path="/quantities/:id/edit" element={<PrivateRoute><QuantityForm isEditing={true} /></PrivateRoute>} />
             <Route path="/change-password" element={<PrivateRoute><ChangePassword /></PrivateRoute>} />
+            <Route path="/services" element={<PrivateRoute><ServicesPage /></PrivateRoute>} />
+            <Route path="/goals" element={<PrivateRoute><GoalsPage /></PrivateRoute>} />
           </Routes>
+
         </div>
       </div>
     </BrowserRouter>

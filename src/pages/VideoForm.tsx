@@ -38,7 +38,7 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
       try {
         setIsLoading(true)
         const response = await fetchWithAuth(
-          `https://debttracker.uz/publications/videos/${id}`,
+          `https://debttracker.uz/en/publications/videos/${id}`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -127,8 +127,8 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
       console.log('Submitting payload:', payload)
 
       const url = isEditing 
-        ? `https://debttracker.uz/publications/videos/${id}`
-        : `https://debttracker.uz/publications/videos`
+        ? `https://debttracker.uz/en/publications/videos/${id}`
+        : `https://debttracker.uz/en/publications/videos/`
       console.log('Submitting to URL:', url)
       
       const response = await fetchWithAuth(url, {

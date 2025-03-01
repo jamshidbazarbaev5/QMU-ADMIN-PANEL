@@ -9,6 +9,7 @@ interface PostFormProps {
   initialData?: any
   isEditing?: boolean
 }
+
 interface TranslatedField {
     name: string
     label: string
@@ -16,6 +17,31 @@ interface TranslatedField {
     required?: boolean
     editorConfig?: any
   }
+
+interface MainMenuItem {
+  id: number
+  parent: number | null
+  translations: {
+    [key: string]: {
+      name: string
+      title: string
+      slug: string
+    }
+  }
+  menu_posts: number[]
+}
+
+interface FooterMenuItem {
+  id: number
+  parent: number | null
+  translations: {
+    [key: string]: {
+      name: string
+      slug: string
+    }
+  }
+  footer_menu_posts: number[]
+}
 
 export function PostForm({ initialData, isEditing }: PostFormProps) {
   const navigate = useNavigate()
@@ -29,6 +55,8 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
   const [postData, setPostData] = useState(initialData)
   const [isLoading, setIsLoading] = useState(isEditing)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [menuItems, setMenuItems] = useState<MainMenuItem[]>([])
+  const [footerMenuItems, setFooterMenuItems] = useState<FooterMenuItem[]>([])
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -74,6 +102,47 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
 
     fetchPost()
   }, [slug, currentLanguage, isEditing, token, navigate])
+
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        const [mainMenuResponse, footerMenuResponse] = await Promise.all([
+          fetchWithAuth(
+            'https://debttracker.uz/en/menus/main/',
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          ),
+          fetchWithAuth(
+            'https://debttracker.uz/en/menus/footer/',
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          )
+        ]);
+
+        if (!mainMenuResponse.ok || !footerMenuResponse.ok) {
+          throw new Error('Failed to fetch menu items')
+        }
+
+        const mainMenuData = await mainMenuResponse.json()
+        const footerMenuData = await footerMenuResponse.json()
+        
+        setMenuItems(mainMenuData)
+        setFooterMenuItems(footerMenuData)
+      } catch (error) {
+        console.error('Error fetching menu items:', error)
+      }
+    }
+
+    fetchMenuItems()
+  }, [token])
 
   if (isLoading) {
     return <div className="container mx-auto p-6 mt-[50px]">Loading...</div>
@@ -177,7 +246,12 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
             className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
           >
             <option value="">Not in Header Menu</option>
-            <option value="1">Header Menu</option>
+            {menuItems.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.translations[currentLanguage]?.name || item.translations['en']?.name}
+                {item.parent && ' (Sub-menu)'}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -191,7 +265,12 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
             className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
           >
             <option value="">Not in Footer Menu</option>
-            <option value="2">Footer Menu</option>
+            {footerMenuItems.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.translations[currentLanguage]?.name || item.translations['en']?.name}
+                {item.parent && ' (Sub-menu)'}
+              </option>
+            ))}
           </select>
         </div>
 

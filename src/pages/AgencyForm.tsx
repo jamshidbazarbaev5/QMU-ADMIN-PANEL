@@ -6,7 +6,7 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Loader2 } from 'lucide-react'
-import { getAuthHeader } from '../api/api';
+import {fetchWithAuth, getAuthHeader} from '../api/api';
 
 interface Menu {
   id: number
@@ -90,14 +90,13 @@ export default function AgencyForm() {
         ? `https://debttracker.uz/${currentLanguage}/menus/agency/${id}/`
         : `https://debttracker.uz/${currentLanguage}/menus/agency/`
 
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method: id ? 'PUT' : 'POST',
         headers: {
           'Accept': 'application/json',
           ...getAuthHeader()
         },
         body: formData,
-        credentials: 'include',
       })
 
       if (!response.ok) throw new Error('Failed to save agency')

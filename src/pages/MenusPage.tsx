@@ -28,6 +28,30 @@ const fields = [
   { name: 'title', label: 'Title', type: 'text' as const, required: true },
 ]
 
+// Add parent select field component
+const ParentSelect = ({ value, onChange, menus }: { 
+  value: number | null, 
+  onChange: (value: number | null) => void,
+  menus: Menu[]
+}) => {
+  const currentLanguage = useLanguage()
+  
+  return (
+    <select 
+      value={value || ''} 
+      onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}
+      className="w-full p-2 border rounded"
+    >
+      <option value="">No parent</option>
+      {menus.map((menu) => (
+        <option key={menu.id} value={menu.id}>
+          {menu.translations[currentLanguage]?.name}
+        </option>
+      ))}
+    </select>
+  )
+}
+
 export function MenusPage() {
   const [menus, setMenus] = useState<Menu[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -35,6 +59,7 @@ export function MenusPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [menuType, setMenuType] = useState<'main' | 'footer'>('main')
   const currentLanguage = useLanguage()
+  const [selectedParent, setSelectedParent] = useState<number | null>(null)
 
   const fetchMenus = async () => {
     try {
@@ -65,7 +90,7 @@ export function MenusPage() {
           ...getAuthHeader()
         },
         body: JSON.stringify({
-          parent: null,
+          parent: selectedParent,
           translations: formData
         }),
       })
@@ -141,6 +166,7 @@ export function MenusPage() {
                   onClick={(e) => {
                     e.stopPropagation()
                     setEditingMenu(item)
+                    setSelectedParent(item.parent)
                     setIsDialogOpen(true)
                   }}
                 >
@@ -165,6 +191,14 @@ export function MenusPage() {
               <h2 className="text-lg font-semibold mb-4">
                 {editingMenu ? 'Edit Menu' : 'Create Menu'}
               </h2>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Parent Menu</label>
+                <ParentSelect 
+                  value={selectedParent} 
+                  onChange={setSelectedParent}
+                  menus={menus.filter(m => m.id !== editingMenu?.id)} 
+                />
+              </div>
               <TranslatedForm
                 fields={fields}
                 languages={['en', 'ru', 'uz', 'kk']}

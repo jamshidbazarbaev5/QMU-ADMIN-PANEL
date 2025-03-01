@@ -43,7 +43,7 @@ export default function Announcements() {
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
-        const filteredAnnouncements = data.filter((announcement: Announcement) => {
+        const filteredAnnouncements = data.results.filter((announcement: Announcement) => {
           const translation = announcement.translations[lang];
           return translation && translation.title && translation.description && translation.slug;
         });

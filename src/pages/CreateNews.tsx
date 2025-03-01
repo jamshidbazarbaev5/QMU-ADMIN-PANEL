@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '../components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import { getAuthHeader } from "../api/api"
+import {fetchWithAuth, getAuthHeader} from "../api/api"
 import { RichTextEditor } from '../components/ckeditor/RichTextEditor'
 
 interface Translation {
@@ -67,7 +67,9 @@ export default function CreateNews() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`https://debttracker.uz/${currentLanguage}/news/category/`)
+        const response = await fetchWithAuth(`https://debttracker.uz/${currentLanguage}/news/category/`,{
+          headers:getAuthHeader()
+        })
         if (!response.ok) throw new Error('Failed to fetch categories')
         const data = await response.json()
         setCategories(data)
@@ -81,7 +83,11 @@ export default function CreateNews() {
   useEffect(() => {
     const fetchGoals = async () => {
       try {
-        const response = await fetch(`https://debttracker.uz/${currentLanguage}/news/goals/`)
+        const response = await fetchWithAuth(`https://debttracker.uz/${currentLanguage}/news/goals/`,
+            {
+              headers:getAuthHeader(),
+            }
+            )
         if (!response.ok) throw new Error('Failed to fetch goals')
         const data = await response.json()
         setGoals(data)
@@ -97,7 +103,7 @@ export default function CreateNews() {
       if (!newsId) return
 
       try {
-        const response = await fetch(`https://debttracker.uz/${currentLanguage}/news/posts/${newsId}/`, {
+        const response = await fetchWithAuth(`https://debttracker.uz/${currentLanguage}/news/posts/${newsId}/`, {
           headers: {
             ...getAuthHeader()
           }
@@ -230,7 +236,7 @@ export default function CreateNews() {
         ? `https://debttracker.uz/${currentLanguage}/news/posts/${newsId}/`
         : `https://debttracker.uz/${currentLanguage}/news/posts/`
 
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method: isEditing ? 'PUT' : 'POST',
         body: formData,
         headers: {

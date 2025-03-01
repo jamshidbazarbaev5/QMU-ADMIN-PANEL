@@ -4,13 +4,6 @@ import { DataTable } from '../helpers/DataTable'
 import { PageHeader } from '../helpers/PageHeader'
 import { Edit, Trash2 } from 'lucide-react'
 
-// Add this type definition at the top of the file, after the imports
-type Column = {
-  header: string;
-  accessor: string;
-  render?: (row: any) => React.ReactNode;
-}
-
 export function QuantityList() {
   const navigate = useNavigate()
   const [quantities, setQuantities] = useState([])
@@ -23,14 +16,13 @@ export function QuantityList() {
 
   const fetchQuantities = async () => {
     try {
-      const response = await fetch('https://debttracker.uz/en/publications/quantities', {
+      const response = await fetch('https://debttracker.uz/publications/quantities', {
         headers: {
           'Authorization': `Bearer ${token}`,
         }
       })
       if (!response.ok) throw new Error('Failed to fetch')
       const data = await response.json()
-      console.log('Fetched quantities:', data)
       setQuantities(data)
     } catch (error) {
       console.error('Error:', error)
@@ -43,7 +35,7 @@ export function QuantityList() {
     if (!window.confirm('Are you sure you want to delete this item?')) return
 
     try {
-      const response = await fetch(`https://debttracker.uz/en/publications/quantities/${id}`, {
+      const response = await fetch(`https://debttracker.uz/publications/quantities/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -56,12 +48,8 @@ export function QuantityList() {
     }
   }
 
-  const columns: Column[] = [
-    { 
-      header: 'Title',
-      accessor: 'translations',
-      render: (row: any) => row.translations?.en?.title || 'No title'
-    },
+  const columns = [
+    { header: 'Title', accessor: 'title' },
     { header: 'Quantity', accessor: 'quantity' },
   ]
 
@@ -97,7 +85,7 @@ export function QuantityList() {
         data={quantities}
         columns={columns}
         actions={renderActions}
-        onRowClick={(item) => navigate(`/quantities/${item.id}/edit`)}
+        onRowClick={(item) => navigate(`/quantities/edit/${item.id}`)}
       />
     </div>
   )

@@ -90,26 +90,27 @@ export default function Layout() {
         <nav className="flex-1 space-y-6 p-4 overflow-y-auto">
           {/* Main Menu */}
           <div>
-            {isMenuOpen && (
+            {/* {isMenuOpen && (
               <h2 className="mb-2 px-2 text-sm font-medium text-gray-500">ГЛАВНОЕ МЕНЮ</h2>
-            )}
-            <Link to="/annoucment-list">
+            )} */}
+            {/* <Link to="/annoucment-list">
               <button className={`w-full flex items-center ${
                 isMenuOpen ? 'gap-3 px-4' : 'justify-center'
               } py-2 rounded-xl  font-medium hover:bg-gray-100 `}>
                 <Plus className="h-5 w-5" />
                 {isMenuOpen && "Создать объявление"}
               </button>
-            </Link>
+            </Link> */}
           </div>
 
           {/* Others - Settings Section */}
           <div>
-            {isMenuOpen && (
+            {/* {isMenuOpen && (
               <h2 className="mb-2 px-2 text-sm font-medium text-gray-500">ДРУГОЕ</h2>
-            )}
+            )} */}
             <div className="space-y-1">
               {[
+                {icon:Plus,text:"Объявления",href:"/annoucment-list"},
                 { icon: MessageSquare, text: "Обратная связь", href: "/feedback" },
                 { icon: Newspaper, text: "Новости", href: "/news" },
                 { icon: Grid, text: "Категории новостей", href: "/news-categories" },
@@ -124,7 +125,10 @@ export default function Layout() {
                 { icon: Newspaper, text: "Публикации", href: "/posts" },
                 { icon: Video, text: "Видео", href: "/videos" },
                 { icon: List, text: "Количество", href: "/quantities" },
+                {icon:Grid,text:"Услуги",href:"/services"},
+                {icon:Grid,text:"Цели",href:"/goals"},
                 { icon: KeyRound, text: "Изменить пароль", href: "/change-password" },
+                
               ].map((item, index) => (
                 <Link
                   key={index}

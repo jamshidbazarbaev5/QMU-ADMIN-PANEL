@@ -8,7 +8,7 @@ import { Button } from '../components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../components/ui/form'
 import { Input } from '../components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
-import { getAuthHeader } from "../api/api"
+import {fetchWithAuth, getAuthHeader} from "../api/api"
 import { RichTextEditor } from '../components/ckeditor/RichTextEditor'
 
 
@@ -53,7 +53,7 @@ export default function CreateAnnouncement() {
           }
         }
 
-        const response = await fetch('https://debttracker.uz/ru/announcements/', {
+        const response = await fetchWithAuth('https://debttracker.uz/ru/announcements/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -65,6 +65,7 @@ export default function CreateAnnouncement() {
         if (response.ok) {
           form.reset()
           setCurrentLanguage('ru')
+          navigate('/annoucment-list')
         } else {
           const errorData = await response.json()
           console.error('Validation errors:', errorData)
