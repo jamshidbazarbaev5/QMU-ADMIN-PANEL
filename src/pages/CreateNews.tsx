@@ -67,7 +67,7 @@ export default function CreateNews() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetchWithAuth(`https://debttracker.uz/${currentLanguage}/news/category/`,{
+        const response = await fetchWithAuth(`https://debttracker.uz/news/category/`,{
           headers:getAuthHeader()
         })
         if (!response.ok) throw new Error('Failed to fetch categories')
@@ -83,7 +83,7 @@ export default function CreateNews() {
   useEffect(() => {
     const fetchGoals = async () => {
       try {
-        const response = await fetchWithAuth(`https://debttracker.uz/${currentLanguage}/news/goals/`,
+        const response = await fetchWithAuth(`https://debttracker.uz/news/goals/`,
             {
               headers:getAuthHeader(),
             }
@@ -103,7 +103,7 @@ export default function CreateNews() {
       if (!newsId) return
 
       try {
-        const response = await fetchWithAuth(`https://debttracker.uz/${currentLanguage}/news/posts/${newsId}/`, {
+        const response = await fetchWithAuth(`https://debttracker.uz/news/posts/${newsId}/`, {
           headers: {
             ...getAuthHeader()
           }
@@ -233,8 +233,8 @@ export default function CreateNews() {
       formData.append('translations', JSON.stringify(translations))
 
       const url = isEditing 
-        ? `https://debttracker.uz/${currentLanguage}/news/posts/${newsId}/`
-        : `https://debttracker.uz/${currentLanguage}/news/posts/`
+        ? `https://debttracker.uz/news/posts/${newsId}/`
+        : `https://debttracker.uz/news/posts/`
 
       const response = await fetchWithAuth(url, {
         method: isEditing ? 'PUT' : 'POST',

@@ -21,6 +21,7 @@ interface Goal {
 const fields = [
   { name: 'name', label: 'Name', type: 'text' as const, required: true },
   { name: 'color', label: 'Color', type: 'text' as const, required: true },
+  { name: 'goals', label: 'Goals', type: 'text' as const, required: true },
 ]
 
 export function GoalsPage() {
@@ -49,7 +50,6 @@ export function GoalsPage() {
   const handleSubmit = async (formData: any) => {
     setIsLoading(true)
     try {
-      // For edit, find an existing slug from any available language
       const editSlug = editingGoal && (
         editingGoal.translations[currentLanguage]?.slug ||
         editingGoal.translations.en?.slug ||
@@ -62,19 +62,19 @@ export function GoalsPage() {
         ? `https://debttracker.uz/${currentLanguage}/news/goals/${editSlug}/`
         : `https://debttracker.uz/${currentLanguage}/news/goals/`
 
-      // Prepare translations with slugs
       const translations = Object.entries(formData).reduce((acc, [lang, data]: [string, any]) => {
-        acc[lang] = {
-          name: data.name,
-          slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+        if (lang !== 'goals' && lang !== 'color' && data.name) {  // Only include languages with names
+          acc[lang] = {
+            name: data.name
+          }
         }
         return acc
       }, {} as Record<string, any>)
 
       const payload = {
         translations,
-        color: formData[currentLanguage].color || 'ffffff',
-        goals: editingGoal?.goals || 2
+        color: formData.color?.replace('#', '') || 'ffffff',
+        goals: Number(formData.goals || 0)
       }
 
       const response = await fetchWithAuth(url, {
@@ -150,6 +150,9 @@ export function GoalsPage() {
       return acc
     }, {} as Record<string, any>)
 
+    // Add goals to the root level of initialData
+    initialData.goals = goal.goals
+
     setEditingGoal({ ...goal, translations: initialData })
     setIsDialogOpen(true)
   }
@@ -204,9 +207,13 @@ export function GoalsPage() {
             fields={fields}
             languages={['uz', 'ru', 'en', 'kk']}
             onSubmit={handleSubmit}
-            initialData={editingGoal?.translations}
+            initialData={{
+              ...editingGoal?.translations,
+              goals: editingGoal?.goals,
+              color: editingGoal?.color
+            }}
             isLoading={isLoading}
-            sharedFields={['color']}
+            sharedFields={['color', 'goals']}
           />
         </DialogContent>
       </Dialog>

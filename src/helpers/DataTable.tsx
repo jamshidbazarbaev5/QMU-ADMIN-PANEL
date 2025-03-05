@@ -1,8 +1,6 @@
-
-
 interface Column {
   header: string
-  accessor: string
+  accessor?: string
   cell?: (item: any) => React.ReactNode
 }
 
@@ -16,7 +14,7 @@ interface DataTableProps {
 
 export function DataTable({ data, columns, onRowClick, actions }: DataTableProps) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto ml-[40px]">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
@@ -42,7 +40,7 @@ export function DataTable({ data, columns, onRowClick, actions }: DataTableProps
               {columns.map((column, colIndex) => (
                 <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <div className="max-w-xs truncate">
-                    {column.cell ? column.cell(item) : item[column.accessor]}
+                    {column.cell ? column.cell(item) : column.accessor ? item[column.accessor] : undefined}
                   </div>
                 </td>
               ))}

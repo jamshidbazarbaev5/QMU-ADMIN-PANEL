@@ -8,7 +8,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, createButtonLabel, onCreateClick }: PageHeaderProps) {
   return (
-    <div className="flex justify-between items-center mb-6">
+    <div className="flex justify-between items-center mb-6 mt-[50px] ml-[40px]">
       <h1 className="text-2xl font-bold text-[#6C5DD3]">{title}</h1>
       <button
         onClick={onCreateClick}

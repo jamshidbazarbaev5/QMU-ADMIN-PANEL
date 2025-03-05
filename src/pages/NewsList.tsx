@@ -37,7 +37,7 @@ export default function NewsList() {
       if (title) queryParams.append('title', title)
       
       const response = await fetchWithAuth(
-        `https://debttracker.uz/en/news/posts/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
+        `https://debttracker.uz/news/posts/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
         {
           headers: {
             ...getAuthHeader()

@@ -56,7 +56,7 @@ export default function CreateAnnouncement() {
           }
         }
 
-        const response = await fetchWithAuth('https://debttracker.uz/ru/announcements/', {
+        const response = await fetchWithAuth('https://debttracker.uz/announcements/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

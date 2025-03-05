@@ -45,7 +45,7 @@ export default function AgencyForm() {
 
   const fetchMenus = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/main/`)
+      const response = await fetch(`https://debttracker.uz/menus/main/`)
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
       setMenus(data)
@@ -57,7 +57,7 @@ export default function AgencyForm() {
   const fetchAgency = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/agency/${id}/`)
+      const response = await fetch(`https://debttracker.uz/menus/agency/${id}/`)
       if (!response.ok) throw new Error('Failed to fetch agency')
       const data = await response.json()
       setSelectedMenu(data.menu)
@@ -87,8 +87,8 @@ export default function AgencyForm() {
       }
 
       const url = id 
-        ? `https://debttracker.uz/${currentLanguage}/menus/agency/${id}/`
-        : `https://debttracker.uz/${currentLanguage}/menus/agency/`
+        ? `https://debttracker.uz/menus/agency/${id}/`
+        : `https://debttracker.uz/menus/agency/`
 
       const response = await fetchWithAuth(url, {
         method: id ? 'PUT' : 'POST',

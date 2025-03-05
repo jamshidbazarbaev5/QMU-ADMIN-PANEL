@@ -7,7 +7,7 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import { getAuthHeader } from '../api/api'
+import {fetchWithAuth, getAuthHeader} from '../api/api'
 
 interface MenuTranslation {
   name: string
@@ -63,7 +63,10 @@ export function MenusPage() {
 
   const fetchMenus = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/${menuType}/`)
+      const response = await fetchWithAuth(`https://debttracker.uz/${currentLanguage}/menus/${menuType}/`,{
+        headers:getAuthHeader(),
+      })
+
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
       setMenus(data)
@@ -83,10 +86,9 @@ export function MenusPage() {
         ? `https://debttracker.uz/${currentLanguage}/menus/${menuType}/${editingMenu.translations[currentLanguage].slug}/`
         : `https://debttracker.uz/${currentLanguage}/menus/${menuType}/`
 
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method: editingMenu ? 'PUT' : 'POST',
         headers: {
-          'Content-Type': 'application/json',
           ...getAuthHeader()
         },
         body: JSON.stringify({
@@ -94,6 +96,8 @@ export function MenusPage() {
           translations: formData
         }),
       })
+
+
 
       if (!response.ok) throw new Error('Failed to save menu')
       
@@ -108,11 +112,29 @@ export function MenusPage() {
   }
 
   const handleDelete = async (menu: Menu) => {
+    // Get the first available translation's slug
+    const availableLanguages = Object.keys(menu.translations);
+    if (availableLanguages.length === 0) {
+      console.error('No translations available for this menu');
+      return;
+    }
+
+    // Use current language's slug if available, otherwise use the first available translation
+    const languageToUse = menu.translations[currentLanguage] 
+      ? currentLanguage 
+      : availableLanguages[0];
+    
+    const slug = menu.translations[languageToUse].slug;
+    if (!slug) {
+      console.error('Cannot delete menu: missing slug');
+      return;
+    }
+
     if (!window.confirm('Are you sure you want to delete this menu?')) return
 
     try {
-      const response = await fetch(
-        `https://debttracker.uz/${currentLanguage}/menus/${menuType}/${menu.translations[currentLanguage].slug}/`,
+      const response = await fetchWithAuth(
+        `https://debttracker.uz/${languageToUse}/menus/${menuType}/${slug}/`,
         { method: 'DELETE', headers: getAuthHeader() }
       )
       

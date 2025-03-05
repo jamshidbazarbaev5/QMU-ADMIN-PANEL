@@ -6,7 +6,7 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Loader2 } from 'lucide-react'
-import { getAuthHeader } from '../api/api'
+import { fetchWithAuth, getAuthHeader } from '../api/api'
 
 const translatedFields = [
   { name: 'name', label: 'Name', type: 'text' as const, required: true },
@@ -42,9 +42,10 @@ export default function FacultyForm() {
   const fetchFaculty = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/faculty/${id}/`)
+      const response = await fetch(`https://debttracker.uz/menus/faculty/${id}/`)
       if (!response.ok) throw new Error('Failed to fetch faculty')
       const data = await response.json()
+      console.log('Fetched data:', data)
       setEmail(data.email)
       setInitialData(data.translations)
       setCurrentLogo(data.logo)
@@ -68,10 +69,10 @@ export default function FacultyForm() {
       formData.append('translations', JSON.stringify(translationData))
 
       const url = id 
-        ? `https://debttracker.uz/${currentLanguage}/menus/faculty/${id}/`
-        : `https://debttracker.uz/${currentLanguage}/menus/faculty/`
+        ? `https://debttracker.uz/menus/faculty/${id}/`
+        : `https://debttracker.uz/menus/faculty/`
 
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method: id ? 'PUT' : 'POST',
         headers: {
           'Accept': 'application/json',
@@ -82,7 +83,7 @@ export default function FacultyForm() {
 
       if (!response.ok) throw new Error('Failed to save faculty')
       
-      navigate('/faculties')
+      navigate('/faculty')
     } catch (error) {
       console.error('Error saving faculty:', error)
     } finally {
@@ -91,6 +92,14 @@ export default function FacultyForm() {
   }
 
   if (isLoading && id) {
+    return (
+      <div className="container mx-auto p-6 flex justify-center items-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#6C5DD3]" />
+      </div>
+    )
+  }
+
+  if (id && !initialData) {
     return (
       <div className="container mx-auto p-6 flex justify-center items-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#6C5DD3]" />

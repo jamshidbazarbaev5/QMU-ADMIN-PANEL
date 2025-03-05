@@ -52,7 +52,7 @@ export function FacultyPage() {
 
   const fetchFaculties = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/faculty/`)
+      const response = await fetch(`https://debttracker.uz/menus/faculty/`)
       if (!response.ok) throw new Error('Failed to fetch faculties')
       const data = await response.json()
       setFaculties(data)
@@ -82,8 +82,8 @@ export function FacultyPage() {
       formData.append('translations', JSON.stringify(translationData))
 
       const url = editingFaculty 
-        ? `https://debttracker.uz/${currentLanguage}/menus/faculty/${editingFaculty.translations[currentLanguage].slug}/`
-        : `https://debttracker.uz/${currentLanguage}/menus/faculty/`
+        ? `https://debttracker.uz/menus/faculty/${editingFaculty.translations[currentLanguage].slug}/`
+        : `https://debttracker.uz/menus/faculty/`
 
       const response = await fetch(url, {
         method: editingFaculty ? 'PUT' : 'POST',
@@ -143,9 +143,40 @@ export function FacultyPage() {
       accessor: 'translations',
       cell: (item: Faculty) => item.translations[currentLanguage]?.description
     },
+    {
+      header: 'Actions',
+      cell: (item: Faculty) => (
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate(`/faculties/${item.translations[currentLanguage].slug}/edit`)
+            }}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          {/* <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDelete(item)
+              }}
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </Button> */}
+        </div>
+      )
+    }
   ]
 
-  
+  useEffect(() => {
+    if (editingFaculty) {
+      setEmail(editingFaculty.email)
+    }
+  }, [editingFaculty])
 
   return (
     <div className="p-6 mt-[50px]">
@@ -159,30 +190,7 @@ export function FacultyPage() {
         data={faculties}
         columns={columns}
         currentLanguage={currentLanguage}
-        actions={(item: Faculty) => (
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation()
-                navigate(`/faculties/${item.id}/edit`)
-              }}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            {/* <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation()
-                handleDelete(item)
-              }}
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </Button> */}
-          </div>
-        )}
+       
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -12,7 +12,7 @@ import FeedbackForm from './pages/FeedbackForm';
 import { LinksPage } from './pages/Links';
 import { MenusPage } from './pages/MenusPage';
 import { FacultyPage } from './pages/FacultyPage';
-import { DepartmentPage } from './pages/DepartmentPage';
+// import { DepartmentPage } from './pages/DepartmentFormPage';
 import { DocumentPage } from './pages/DocumentPage';
 import { MenuAdminsPage } from './pages/MenuAdminsPage';
 import { AgencyPage } from './pages/AgencyPage';
@@ -34,6 +34,7 @@ import { QuantityList } from './pages/QuantittyList';
 import { useState, useEffect } from 'react';
 import { ServicesPage } from './pages/ServicesPage';
 import { GoalsPage } from './pages/GoalsPage';
+// import { DepartmentFormPage } from './pages/DeparmentPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('accessToken'));
@@ -86,7 +87,7 @@ function App() {
             <Route path="/links" element={<PrivateRoute><LinksPage /></PrivateRoute>} />
             <Route path="/menus" element={<PrivateRoute><MenusPage /></PrivateRoute>} />
             <Route path="/faculty" element={<PrivateRoute><FacultyPage /></PrivateRoute>} />
-            <Route path="/department" element={<PrivateRoute><DepartmentPage /></PrivateRoute>} />
+            {/* <Route path="/department" element={<PrivateRoute><DepartmentPage /></PrivateRoute>} /> */}
             <Route path="/document" element={<PrivateRoute><DocumentPage /></PrivateRoute>} />
             <Route path="/menu-admins" element={<PrivateRoute><MenuAdminsPage /></PrivateRoute>} />
             <Route path="/agency" element={<PrivateRoute><AgencyPage /></PrivateRoute>} />
@@ -112,6 +113,8 @@ function App() {
             <Route path="/change-password" element={<PrivateRoute><ChangePassword /></PrivateRoute>} />
             <Route path="/services" element={<PrivateRoute><ServicesPage /></PrivateRoute>} />
             <Route path="/goals" element={<PrivateRoute><GoalsPage /></PrivateRoute>} />
+            {/* <Route path="/departments/:id/edit" element={<PrivateRoute><DepartmentPage /></PrivateRoute>} /> */}
+            {/* <Route path="/departments/create" element={<PrivateRoute><DepartmentFormPage /></PrivateRoute>} /> */}
           </Routes>
 
         </div>

@@ -51,41 +51,67 @@ export function ServicesPage() {
     try {
       const url = editingService 
         ? `https://debttracker.uz/ru/references/services/${editingService.id}/`
-        : 'https://debttracker.uz/ru/references/services/'
+        : 'https://debttracker.uz/ru/references/services/'  
       
       const submitData = new FormData()
       
-      // Add translations for each language
-      const translations: Record<string, { name: string }> = {}
-      Object.entries(formData).forEach(([lang, data]: [string, any]) => {
-        translations[lang] = { name: data.name }
-      })
-      
-      // Use URL from the current language form
-      submitData.append('url', formData[currentLanguage].url)
+      // Add translations first
+      const translations = {
+        en: { name: formData.en.name },
+        uz: { name: formData.uz.name },
+        ru: { name: formData.ru.name },
+        kk: { name: formData.kk.name }
+      }
       submitData.append('translations', JSON.stringify(translations))
+      
+      // Add URL
+      submitData.append('url', formData[currentLanguage].url)
       
       if (selectedImage) {
         submitData.append('img', selectedImage)
+      } else if (!editingService) {
+        throw new Error('Please select an image')
       }
+      
+      const headers = getAuthHeader()
       
       const response = await fetchWithAuth(url, {
         method: editingService ? 'PUT' : 'POST',
         body: submitData,
-        headers: getAuthHeader()
+        headers: headers
       })
 
-      if (response.ok) {
-        await fetchServices()
-        setIsDialogOpen(false)
-        setEditingService(null)
-        setSelectedImage(null)
-      } else {
-        const error = await response.json()
-        throw new Error(error.detail || 'Failed to save service')
+      console.log('Response status:', response)
+      console.log('Response headers:', Object.fromEntries(response.headers))
+
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('text/html')) {
+        const htmlText = await response.text()
+        console.error('Server returned HTML:', htmlText)
+        throw new Error('Server returned HTML instead of JSON. Please check server logs.')
       }
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Error response body:', errorText)
+        
+        let errorMessage = 'Failed to save service'
+        try {
+          const errorJson = JSON.parse(errorText)
+          errorMessage = errorJson.detail || errorMessage
+        } catch (e) {
+          errorMessage = errorText || errorMessage
+        }
+        throw new Error(errorMessage)
+      }
+
+      await fetchServices()
+      setIsDialogOpen(false)
+      setEditingService(null)
+      setSelectedImage(null)
     } catch (error) {
       console.error('Error saving service:', error)
+      alert(error instanceof Error ? error.message : 'An unknown error occurred')
     } finally {
       setIsLoading(false)
     }
@@ -96,7 +122,6 @@ export function ServicesPage() {
       header: 'Name', 
       accessor: 'name',
       cell: (item: Service) => {
-        // Display name from translations based on current language
         return item.translations?.[currentLanguage]?.name || item.name
       }
     },
@@ -123,31 +148,20 @@ export function ServicesPage() {
     setSelectedImage(null)
     setIsDialogOpen(true)
     
-    // Fetch translations for the service
     const response = await fetchWithAuth(`https://debttracker.uz/ru/references/services/${service.id}/`, {
       headers: getAuthHeader()
     });
     const serviceData = await response.json();
     
-    // Prepare initial data with translations for all languages
     const translatedData = Object.keys(serviceData.translations || {}).reduce((acc, lang) => {
       acc[lang] = {
         name: serviceData.translations[lang]?.name || '',
-        url: serviceData.url // URL is shared across all languages
+        url: serviceData.url 
       };
       return acc;
     }, {} as Record<string, any>);
     
-    // Ensure all required languages have entries
-    ['uz', 'ru', 'en', 'kk'].forEach(lang => {
-      if (!translatedData[lang]) {
-        translatedData[lang] = {
-          name: '',
-          url: serviceData.url // URL is shared across all languages
-        };
-      }
-    });
-    
+ 
     setEditingService({ ...service, translations: translatedData });
   }
 

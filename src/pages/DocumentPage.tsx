@@ -40,7 +40,7 @@ export function DocumentPage() {
 
   const fetchDocuments = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/document/`)
+      const response = await fetch(`https://debttracker.uz/menus/document/`)
       if (!response.ok) throw new Error('Failed to fetch documents')
       const data = await response.json()
       console.log('Fetched documents:', data)
@@ -70,8 +70,8 @@ export function DocumentPage() {
       }
 
       const url = editingDocument 
-        ? `https://debttracker.uz/${currentLanguage}/menus/document/${editingDocument.id}/`
-        : `https://debttracker.uz/${currentLanguage}/menus/document/`
+        ? `https://debttracker.uz/menus/document/${editingDocument.id}/`
+        : `https://debttracker.uz/menus/document/`
 
       const response = await fetch(url, {
         method: editingDocument ? 'PUT' : 'POST',
@@ -96,7 +96,7 @@ export function DocumentPage() {
 
     try {
       const response = await fetch(
-        `https://debttracker.uz/${currentLanguage}/menus/document/${document.id}/`,
+        `https://debttracker.uz/menus/document/${document.id}/`,
         { method: 'DELETE' }
       )
       
