@@ -31,6 +31,11 @@ interface Goal {
   color: string
 }
 
+interface NewsImage {
+  id: number
+  image: string
+}
+
 interface FormValues {
   category: string
   goals: string[]
@@ -61,6 +66,7 @@ export default function CreateNews() {
   const [categories, setCategories] = useState<Category[]>([])
   const [goals, setGoals] = useState<Goal[]>([])
   const [uploadedImages, setUploadedImages] = useState<File[]>([])
+  const [existingImages, setExistingImages] = useState<NewsImage[]>([])
   const [isLoadingInitialData, setIsLoadingInitialData] = useState(isEditing)
   const [isGoalsDropdownOpen, setIsGoalsDropdownOpen] = useState(false)
 
@@ -126,9 +132,17 @@ export default function CreateNews() {
           description_kk: data.translations?.kk?.description || "",
         })
 
-        if (data.uploaded_images) {
-          // You might need to handle displaying existing images differently
-          // depending on how your backend returns them
+        // Handle existing images
+        if (data.images && Array.isArray(data.images)) {
+          setExistingImages(data.images)
+        }
+
+        // Show the main image if it exists
+        if (data.main_image) {
+          setExistingImages(prev => [{
+            id: -1, // Use a special ID for main image
+            image: data.main_image
+          }, ...prev])
         }
       } catch (error) {
         console.error('Error fetching news data:', error)
@@ -263,6 +277,26 @@ export default function CreateNews() {
     }
   }
 
+  // Add a function to handle existing image deletion
+  const handleDeleteExistingImage = async (imageId: number) => {
+    try {
+      const response = await fetchWithAuth(
+        `https://debttracker.uz/news/images/${imageId}/`,
+        {
+          method: 'DELETE',
+          headers: getAuthHeader(),
+        }
+      )
+
+      if (!response.ok) throw new Error('Failed to delete image')
+
+      setExistingImages(prev => prev.filter(img => img.id !== imageId))
+    } catch (error) {
+      console.error('Error deleting image:', error)
+      alert('Failed to delete image')
+    }
+  }
+
   if (isLoadingInitialData) {
     return (
       <div className="container mx-auto p-6">
@@ -384,18 +418,30 @@ export default function CreateNews() {
                         <FormItem>
                           <FormLabel>Main Image</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="file" 
-                              accept="image/*"
-                              onChange={(e) => {
-                                const files = e.target.files
-                                if (files?.length) {
-                                  onChange(files)
-                                }
-                              }}
-                              {...field}
-                              value={undefined}
-                            />
+                            <div className="space-y-4">
+                              <Input 
+                                type="file" 
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const files = e.target.files
+                                  if (files?.length) {
+                                    onChange(files)
+                                  }
+                                }}
+                                {...field}
+                                value={undefined}
+                              />
+                              {/* Show existing main image if available */}
+                              {isEditing && existingImages.length > 0 && existingImages[0].id === -1 && (
+                                <div className="mt-2">
+                                  <img 
+                                    src={existingImages[0].image} 
+                                    alt="Current main image"
+                                    className="w-full max-w-md h-auto rounded"
+                                  />
+                                </div>
+                              )}
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -420,7 +466,30 @@ export default function CreateNews() {
                                 {...field}
                                 value={undefined}
                               />
+                              
+                              {/* Display grid of images */}
                               <div className="grid grid-cols-4 gap-4">
+                                {/* Existing images (excluding main image) */}
+                                {existingImages
+                                  .filter(image => image.id !== -1) // Filter out main image
+                                  .map((image) => (
+                                  <div key={image.id} className="relative">
+                                    <img 
+                                      src={image.image} 
+                                      alt="Existing image"
+                                      className="w-full h-24 object-cover rounded"
+                                    />
+                                    <button
+                                      type="button"
+                                      className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
+                                      onClick={() => handleDeleteExistingImage(image.id)}
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                ))}
+                                
+                                {/* Newly uploaded images */}
                                 {uploadedImages.map((file, index) => (
                                   <div key={index} className="relative">
                                     <img 
