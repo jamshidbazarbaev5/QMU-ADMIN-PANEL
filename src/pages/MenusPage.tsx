@@ -63,8 +63,8 @@ export function MenusPage() {
 
   const fetchMenus = async () => {
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/${currentLanguage}/menus/${menuType}/`,{
-        headers:getAuthHeader(),
+      const response = await fetchWithAuth(`https://debttracker.uz/menus/${menuType}/`, {
+        headers: getAuthHeader(),
       })
 
       if (!response.ok) throw new Error('Failed to fetch menus')
@@ -83,8 +83,8 @@ export function MenusPage() {
     setIsLoading(true)
     try {
       const url = editingMenu 
-        ? `https://debttracker.uz/${currentLanguage}/menus/${menuType}/${editingMenu.translations[currentLanguage].slug}/`
-        : `https://debttracker.uz/${currentLanguage}/menus/${menuType}/`
+        ? `https://debttracker.uz/menus/${menuType}/${editingMenu.translations[currentLanguage].slug}/`
+        : `https://debttracker.uz/menus/${menuType}/`
 
       const response = await fetchWithAuth(url, {
         method: editingMenu ? 'PUT' : 'POST',
@@ -96,8 +96,6 @@ export function MenusPage() {
           translations: formData
         }),
       })
-
-
 
       if (!response.ok) throw new Error('Failed to save menu')
       
@@ -134,7 +132,7 @@ export function MenusPage() {
 
     try {
       const response = await fetchWithAuth(
-        `https://debttracker.uz/${languageToUse}/menus/${menuType}/${slug}/`,
+        `https://debttracker.uz/menus/${menuType}/${slug}/`,
         { method: 'DELETE', headers: getAuthHeader() }
       )
       

@@ -39,7 +39,7 @@ export default function Announcements() {
         searchParams.append('title', query)
       }
       
-      const url = `https://debttracker.uz/${lang}/announcements/${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+      const url = `https://debttracker.uz/announcements/${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()

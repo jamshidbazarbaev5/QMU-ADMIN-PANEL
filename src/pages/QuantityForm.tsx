@@ -36,7 +36,7 @@ export function QuantityForm({ isEditing }: QuantityFormProps) {
     }
 
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/en/publications/quantities/${id}/`, {
+      const response = await fetchWithAuth(`https://debttracker.uz/publications/quantities/${id}/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         }

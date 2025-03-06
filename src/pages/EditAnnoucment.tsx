@@ -56,7 +56,7 @@ export default function EditAnnouncement() {
       
       try {
         setIsLoading(true)
-        const response = await fetch(`https://debttracker.uz/${layoutLanguage}/announcements/${slug}/`)
+        const response = await fetch(`https://debttracker.uz/announcements/${slug}/`)
         
         if (!response.ok) {
           throw new Error('Failed to fetch announcement')
