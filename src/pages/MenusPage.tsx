@@ -89,8 +89,10 @@ export function MenusPage() {
       const response = await fetchWithAuth(url, {
         method: editingMenu ? 'PUT' : 'POST',
         headers: {
-          ...getAuthHeader()
+          ...getAuthHeader(),
+          'Content-Type': 'application/json',
         },
+
         body: JSON.stringify({
           parent: selectedParent,
           translations: formData
