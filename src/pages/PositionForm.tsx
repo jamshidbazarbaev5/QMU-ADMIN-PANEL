@@ -6,7 +6,7 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Loader2 } from 'lucide-react'
-import { getAuthHeader } from '../api/api'
+import {fetchWithAuth, getAuthHeader} from '../api/api'
 
 interface PositionTranslation {
   name: string;
@@ -44,7 +44,7 @@ export default function PositionForm() {
   const fetchPosition = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/position/${id}/`)
+      const response = await fetch(`https://debttracker.uz/menus/position/${id}/`)
       
       if (!response.ok) throw new Error('Failed to fetch position')
       const data: Position = await response.json()
@@ -103,10 +103,10 @@ export default function PositionForm() {
       console.log('Sending payload:', payload) // Debug log
 
       const url = id 
-        ? `https://debttracker.uz/${currentLanguage}/menus/position/${id}/`
-        : `https://debttracker.uz/${currentLanguage}/menus/position/`
+        ? `https://debttracker.uz/menus/position/${id}/`
+        : `https://debttracker.uz/menus/position/`
 
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method: id ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',

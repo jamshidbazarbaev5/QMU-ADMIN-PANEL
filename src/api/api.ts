@@ -187,9 +187,7 @@ export const fetchWithAuth = async (url: string, options: RequestInit): Promise<
   return response;
 };
 
-// Update login interface and function
 interface LoginResponse extends TokenResponse {
-  // Remove incorrect field expectations
   access: string;
   refresh?: string;
 }
@@ -207,7 +205,6 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
         const data = await response.json();
         
         if (!response.ok) {
-            // Handle specific error status codes
             if (response.status === 401) {
                 throw new Error('Invalid credentials');
             } else if (response.status === 403) {
@@ -216,7 +213,6 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
             throw new Error(data.detail || 'Login failed');
         }
         
-        // Store tokens using the correct field names from the API
         if (data.access) {
             localStorage.setItem('accessToken', data.access);
             if (data.refresh) {

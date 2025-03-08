@@ -10,7 +10,6 @@ export const useLanguage = () => {
     }
 
     window.addEventListener('storage', handleStorageChange)
-    // Initial setup
     handleStorageChange()
 
     return () => {

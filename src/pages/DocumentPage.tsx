@@ -7,6 +7,7 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { format } from 'date-fns'
+import {fetchWithAuth} from "../api/api.ts";
 
 interface DocumentTranslation {
   title: string | null
@@ -73,7 +74,7 @@ export function DocumentPage() {
         ? `https://debttracker.uz/menus/document/${editingDocument.id}/`
         : `https://debttracker.uz/menus/document/`
 
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method: editingDocument ? 'PUT' : 'POST',
         body: formData
       })

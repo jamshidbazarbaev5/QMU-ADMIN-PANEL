@@ -70,7 +70,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       try {
         setIsLoading(true)
         const response = await fetchWithAuth(
-          `https://debttracker.uz/en/publications/posts/${slug}/`,
+          `https://debttracker.uz/publications/posts/${slug}/`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -108,7 +108,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       try {
         const [mainMenuResponse, footerMenuResponse] = await Promise.all([
           fetchWithAuth(
-            'https://debttracker.uz/en/menus/main/',
+            'https://debttracker.uz/menus/main/',
             {
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -117,7 +117,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
             }
           ),
           fetchWithAuth(
-            'https://debttracker.uz/en/menus/footer/',
+            'https://debttracker.uz/menus/footer/',
             {
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -173,8 +173,8 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       formData.append('translations', JSON.stringify(translations))
 
       const url = isEditing 
-        ? `https://debttracker.uz/${currentLanguage}/publications/posts/${slug}/`
-        : `https://debttracker.uz/${currentLanguage}/publications/posts/`
+        ? `https://debttracker.uz/publications/posts/${slug}/`
+        : `https://debttracker.uz/publications/posts/`
       
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',

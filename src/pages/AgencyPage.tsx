@@ -55,7 +55,7 @@ export function AgencyPage() {
 
   const fetchAgencies = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/agency/`)
+      const response = await fetch(`https://debttracker.uz/menus/agency/`)
       if (!response.ok) throw new Error('Failed to fetch agencies')
       const data = await response.json()
       setAgencies(Array.isArray(data) ? data : [data])
@@ -66,7 +66,7 @@ export function AgencyPage() {
 
   const fetchMenus = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/main/`)
+      const response = await fetch(`https://debttracker.uz/menus/main/`)
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
       setMenus(data)
@@ -97,8 +97,8 @@ export function AgencyPage() {
       }
 
       const url = editingAgency 
-        ? `https://debttracker.uz/${currentLanguage}/menus/agency/${editingAgency.id}/`
-        : `https://debttracker.uz/${currentLanguage}/menus/agency/`
+        ? `https://debttracker.uz/menus/agency/${editingAgency.id}/`
+        : `https://debttracker.uz/menus/agency/`
 
       const response = await fetch(url, {
         method: editingAgency ? 'PUT' : 'POST',
@@ -124,7 +124,7 @@ export function AgencyPage() {
 
     try {
       const response = await fetch(
-        `https://debttracker.uz/${currentLanguage}/menus/agency/${agency.id}/`,
+        `https://debttracker.uz/menus/agency/${agency.id}/`,
         { method: 'DELETE' }
       )
       

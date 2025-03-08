@@ -31,9 +31,11 @@ import { VideoForm } from './pages/VideoForm';
 import { Videos } from './pages/Videos';
 import { QuantityForm } from './pages/QuantityForm';
 import { QuantityList } from './pages/QuantittyList';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ServicesPage } from './pages/ServicesPage';
 import { GoalsPage } from './pages/GoalsPage';
+import {DepartmentPage} from "./pages/DepartmentPage.tsx";
+import { DepartmentFormPage } from './pages/DepartmentFormPage.tsx';
 // import { DepartmentFormPage } from './pages/DeparmentPage';
 
 function App() {
@@ -87,7 +89,7 @@ function App() {
             <Route path="/links" element={<PrivateRoute><LinksPage /></PrivateRoute>} />
             <Route path="/menus" element={<PrivateRoute><MenusPage /></PrivateRoute>} />
             <Route path="/faculty" element={<PrivateRoute><FacultyPage /></PrivateRoute>} />
-            {/* <Route path="/department" element={<PrivateRoute><DepartmentPage /></PrivateRoute>} /> */}
+             <Route path="/department" element={<PrivateRoute><DepartmentPage /></PrivateRoute>} />
             <Route path="/document" element={<PrivateRoute><DocumentPage /></PrivateRoute>} />
             <Route path="/menu-admins" element={<PrivateRoute><MenuAdminsPage /></PrivateRoute>} />
             <Route path="/agency" element={<PrivateRoute><AgencyPage /></PrivateRoute>} />
@@ -115,6 +117,8 @@ function App() {
             <Route path="/goals" element={<PrivateRoute><GoalsPage /></PrivateRoute>} />
             {/* <Route path="/departments/:id/edit" element={<PrivateRoute><DepartmentPage /></PrivateRoute>} /> */}
             {/* <Route path="/departments/create" element={<PrivateRoute><DepartmentFormPage /></PrivateRoute>} /> */}
+            <Route path="/departments/create" element={<PrivateRoute><DepartmentFormPage /></PrivateRoute>} />
+            <Route path="/departments/:id/edit" element={<PrivateRoute><DepartmentFormPage /></PrivateRoute>} />
           </Routes>
 
         </div>

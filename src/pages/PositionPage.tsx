@@ -39,7 +39,7 @@ export function PositionPage() {
 
   const fetchPositions = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/position/`, )
+      const response = await fetch(`https://debttracker.uz/menus/position/`, )
       if (!response.ok) throw new Error('Failed to fetch positions')
       const data = await response.json()
       setPositions(Array.isArray(data) ? data : [data])
@@ -67,8 +67,8 @@ export function PositionPage() {
       }
 
       const url = editingPosition 
-        ? `https://debttracker.uz/${currentLanguage}/menus/position/${editingPosition.id}/`
-        : `https://debttracker.uz/${currentLanguage}/menus/position/`
+        ? `https://debttracker.uz/menus/position/${editingPosition.id}/`
+        : `https://debttracker.uz/menus/position/`
 
       const response = await fetch(url, {
         method: editingPosition ? 'PUT' : 'POST',
@@ -97,7 +97,7 @@ export function PositionPage() {
 
     try {
       const response = await fetch(
-        `https://debttracker.uz/${currentLanguage}/menus/position/${position.id}/`,
+        `https://debttracker.uz/menus/position/${position.id}/`,
         { method: 'DELETE' }
       )
       

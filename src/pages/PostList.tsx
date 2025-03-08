@@ -15,8 +15,8 @@ export function Posts() {
     try {
       setLoading(true)
       const url = searchQuery 
-        ? `https://debttracker.uz/${currentLanguage}/publications/posts/?title=${encodeURIComponent(searchQuery)}`
-        : `https://debttracker.uz/${currentLanguage}/publications/posts/`
+        ? `https://debttracker.uz/publications/posts/?title=${encodeURIComponent(searchQuery)}`
+        : `https://debttracker.uz/publications/posts/`
       
       const response = await fetch(url)
       
@@ -62,7 +62,7 @@ export function Posts() {
     if (!confirm('Are you sure you want to delete this post?')) return
 
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/publications/posts/${slug}/`, {
+      const response = await fetch(`https://debttracker.uz/publications/posts/${slug}/`, {
         method: 'DELETE'
       })
 

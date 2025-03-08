@@ -4,7 +4,7 @@ import { useLanguage } from '../hooks/useLanguage'
 import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
-import { getAuthHeader } from '../api/api'
+import {fetchWithAuth, getAuthHeader} from '../api/api'
 // ... import other necessary types and components
 
 // Add all interfaces from MenuAdminsPage
@@ -109,7 +109,7 @@ export function MenuAdminFormPage() {
   // Update fetch functions to use correct endpoints
   const fetchMenus = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/main/`)
+      const response = await fetch(`https://debttracker.uz/menus/main/`)
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
       setMenus(data)
@@ -120,7 +120,7 @@ export function MenuAdminFormPage() {
 
   const fetchFaculties = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/faculty/`)
+      const response = await fetch(`https://debttracker.uz/menus/faculty/`)
       if (!response.ok) throw new Error('Failed to fetch faculties')
       const data = await response.json()
       setFaculties(data)
@@ -131,7 +131,7 @@ export function MenuAdminFormPage() {
 
   const fetchDepartments = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/department/`)
+      const response = await fetch(`https://debttracker.uz/menus/department/`)
       if (!response.ok) throw new Error('Failed to fetch departments')
       const data = await response.json()
       setDepartments(data)
@@ -142,7 +142,7 @@ export function MenuAdminFormPage() {
 
   const fetchAgencies = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/agency/`)
+      const response = await fetch(`https://debttracker.uz/menus/agency/`)
       if (!response.ok) throw new Error('Failed to fetch agencies')
       const data = await response.json()
       setAgencies(data)
@@ -153,7 +153,7 @@ export function MenuAdminFormPage() {
 
   const fetchPositions = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/position/`)
+      const response = await fetch(`https://debttracker.uz/menus/position/`)
       if (!response.ok) throw new Error('Failed to fetch positions')
       const data = await response.json()
       // Ensure we always have an array of positions
@@ -191,10 +191,10 @@ export function MenuAdminFormPage() {
       }
 
       const url = id 
-        ? `https://debttracker.uz/${currentLanguage}/menus/admin/${id}/`
-        : `https://debttracker.uz/${currentLanguage}/menus/admin/`
+        ? `https://debttracker.uz/menus/admin/${id}/`
+        : `https://debttracker.uz/menus/admin/`
 
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method: id ? 'PUT' : 'POST',
         body: formData,
         headers: {
@@ -229,7 +229,7 @@ export function MenuAdminFormPage() {
   const fetchAdminDetails = async () => {
     if (!id) return
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/admin/${id}/`)
+      const response = await fetch(`https://debttracker.uz/menus/admin/${id}/`)
       if (!response.ok) throw new Error('Failed to fetch admin details')
       const data = await response.json()
       setEditingAdmin(data)
@@ -350,8 +350,8 @@ export function MenuAdminFormPage() {
               </SelectTrigger>
               <SelectContent className="min-w-[600px]">
                 {agencies.map((agency) => (
-                  <SelectItem 
-                    key={agency.id} 
+                  <SelectItem
+                    key={agency.id}
                     value={agency.id.toString()}
                     className="whitespace-normal py-2 break-words"
                   >

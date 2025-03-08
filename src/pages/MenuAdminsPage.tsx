@@ -96,7 +96,7 @@ export function MenuAdminsPage() {
 
   const fetchAdmins = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/admin/`)
+      const response = await fetch(`https://debttracker.uz/menus/admin/`)
       if (!response.ok) throw new Error('Failed to fetch admins')
       const data = await response.json()
       setAdmins(Array.isArray(data) ? data : [data])
@@ -107,7 +107,7 @@ export function MenuAdminsPage() {
 
   const fetchMenus = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/main/`)
+      const response = await fetch(`https://debttracker.uz/menus/main/`)
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
       setMenus(data)
@@ -118,7 +118,7 @@ export function MenuAdminsPage() {
 
   const fetchFaculties = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/faculty/`)
+      const response = await fetch(`https://debttracker.uz/menus/faculty/`)
       if (!response.ok) throw new Error('Failed to fetch faculties')
       const data = await response.json()
       setFaculties(data)
@@ -129,7 +129,7 @@ export function MenuAdminsPage() {
 
   const fetchDepartments = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/department/`)
+      const response = await fetch(`https://debttracker.uz/menus/department/`)
       if (!response.ok) throw new Error('Failed to fetch departments')
       const data = await response.json()
       setDepartments(data)
@@ -140,7 +140,7 @@ export function MenuAdminsPage() {
 
   const fetchAgencies = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/menus/agency/`)
+      const response = await fetch(`https://debttracker.uz/menus/agency/`)
       if (!response.ok) throw new Error('Failed to fetch agencies')
       const data = await response.json()
       setAgencies(data)
@@ -186,8 +186,8 @@ export function MenuAdminsPage() {
       }
 
       const url = editingAdmin 
-        ? `https://debttracker.uz/${currentLanguage}/menus/admin/${editingAdmin.id}/`
-        : `https://debttracker.uz/${currentLanguage}/menus/admin/`
+        ? `https://debttracker.uz/menus/admin/${editingAdmin.id}/`
+        : `https://debttracker.uz/menus/admin/`
 
       const response = await fetch(url, {
         method: editingAdmin ? 'PUT' : 'POST',
@@ -215,7 +215,7 @@ export function MenuAdminsPage() {
 
     try {
       const response = await fetch(
-        `https://debttracker.uz/${currentLanguage}/menus/admin/${admin.id}/`,
+        `https://debttracker.uz/menus/admin/${admin.id}/`,
         { method: 'DELETE' }
       )
       

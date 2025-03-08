@@ -5,7 +5,7 @@
 // import { TranslatedForm } from '../helpers/TranslatedForm'
 // import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 // import { getAuthHeader } from '../api/api'
-
+//
 // interface Faculty {
 //   id: number
 //   translations: {
@@ -14,7 +14,7 @@
 //     }
 //   }
 // }
-
+//
 // interface Department {
 //   translations: {
 //     [key: string]: {
@@ -24,16 +24,16 @@
 //     }
 //   }
 // }
-
+//
 // export function DepartmentFormPage() {
 //   const { id } = useParams()
 //   const navigate = useNavigate()
-//   const { currentLanguage } = useLanguage()
+//   const  currentLanguage  = useLanguage()
 //   const [isLoading, setIsLoading] = useState(false)
 //   const [faculties, setFaculties] = useState<Faculty[]>([])
 //   const [selectedFaculty, setSelectedFaculty] = useState<string>('')
 //   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null)
-
+//
 //   const translatedFields = [
 //     {
 //       name: 'name',
@@ -52,14 +52,14 @@
 //       type: 'richtext' as const,
 //     },
 //   ]
-
+//
 //   useEffect(() => {
 //     fetchFaculties()
 //     if (id) {
 //       fetchDepartment(id)
 //     }
 //   }, [id])
-
+//
 //   const fetchFaculties = async () => {
 //     try {
 //       const response = await fetch('https://debttracker.uz/en/menus/faculty/', {
@@ -71,7 +71,7 @@
 //       console.error('Error fetching faculties:', error)
 //     }
 //   }
-
+//
 //   const fetchDepartment = async (departmentId: string) => {
 //     try {
 //       const response = await fetch(`https://debttracker.uz/en/menus/department/${departmentId}/`, {
@@ -83,21 +83,21 @@
 //       console.error('Error fetching department:', error);
 //     }
 //   }
-
+//
 //   const handleSubmit = async (translatedData: any) => {
 //     if (!selectedFaculty) {
 //       alert('Please select a faculty')
 //       return
 //     }
-
+//
 //     setIsLoading(true)
 //     try {
 //       const endpoint = id
 //         ? `https://debttracker.uz/en/menus/department/${id}/`
 //         : 'https://debttracker.uz/en/menus/department/'
-      
+//
 //       const method = id ? 'PUT' : 'POST'
-      
+//
 //       const response = await fetch(endpoint, {
 //         method,
 //         headers: {
@@ -109,7 +109,7 @@
 //           translations: translatedData,
 //         }),
 //       })
-
+//
 //       if (response.ok) {
 //         navigate('/departments')
 //       }
@@ -119,14 +119,13 @@
 //       setIsLoading(false)
 //     }
 //   }
-
+//
 //   return (
 //     <div className="container mx-auto py-10 mt-[50px]">
 //       <PageHeader
-//         heading={id ? "Edit Department" : "Create Department"}
-//         description={id ? "Edit an existing department" : "Create a new department"}
-//       />
-
+//           heading={id ? "Edit Department" : "Create Department"}
+//           description={id ? "Edit an existing department" : "Create a new department"} title={''} createButtonLabel={''}
+//        />
 //       <div className="mt-8">
 //         <div className="mb-6">
 //           <label className="block text-sm font-medium mb-2">Faculty</label>
@@ -140,7 +139,7 @@
 //             <SelectContent>
 //               {faculties.map((faculty) => (
 //                 <SelectItem key={faculty.id} value={String(faculty.id)}>
-//                   {faculty.translations[currentLanguage]?.name || 
+//                   {faculty.translations[currentLanguage]?.name ||
 //                    faculty.translations.en?.name ||
 //                    faculty.translations.ru?.name}
 //                 </SelectItem>
@@ -148,7 +147,7 @@
 //             </SelectContent>
 //           </Select>
 //         </div>
-
+//
 //         <TranslatedForm
 //           fields={translatedFields}
 //           languages={['en', 'ru', 'uz', 'kk']}
