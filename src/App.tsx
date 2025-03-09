@@ -37,6 +37,7 @@ import { GoalsPage } from './pages/GoalsPage';
 import {DepartmentPage} from "./pages/DepartmentPage.tsx";
 import { DepartmentFormPage } from './pages/DepartmentFormPage.tsx';
 // import { DepartmentFormPage } from './pages/DeparmentPage';
+import { DocumentForm } from './pages/DocumentForm'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('accessToken'));
@@ -100,7 +101,7 @@ function App() {
             <Route path="/faculties/new" element={<PrivateRoute><FacultyForm /></PrivateRoute>} />
             <Route path="/faculties/:id/edit" element={<PrivateRoute><FacultyForm /></PrivateRoute>} />
             <Route path="/agencies/new" element={<PrivateRoute><AgencyForm /></PrivateRoute>} />
-            <Route path="/agencies/:id/edit" element={<PrivateRoute><AgencyForm /></PrivateRoute>} />
+            <Route path="/agencies/:slug/edit" element={<PrivateRoute><AgencyForm /></PrivateRoute>} />
             <Route path="/positions/new" element={<PrivateRoute><PositionForm /></PrivateRoute>} />
             <Route path="/positions/:id/edit" element={<PrivateRoute><PositionForm /></PrivateRoute>} />
             <Route path="/news" element={<PrivateRoute><NewsList /></PrivateRoute>} />
@@ -120,6 +121,8 @@ function App() {
             {/* <Route path="/departments/create" element={<PrivateRoute><DepartmentFormPage /></PrivateRoute>} /> */}
             <Route path="/departments/create" element={<PrivateRoute><DepartmentFormPage /></PrivateRoute>} />
             <Route path="/departments/:id/edit" element={<PrivateRoute><DepartmentFormPage /></PrivateRoute>} />
+            <Route path="/documents/create" element={<PrivateRoute><DocumentForm /></PrivateRoute>} />
+            <Route path="/documents/edit/:id" element={<PrivateRoute><DocumentForm /></PrivateRoute>} />
           </Routes>
 
         </div>

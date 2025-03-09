@@ -5,6 +5,7 @@ import { DataTable } from '../helpers/DataTable'
 import { useNavigate } from 'react-router-dom'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
+import { fetchWithAuth, getAuthHeader } from '../api/api'
 
 
 interface DepartmentTranslation {
@@ -20,6 +21,7 @@ interface Department {
     [key: string]: DepartmentTranslation
   }
 }
+
 
 
 
@@ -46,6 +48,18 @@ export function DepartmentPage() {
 
   const handleEdit = (department: Department) => {
     navigate(`/departments/${department.translations[currentLanguage].slug}/edit`)
+  }
+
+  const handleDelete = async (department: Department) => {
+    try {
+      await fetchWithAuth(`https://debttracker.uz/menus/department/${department.translations.en.slug}/`, {
+        method: 'DELETE',
+        headers: getAuthHeader(),
+      })
+      await fetchDepartments()
+    } catch (error) {
+      console.error('Error deleting department:', error)
+    }
   }
 
   const columns = [
@@ -95,7 +109,7 @@ export function DepartmentPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                // handleDelete(item)
+                handleDelete(item)
               }}
             >
               <Trash2 className="h-4 w-4 text-red-500" />

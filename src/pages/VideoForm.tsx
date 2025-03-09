@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { PageHeader } from '../helpers/PageHeader'
 import { TranslatedForm } from '../helpers/TranslatedForm'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useLanguage } from '../hooks/useLanguage'
 import { fetchWithAuth } from '../api/api'
 
 interface VideoFormProps {
@@ -20,7 +19,6 @@ interface TranslatedField {
 export function VideoForm({ initialData, isEditing }: VideoFormProps) {
   const navigate = useNavigate()
   const { id } = useParams()
-  const currentLanguage = useLanguage()
   const token = localStorage.getItem('accessToken')
   const [videoUrl, setVideoUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -38,7 +36,7 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
       try {
         setIsLoading(true)
         const response = await fetchWithAuth(
-          `https://debttracker.uz/en/publications/videos/${id}`,
+          `https://debttracker.uz/publications/videos/${id}`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -68,7 +66,7 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
     }
 
     fetchVideo()
-  }, [id, currentLanguage, isEditing, token, navigate])
+  }, [id, isEditing, token, navigate])
 
   if (isLoading) {
     return <div className="container mx-auto p-6 mt-[50px]">Loading...</div>
@@ -127,8 +125,8 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
       console.log('Submitting payload:', payload)
 
       const url = isEditing 
-        ? `https://debttracker.uz/en/publications/videos/${id}`
-        : `https://debttracker.uz/en/publications/videos/`
+        ? `https://debttracker.uz/publications/videos/${id}/`
+        : `https://debttracker.uz/publications/videos/`
       console.log('Submitting to URL:', url)
       
       const response = await fetchWithAuth(url, {

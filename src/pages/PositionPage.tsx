@@ -24,7 +24,6 @@ interface Position {
 
 const translatedFields = [
   { name: 'name', label: 'Name', type: 'text' as const, required: true },
-  { name: 'description', label: 'Description', type: 'richtext' as const, required: true }
 ]
 
 export function PositionPage() {
@@ -124,26 +123,12 @@ export function PositionPage() {
             accessor: 'translations',
             cell: (item: Position) => item.translations[currentLanguage]?.name || '-'
           },
-          { 
-            header: 'Description',
-            accessor: 'translations',
-            cell: (item: Position) => (
-              <div 
-                className="max-w-md truncate"
-                dangerouslySetInnerHTML={{ 
-                  __html: item.translations[currentLanguage]?.description || '-'
-                }}
-              />
-            )
-          },
+         
           { 
             header: 'Email',
             accessor: 'email',
           },
-          {
-            header: 'Position',
-            accessor: 'position',
-          }
+         
         ]}
         currentLanguage={currentLanguage}
         actions={(item: Position) => (

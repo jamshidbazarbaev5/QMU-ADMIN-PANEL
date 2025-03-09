@@ -26,7 +26,7 @@ const translatedFields = [
 ]
 
 export default function AgencyForm() {
-  const { id } = useParams()
+  const { slug } = useParams()
   const navigate = useNavigate()
   const currentLanguage = useLanguage()
   const [isLoading, setIsLoading] = useState(false)
@@ -38,14 +38,16 @@ export default function AgencyForm() {
 
   useEffect(() => {
     fetchMenus()
-    if (id) {
+    if (slug) {
       fetchAgency()
     }
-  }, [id, currentLanguage])
+  }, [slug, currentLanguage])
 
   const fetchMenus = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/main/`)
+      const response = await fetchWithAuth(`https://debttracker.uz/menus/main/`,{
+        headers:getAuthHeader()
+      })
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
       setMenus(data)
@@ -57,7 +59,9 @@ export default function AgencyForm() {
   const fetchAgency = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`https://debttracker.uz/menus/agency/${id}/`)
+      const response = await fetchWithAuth(`https://debttracker.uz/menus/agency/${slug}/`, {
+        headers: getAuthHeader()
+      })
       if (!response.ok) throw new Error('Failed to fetch agency')
       const data = await response.json()
       setSelectedMenu(data.menu)
@@ -86,12 +90,12 @@ export default function AgencyForm() {
         formData.append('main_image', selectedImage)
       }
 
-      const url = id 
-        ? `https://debttracker.uz/menus/agency/${id}/`
+      const url = slug 
+        ? `https://debttracker.uz/menus/agency/${slug}/`
         : `https://debttracker.uz/menus/agency/`
 
       const response = await fetchWithAuth(url, {
-        method: id ? 'PUT' : 'POST',
+        method: slug ? 'PUT' : 'POST',
         headers: {
           'Accept': 'application/json',
           ...getAuthHeader()
@@ -101,7 +105,7 @@ export default function AgencyForm() {
 
       if (!response.ok) throw new Error('Failed to save agency')
       
-      navigate('/agencies')
+      navigate('/agency')
     } catch (error) {
       console.error('Error saving agency:', error)
     } finally {
@@ -109,7 +113,7 @@ export default function AgencyForm() {
     }
   }
 
-  if (isLoading && id) {
+  if (isLoading && slug) {
     return (
       <div className="container mx-auto p-6 flex justify-center items-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#6C5DD3]" />
@@ -121,7 +125,7 @@ export default function AgencyForm() {
     <div className="container mx-auto p-6">
       <Card>
         <CardHeader>
-          <CardTitle>{id ? 'Edit' : 'Create'} Agency</CardTitle>
+          <CardTitle>{slug ? 'Edit' : 'Create'} Agency</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4 mb-4">
@@ -184,10 +188,6 @@ export default function AgencyForm() {
             <Button
               type="submit"
               disabled={isLoading}
-              onClick={() => {
-                const form = document.querySelector('form')
-                if (form) form.requestSubmit()
-              }}
             >
               {isLoading ? (
                 <>

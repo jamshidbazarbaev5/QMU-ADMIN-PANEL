@@ -4,8 +4,18 @@ import { DataTable } from '../helpers/DataTable'
 import { TranslatedForm } from '../helpers/TranslatedForm'
 import { useLanguage } from '../hooks/useLanguage'
 import { Dialog, DialogContent } from '../components/ui/dialog'
-import { Pencil } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { getAuthHeader, fetchWithAuth } from '../api/api'
+import { 
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "../components/ui/alert-dialog"
 
 interface Link {
   id: number
@@ -28,6 +38,7 @@ export function LinksPage() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const currentLanguage = useLanguage()
+  const [deletingLink, setDeletingLink] = useState<Link | null>(null)
 
   const fetchLinks = async () => {
     const response = await fetchWithAuth('https://debttracker.uz/references/links/', {
@@ -87,8 +98,34 @@ export function LinksPage() {
     }
   }
 
+  const handleDelete = async (link: Link) => {
+    try {
+      const response = await fetchWithAuth(
+        `https://debttracker.uz/references/links/${link.id}/`,
+        {
+          method: 'DELETE',
+          headers: getAuthHeader(),
+        }
+      );
+
+      if (response.ok) {
+        await fetchLinks();
+        setDeletingLink(null);
+      } else {
+        throw new Error('Failed to delete link');
+      }
+    } catch (error) {
+      console.error('Error deleting link:', error);
+      // You might want to show an error message to the user here
+    }
+  };
+
   const columns = [
-    { header: 'Name', accessor: 'name' },
+    { 
+      header: 'Name', 
+      accessor: 'name',
+      cell: (item: Link) => item.translations?.[currentLanguage]?.name || item.name
+    },
     { header: 'URL', accessor: 'url' },
     { 
       header: 'Image', 
@@ -147,15 +184,26 @@ export function LinksPage() {
         columns={columns}
         currentLanguage={currentLanguage}
         actions={(item) => (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              handleEdit(item)
-            }}
-            className="p-2 hover:bg-gray-100 rounded-full"
-          >
-            <Pencil className="h-4 w-4 text-gray-500" />
-          </button>
+          <div className="flex gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleEdit(item)
+              }}
+              className="p-2 hover:bg-gray-100 rounded-full"
+            >
+              <Pencil className="h-4 w-4 text-gray-500" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setDeletingLink(item)
+              }}
+              className="p-2 hover:bg-gray-100 rounded-full"
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </button>
+          </div>
         )}
       />
 
@@ -204,6 +252,27 @@ export function LinksPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deletingLink} onOpenChange={(open) => !open && setDeletingLink(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the link
+              "{deletingLink?.translations?.[currentLanguage]?.name || deletingLink?.name}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletingLink && handleDelete(deletingLink)}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

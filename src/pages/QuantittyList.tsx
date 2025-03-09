@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { DataTable } from '../helpers/DataTable'
 import { PageHeader } from '../helpers/PageHeader'
 import { Edit, Trash2 } from 'lucide-react'
+import { useLanguage } from '../hooks/useLanguage'
 
 export function QuantityList() {
   const navigate = useNavigate()
   const [quantities, setQuantities] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const token = localStorage.getItem('accessToken')
+  const  currentLanguage  = useLanguage()
 
   useEffect(() => {
     fetchQuantities()
@@ -49,7 +51,7 @@ export function QuantityList() {
   }
 
   const columns = [
-    { header: 'Title', accessor: 'title' },
+    { header: 'Title', accessor: 'title', cell: (item: any) => item.translations[currentLanguage]?.title || '-' },
     { header: 'Quantity', accessor: 'quantity' },
   ]
 

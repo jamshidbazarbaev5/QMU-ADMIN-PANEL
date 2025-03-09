@@ -4,12 +4,24 @@ import { DataTable } from '../helpers/DataTable'
 import { PageHeader } from '../helpers/PageHeader'
 import { useLanguage } from '../hooks/useLanguage'
 
+interface MenuTranslation {
+  name: string;
+}
+
+interface Menu {
+  id: number;
+  translations: {
+    [key: string]: MenuTranslation;
+  };
+}
+
 export function Posts() {
   const navigate = useNavigate()
   const [posts, setPosts] = useState([])
   const [, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const currentLanguage = useLanguage()
+  const [menus, setMenus] = useState<Menu[]>([])
 
   const fetchPosts = async () => {
     try {
@@ -34,22 +46,55 @@ export function Posts() {
     }
   }
 
+  const fetchMenus = async () => {
+    try {
+      const response = await fetch('https://debttracker.uz/menus/main/')
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setMenus(data)
+    } catch (error) {
+      console.error('Error fetching menus:', error)
+      setMenus([])
+    }
+  }
+
   useEffect(() => {
+    console.log('Effect running, currentLanguage:', currentLanguage)
     fetchPosts()
+    fetchMenus()
   }, [searchQuery, currentLanguage])
+
+  // Helper function to get menu name
+  const getMenuName = (menuId: number) => {
+    const menu = menus.find(m => m.id === menuId)
+    if (menu && menu.translations && menu.translations[currentLanguage]) {
+      return menu.translations[currentLanguage].name
+    }
+   
+  }
 
   const columns = [
     {
       header: 'Image',
       accessor: 'main_image',
-      cell: (item: any) => item.main_image && (
-        <img src={item.main_image} alt={item.translations[currentLanguage]?.title} className="h-12 w-12 object-cover rounded" />
-      )
+      cell: (item: any) => item.main_image ? (
+        <img src={item.main_image} alt="" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
+      ) : '-'
     },
     {
       header: 'Title',
       accessor: `translations.${currentLanguage}.title`,
-      cell: (item: any) => item.translations[currentLanguage]?.title || '-'
+      cell: (item: any) => {
+        const translation = item.translations[currentLanguage]
+        return translation ? translation.title : '-'
+      }
+    },
+    {
+      header: 'Menu',
+      accessor: 'menu',
+      cell: (item: any) => getMenuName(item.menu)
     },
     {
       header: 'Date',

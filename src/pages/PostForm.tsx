@@ -4,6 +4,13 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
 import { fetchWithAuth, getAuthHeader } from '../api/api';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select'
 
 interface PostFormProps {
   initialData?: any
@@ -59,6 +66,9 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
   const [footerMenuItems, setFooterMenuItems] = useState<FooterMenuItem[]>([])
   const [uploadedImages, setUploadedImages] = useState<File[]>([])
   const [existingImages, setExistingImages] = useState<any[]>([])
+  const [selectedParentMenu, setSelectedParentMenu] = useState<string>('')
+  const [selectedParentFooterMenu, setSelectedParentFooterMenu] = useState<string>('')
+  const [activeMenuType, setActiveMenuType] = useState<'header' | 'footer' | null>(null);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -114,7 +124,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
             'https://debttracker.uz/menus/main/',
             {
               headers: {
-                'Authorization': `Bearer ${token}`,
+                ...getAuthHeader(),
                 'Content-Type': 'application/json',
               },
             }
@@ -123,7 +133,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
             'https://debttracker.uz/menus/footer/',
             {
               headers: {
-                'Authorization': `Bearer ${token}`,
+                ...getAuthHeader(),
                 'Content-Type': 'application/json',
               },
             }
@@ -146,6 +156,14 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
 
     fetchMenuItems()
   }, [token])
+
+  useEffect(() => {
+    if (initialData?.menu) {
+      setActiveMenuType('header');
+    } else if (initialData?.footer_menu) {
+      setActiveMenuType('footer');
+    }
+  }, [initialData]);
 
   const handleAdditionalImages = (files: FileList | null) => {
     if (files) {
@@ -222,6 +240,22 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
     }
   }
 
+  const getParentMenuItems = (items: MainMenuItem[]) => {
+    return items.filter(item => item.parent === null)
+  }
+
+  const getSubMenuItems = (items: MainMenuItem[], parentId: number) => {
+    return items.filter(item => item.parent === parentId)
+  }
+
+  const getParentFooterMenuItems = (items: FooterMenuItem[]) => {
+    return items.filter(item => item.parent === null)
+  }
+
+  const getSubFooterMenuItems = (items: FooterMenuItem[], parentId: number) => {
+    return items.filter(item => item.parent === parentId)
+  }
+
   return (
     <div className="container mx-auto p-6 mt-[50px]">
       <PageHeader
@@ -256,38 +290,104 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Header Menu
           </label>
-          <select
-            value={selectedMenu}
-            onChange={(e) => setSelectedMenu(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-          >
-            <option value="">Not in Header Menu</option>
-            {menuItems.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.translations[currentLanguage]?.name || item.translations['en']?.name}
-                {item.parent && ' (Sub-menu)'}
-              </option>
-            ))}
-          </select>
+          <div className="space-y-4">
+            <Select
+              disabled={activeMenuType === 'footer'}
+              value={selectedParentMenu}
+              onValueChange={(value) => {
+                setSelectedParentMenu(value);
+                setSelectedMenu('');
+                if (value) {
+                  setActiveMenuType('header');
+                } else {
+                  setActiveMenuType(null);
+                }
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Not in Header Menu" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">Not in Header Menu</SelectItem>
+                {getParentMenuItems(menuItems).map((item) => (
+                  <SelectItem key={item.id} value={item.id.toString()}>
+                    {item.translations[currentLanguage]?.name || item.translations['en']?.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {selectedParentMenu && (
+              <Select
+                value={selectedMenu}
+                onValueChange={(value) => setSelectedMenu(value === '_none' ? '' : value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Sub-menu (Optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Select Sub-menu (Optional)</SelectItem>
+                  {getSubMenuItems(menuItems, Number(selectedParentMenu)).map((item) => (
+                    <SelectItem key={item.id} value={item.id.toString()}>
+                      {item.translations[currentLanguage]?.name || item.translations['en']?.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
 
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Footer Menu
           </label>
-          <select
-            value={selectedFooterMenu}
-            onChange={(e) => setSelectedFooterMenu(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-          >
-            <option value="">Not in Footer Menu</option>
-            {footerMenuItems.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.translations[currentLanguage]?.name || item.translations['en']?.name}
-                {item.parent && ' (Sub-menu)'}
-              </option>
-            ))}
-          </select>
+          <div className="space-y-4">
+            <Select
+              disabled={activeMenuType === 'header'}
+              value={selectedParentFooterMenu}
+              onValueChange={(value) => {
+                setSelectedParentFooterMenu(value);
+                setSelectedFooterMenu('');
+                if (value) {
+                  setActiveMenuType('footer');
+                } else {
+                  setActiveMenuType(null);
+                }
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Not in Footer Menu" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">Not in Footer Menu</SelectItem>
+                {getParentFooterMenuItems(footerMenuItems).map((item) => (
+                  <SelectItem key={item.id} value={item.id.toString()}>
+                    {item.translations[currentLanguage]?.name || item.translations['en']?.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {selectedParentFooterMenu && (
+              <Select
+                value={selectedFooterMenu}
+                onValueChange={(value) => setSelectedFooterMenu(value === '_none' ? '' : value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Sub-menu (Optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Select Sub-menu (Optional)</SelectItem>
+                  {getSubFooterMenuItems(footerMenuItems, Number(selectedParentFooterMenu)).map((item) => (
+                    <SelectItem key={item.id} value={item.id.toString()}>
+                      {item.translations[currentLanguage]?.name || item.translations['en']?.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
 
         <div className="mb-6">

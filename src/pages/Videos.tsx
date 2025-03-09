@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { DataTable } from '../helpers/DataTable'
 import { PageHeader } from '../helpers/PageHeader'
 import { useLanguage } from '../hooks/useLanguage'
-import { fetchWithAuth } from '../api/api'
+import { fetchWithAuth, getAuthHeader } from '../api/api'
 
 export function Videos() {
   const navigate = useNavigate()
@@ -29,7 +29,7 @@ export function Videos() {
 
       const data = await response.json()
       console.log('Fetched videos:', data)
-      setVideos(data || [])
+      setVideos(data.results || [])
     } catch (error) {
       console.error('Error fetching videos:', error)
       setVideos([])
@@ -80,6 +80,7 @@ export function Videos() {
     try {
       const response = await fetchWithAuth(`https://debttracker.uz/publications/videos/${id}/`, {
         method: 'DELETE',
+        headers: getAuthHeader(),
       })
 
       if (response.ok) {
@@ -128,6 +129,7 @@ export function Videos() {
               </button>
             </div>
           )}
+          
         />
       </div>
     </div>

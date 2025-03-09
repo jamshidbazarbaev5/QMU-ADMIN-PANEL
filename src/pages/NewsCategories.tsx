@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Pencil, Loader2 } from "lucide-react"
+import { Plus, Pencil, Loader2, Trash2 } from "lucide-react"
 import { Button } from "../components/ui/button"
 import {
   Table,
@@ -10,6 +10,18 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table"
+import { fetchWithAuth, getAuthHeader } from "../api/api"
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../components/ui/alert-dialog"
 
 interface Translation {
   name: string
@@ -26,19 +38,23 @@ interface Category {
   }
 }
 
+type LanguageKey = 'en' | 'ru' | 'uz' | 'kk'
+
 export default function NewsCategories() {
   const navigate = useNavigate()
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [currentLanguage, setCurrentLanguage] = useState<string>(() => {
-    return localStorage.getItem('language') || 'ru'
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageKey>(() => {
+    return (localStorage.getItem('language') || 'ru') as LanguageKey
   })
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`https://debttracker.uz/news/category/`)
+        const response = await fetchWithAuth(`https://debttracker.uz/news/category/`, {
+          headers: getAuthHeader()
+        })
         if (!response.ok) {
           throw new Error('Failed to fetch categories')
         }
@@ -59,13 +75,34 @@ export default function NewsCategories() {
     const handleStorageChange = () => {
       const newLanguage = localStorage.getItem('language')
       if (newLanguage && newLanguage !== currentLanguage) {
-        setCurrentLanguage(newLanguage)
+        setCurrentLanguage(newLanguage as LanguageKey)
       }
     }
 
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [currentLanguage])
+
+  const handleDelete = async (slug: string) => {
+    try {
+      const response = await fetchWithAuth(`https://debttracker.uz/news/category/${slug}/`, {
+        method: 'DELETE',
+        headers: getAuthHeader()
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete category')
+      }
+
+      // Refresh the categories list
+      setCategories(categories.filter(category => 
+        category.translations[currentLanguage]?.slug !== slug
+      ))
+    } catch (error) {
+      console.error('Error deleting category:', error)
+      alert('Failed to delete category')
+    }
+  }
 
   if (isLoading) {
     return (
@@ -98,20 +135,59 @@ export default function NewsCategories() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {categories.map((category) => (
+            {categories.map((category, index) => (
               <TableRow key={category.id}>
-                <TableCell>{category.id}</TableCell>
+                <TableCell>{index + 1}</TableCell>
                 <TableCell>
-                  {category.translations[currentLanguage as keyof typeof category.translations]?.name || '-'}
+                  {category.translations[currentLanguage]?.name || '-'}
                 </TableCell>
-                <TableCell>
+                <TableCell className="flex gap-2">
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => navigate(`/edit-news-category/${category.id}`)}
+                    onClick={() => {
+                      const slug = category.translations[currentLanguage]?.slug
+                      if (slug) {
+                        navigate(`/create-news-category?slug=${slug}`)
+                      }
+                    }}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this category? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-red-600 hover:bg-red-700"
+                          onClick={() => {
+                            const slug = category.translations[currentLanguage]?.slug
+                            if (slug) {
+                              handleDelete(slug)
+                            }
+                          }}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </TableCell>
               </TableRow>
             ))}

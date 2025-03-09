@@ -4,8 +4,9 @@ import { DataTable } from '../helpers/DataTable'
 import { TranslatedForm } from '../helpers/TranslatedForm'
 import { useLanguage } from '../hooks/useLanguage'
 import { Dialog, DialogContent } from '../components/ui/dialog'
-import { Pencil } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { getAuthHeader, fetchWithAuth } from '../api/api'
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '../components/ui/alert-dialog'
 
 interface Service {
   id: number
@@ -27,10 +28,11 @@ export function ServicesPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null)
   const currentLanguage = useLanguage()
 
   const fetchServices = async () => {
-    const response = await fetchWithAuth('https://debttracker.uz/ru/references/services/', {
+    const response = await fetchWithAuth('https://debttracker.uz/references/services/', {
       headers: getAuthHeader()
     });
     const data = await response.json();
@@ -50,12 +52,11 @@ export function ServicesPage() {
     setIsLoading(true)
     try {
       const url = editingService 
-        ? `https://debttracker.uz/ru/references/services/${editingService.id}/`
-        : 'https://debttracker.uz/ru/references/services/'  
+        ? `https://debttracker.uz/references/services/${editingService.id}/`
+        : 'https://debttracker.uz/references/services/'
       
       const submitData = new FormData()
       
-      // Add translations first
       const translations = {
         en: { name: formData.en.name },
         uz: { name: formData.uz.name },
@@ -144,25 +145,52 @@ export function ServicesPage() {
   ]
 
   const handleEdit = async (service: Service) => {
-    setEditingService(service)
-    setSelectedImage(null)
-    setIsDialogOpen(true)
+    console.log('Editing service:', service);
+    setEditingService(service);
+    setSelectedImage(null);
+    setIsDialogOpen(true);
     
     const response = await fetchWithAuth(`https://debttracker.uz/ru/references/services/${service.id}/`, {
       headers: getAuthHeader()
     });
     const serviceData = await response.json();
+    console.log('Fetched service data:', serviceData);
     
-    const translatedData = Object.keys(serviceData.translations || {}).reduce((acc, lang) => {
-      acc[lang] = {
+    // Initialize translatedData with the URL for all languages
+    const translatedData = {} as Record<string, any>;
+    const allLanguages = ['uz', 'ru', 'en', 'kk'];
+    
+    allLanguages.forEach(lang => {
+      translatedData[lang] = {
         name: serviceData.translations[lang]?.name || '',
-        url: serviceData.url 
+        url: service.url  // Use the URL from the service object
       };
-      return acc;
-    }, {} as Record<string, any>);
+    });
     
- 
+    console.log('Final translated data:', translatedData);
     setEditingService({ ...service, translations: translatedData });
+  }
+
+  const handleDelete = async (service: Service) => {
+    try {
+      const response = await fetchWithAuth(
+        `https://debttracker.uz/references/services/${service.id}/`,
+        {
+          method: 'DELETE',
+          headers: getAuthHeader(),
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to delete service')
+      }
+
+      await fetchServices()
+      setServiceToDelete(null)
+    } catch (error) {
+      console.error('Error deleting service:', error)
+      alert(error instanceof Error ? error.message : 'An unknown error occurred')
+    }
   }
 
   return (
@@ -182,15 +210,26 @@ export function ServicesPage() {
         columns={columns}
         currentLanguage={currentLanguage}
         actions={(item) => (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              handleEdit(item)
-            }}
-            className="p-2 hover:bg-gray-100 rounded-full"
-          >
-            <Pencil className="h-4 w-4 text-gray-500" />
-          </button>
+          <div className="flex gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleEdit(item)
+              }}
+              className="p-2 hover:bg-gray-100 rounded-full"
+            >
+              <Pencil className="h-4 w-4 text-gray-500" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setServiceToDelete(item)
+              }}
+              className="p-2 hover:bg-gray-100 rounded-full"
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </button>
+          </div>
         )}
       />
 
@@ -239,6 +278,26 @@ export function ServicesPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!serviceToDelete} onOpenChange={() => setServiceToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the service.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600"
+              onClick={() => serviceToDelete && handleDelete(serviceToDelete)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

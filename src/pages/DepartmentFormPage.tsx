@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
-import { PageHeader } from '../helpers/PageHeader'
 import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { fetchWithAuth, getAuthHeader } from '../api/api'
+import { Card, CardHeader, CardContent, CardTitle } from '../components/ui/card'
+import { Button } from '../components/ui/button'
+import { Loader2 } from 'lucide-react'
 
 interface Faculty {
   id: number
@@ -97,7 +99,7 @@ export function DepartmentFormPage() {
       })
 
       if (response.ok) {
-        navigate('/departments')
+        navigate('/department')
       }
     } catch (error) {
       console.error('Error saving department:', error)
@@ -106,42 +108,71 @@ export function DepartmentFormPage() {
     }
   }
 
-  return (
-    <div className="container mx-auto py-10 mt-[50px]">
-      <PageHeader
-        title={id ? "Edit Department" : "Create Department"}
-        createButtonLabel=""
-      />
-      <div className="mt-8">
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-2">Faculty</label>
-          <Select
-            value={selectedFaculty}
-            onValueChange={setSelectedFaculty}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a faculty" />
-            </SelectTrigger>
-            <SelectContent>
-              {faculties?.map((faculty) => (
-                <SelectItem key={faculty.id} value={String(faculty.id)}>
-                  {faculty.translations[currentLanguage]?.name ||
-                   faculty.translations.en?.name ||
-                   faculty.translations.ru?.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <TranslatedForm
-          fields={translatedFields}
-          languages={['en', 'ru', 'uz', 'kk']}
-          onSubmit={handleSubmit}
-          initialData={editingDepartment?.translations}
-          isLoading={isLoading}
-        />
+  if (isLoading && id) {
+    return (
+      <div className="container mx-auto p-6 flex justify-center items-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#6C5DD3]" />
       </div>
+    )
+  }
+
+  if (id && !editingDepartment) {
+    return (
+      <div className="container mx-auto p-6 flex justify-center items-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#6C5DD3]" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto p-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>{id ? 'Edit' : 'Create'} Department</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Faculty</label>
+              <Select
+                value={selectedFaculty}
+                onValueChange={setSelectedFaculty}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a faculty" />
+                </SelectTrigger>
+                <SelectContent>
+                  {faculties?.map((faculty) => (
+                    <SelectItem key={faculty.id} value={String(faculty.id)}>
+                      {faculty.translations[currentLanguage]?.name ||
+                       faculty.translations.en?.name ||
+                       faculty.translations.ru?.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <TranslatedForm
+            fields={translatedFields}
+            languages={['en', 'ru', 'uz', 'kk']}
+            onSubmit={handleSubmit}
+            initialData={editingDepartment?.translations}
+            isLoading={isLoading}
+          />
+
+          <div className="flex justify-end gap-4 mt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate('/departments')}
+            >
+              Cancel
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

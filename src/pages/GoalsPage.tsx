@@ -7,6 +7,7 @@ import { Dialog, DialogContent } from '../components/ui/dialog'
 import { Pencil, Trash2 } from 'lucide-react'
 import { getAuthHeader, fetchWithAuth } from '../api/api'
 import { Button } from '../components/ui/button'
+import { ChromePicker } from 'react-color'
 
 interface Goal {
   id: number
@@ -19,9 +20,7 @@ interface Goal {
 }
 
 const fields = [
-  { name: 'name', label: 'Name', type: 'text' as const, required: true },
-  { name: 'color', label: 'Color', type: 'text' as const, required: true },
-  { name: 'goals', label: 'Goals', type: 'text' as const, required: true },
+  { name: 'имя', label: 'имя', type: 'text' as const, required: true },
 ]
 
 export function GoalsPage() {
@@ -30,6 +29,8 @@ export function GoalsPage() {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const currentLanguage = useLanguage()
+  const [color, setColor] = useState('#ffffff')
+  const [goalsValue, setGoalsValue] = useState<number>(0)
 
   const fetchGoals = async () => {
     try {
@@ -63,7 +64,7 @@ export function GoalsPage() {
         : `https://debttracker.uz/news/goals/`
 
       const translations = Object.entries(formData).reduce((acc, [lang, data]: [string, any]) => {
-        if (lang !== 'goals' && lang !== 'color' && data.name) {  // Only include languages with names
+        if (lang !== 'goals' && lang !== 'color' && data.name) {
           acc[lang] = {
             name: data.name
           }
@@ -73,8 +74,8 @@ export function GoalsPage() {
 
       const payload = {
         translations,
-        color: formData.color?.replace('#', '') || 'ffffff',
-        goals: Number(formData.goals || 0)
+        color: color.replace('#', ''),
+        goals: goalsValue
       }
 
       const response = await fetchWithAuth(url, {
@@ -86,7 +87,11 @@ export function GoalsPage() {
         body: JSON.stringify(payload)
       })
 
-      if (!response.ok) throw new Error('Failed to save goal')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Server response:', errorData)
+        throw new Error('Failed to save goal')
+      }
       
       await fetchGoals()
       setIsDialogOpen(false)
@@ -102,8 +107,19 @@ export function GoalsPage() {
     if (!window.confirm('Are you sure you want to delete this goal?')) return
 
     try {
+      const deleteSlug = 
+        goal.translations[currentLanguage]?.slug ||
+        goal.translations.en?.slug ||
+        goal.translations.ru?.slug ||
+        goal.translations.uz?.slug ||
+        goal.translations.kk?.slug
+
+      if (!deleteSlug) {
+        throw new Error('No valid slug found for deletion')
+      }
+
       const response = await fetchWithAuth(
-          `https://debttracker.uz/news/goals/${goal.translations.slug}/`,
+        `https://debttracker.uz/news/goals/${deleteSlug}/`,
         { 
           method: 'DELETE',
           headers: getAuthHeader()
@@ -139,29 +155,56 @@ export function GoalsPage() {
   ]
 
   const handleEdit = (goal: Goal) => {
-    // Keep the original translations data for maintaining slugs
+    setColor(`#${goal.color}`)
+    setGoalsValue(goal.goals)
     const initialData = Object.keys(goal.translations).reduce((acc, lang) => {
       acc[lang] = {
         name: goal.translations[lang]?.name || '',
-        color: goal.color,
         // Keep the original slug
         slug: goal.translations[lang]?.slug || ''
       }
       return acc
     }, {} as Record<string, any>)
 
-    // Add goals to the root level of initialData
-    initialData.goals = goal.goals
-
     setEditingGoal({ ...goal, translations: initialData })
     setIsDialogOpen(true)
+  }
+
+  // Add color picker component
+  const ColorPickerField = ({ value, onChange }: { value: string; onChange: (color: string) => void }) => {
+    const [showPicker, setShowPicker] = useState(false)
+
+    return (
+      <div className="relative">
+        <div className="flex items-center gap-2">
+          <div
+            className="w-10 h-10 rounded border cursor-pointer"
+            style={{ backgroundColor: value }}
+            onClick={() => setShowPicker(!showPicker)}
+          />
+          <span>{value}</span>
+        </div>
+        {showPicker && (
+          <div className="absolute z-10 mt-2">
+            <div
+              className="fixed inset-0"
+              onClick={() => setShowPicker(false)}
+            />
+            <ChromePicker
+              color={value}
+              onChange={(color) => onChange(color.hex)}
+            />
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (
     <div className="p-6 mt-[50px]">
       <PageHeader
-        title="Goals"
-        createButtonLabel="Add Goal"
+        title="Цели"
+        createButtonLabel="Добавить цель"
         onCreateClick={() => {
           setEditingGoal(null)
           setIsDialogOpen(true)
@@ -201,19 +244,37 @@ export function GoalsPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <h2 className="text-lg font-semibold mb-4">
-            {editingGoal ? 'Edit Goal' : 'Create Goal'}
+            {editingGoal ? 'Редактировать цель' : 'Создать цель'}
           </h2>
+          
+          <div className="space-y-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Цвет</label>
+              <ColorPickerField
+                value={color}
+                onChange={(newColor) => setColor(newColor)}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">Цели</label>
+              <input
+                type="number"
+                className="w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                value={goalsValue}
+                onChange={(e) => setGoalsValue(Number(e.target.value))}
+                required
+                min={0}
+              />
+            </div>
+          </div>
+
           <TranslatedForm
             fields={fields}
             languages={['uz', 'ru', 'en', 'kk']}
             onSubmit={handleSubmit}
-            initialData={{
-              ...editingGoal?.translations,
-              goals: editingGoal?.goals,
-              color: editingGoal?.color
-            }}
+            initialData={editingGoal?.translations}
             isLoading={isLoading}
-            sharedFields={['color', 'goals']}
           />
         </DialogContent>
       </Dialog>

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { Loader2 } from "lucide-react"
@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../components/ui/form'
 import { Input } from '../components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
-import { getAuthHeader } from "../api/api"
+import { fetchWithAuth, getAuthHeader } from "../api/api"
 
 interface FormValues {
   name_ru: string
@@ -17,9 +17,9 @@ interface FormValues {
 
 export default function CreateNewsCategory() {
   const navigate = useNavigate()
-  const [] = useState<string>(() => {
-    return localStorage.getItem('language') || 'ru'
-  })
+  const [isLoading, setIsLoading] = useState(false)
+  const slug = new URLSearchParams(window.location.search).get('slug')
+  const isEditMode = !!slug
 
   const form = useForm<FormValues>({
     defaultValues: {
@@ -29,6 +29,38 @@ export default function CreateNewsCategory() {
       name_kk: "",
     },
   })
+
+  // Fetch existing category data
+  useEffect(() => {
+    async function fetchCategory() {
+      if (!slug) return
+
+      setIsLoading(true)
+      try {
+        const response = await fetch(`https://debttracker.uz/news/category/${slug}`, {
+          headers: getAuthHeader()
+        })
+        
+        if (!response.ok) throw new Error('Failed to fetch category')
+        
+        const data = await response.json()
+        form.reset({
+          name_ru: data.translations.ru.name,
+          name_en: data.translations.en.name,
+          name_uz: data.translations.uz.name,
+          name_kk: data.translations.kk.name,
+        })
+      } catch (error) {
+        console.error('Error fetching category:', error)
+        alert('Failed to fetch category')
+        navigate('/news-categories')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchCategory()
+  }, [slug, form, navigate])
 
   async function onSubmit(values: FormValues) {
     try {
@@ -51,8 +83,12 @@ export default function CreateNewsCategory() {
         }
       }
 
-      const response = await fetch(`https://debttracker.uz/news/category/`, {
-        method: 'POST',
+      const url = isEditMode 
+        ? `https://debttracker.uz/news/category/${slug}/`
+        : `https://debttracker.uz/news/category/`
+
+      const response = await fetchWithAuth(url, {
+        method: isEditMode ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...getAuthHeader()
@@ -61,13 +97,13 @@ export default function CreateNewsCategory() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create category')
+        throw new Error(`Failed to ${isEditMode ? 'update' : 'create'} category`)
       }
 
       navigate('/news-categories')
     } catch (error) {
-      console.error('Error creating category:', error)
-      alert('Failed to create category')
+      console.error(`Error ${isEditMode ? 'updating' : 'creating'} category:`, error)
+      alert(`Failed to ${isEditMode ? 'update' : 'create'} category`)
     }
   }
 
@@ -75,52 +111,58 @@ export default function CreateNewsCategory() {
     <div className="container mx-auto p-6">
       <Card>
         <CardHeader>
-          <CardTitle>Create News Category</CardTitle>
+          <CardTitle>{isEditMode ? 'Edit' : 'Create'} News Category</CardTitle>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <div className="space-y-4">
-                {[
-                  { name: "name_ru", label: "Name (RU)" },
-                  { name: "name_en", label: "Name (EN)" },
-                  { name: "name_uz", label: "Name (UZ)" },
-                  { name: "name_kk", label: "Name (KK)" },
-                ].map((field) => (
-                  <FormField
-                    key={field.name}
-                    control={form.control}
-                    name={field.name as keyof FormValues}
-                    render={({ field: fieldProps }) => (
-                      <FormItem>
-                        <FormLabel>{field.label}</FormLabel>
-                        <FormControl>
-                          <Input {...fieldProps} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+          {isLoading ? (
+            <div className="flex justify-center">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <div className="space-y-4">
+                  {[
+                    { name: "name_ru", label: "Name (RU)" },
+                    { name: "name_en", label: "Name (EN)" },
+                    { name: "name_uz", label: "Name (UZ)" },
+                    { name: "name_kk", label: "Name (KK)" },
+                  ].map((field) => (
+                    <FormField
+                      key={field.name}
+                      control={form.control}
+                      name={field.name as keyof FormValues}
+                      render={({ field: fieldProps }) => (
+                        <FormItem>
+                          <FormLabel>{field.label}</FormLabel>
+                          <FormControl>
+                            <Input {...fieldProps} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+                
+                <div className="flex justify-end gap-4">
+                  <Button 
+                    variant="outline" 
+                    type="button"
+                    onClick={() => navigate('/news-categories')}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={form.formState.isSubmitting}>
+                    {form.formState.isSubmitting && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                  />
-                ))}
-              </div>
-              
-              <div className="flex justify-end gap-4">
-                <Button 
-                  variant="outline" 
-                  type="button"
-                  onClick={() => navigate('/news-categories')}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Create Category
-                </Button>
-              </div>
-            </form>
-          </Form>
+                    {isEditMode ? 'Update' : 'Create'} Category
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          )}
         </CardContent>
       </Card>
     </div>

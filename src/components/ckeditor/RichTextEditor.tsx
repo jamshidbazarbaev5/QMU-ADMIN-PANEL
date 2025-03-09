@@ -18,7 +18,7 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
           'preview', 'anchor', 'searchreplace', 'visualblocks',
           'fullscreen', 'insertdatetime', 'media', 'table', 'code',
           'help', 'wordcount', 'pagebreak', 'nonbreaking',
-          'save', 'directionality', 'emoticons', 'visualchars', 'quickbars', 'formatpainter'
+          'save', 'directionality', 'emoticons', 'visualchars', 'quickbars'
         ],
         toolbar: [
           'file | undo redo | formatselect | fontselect | fontsizeselect |',

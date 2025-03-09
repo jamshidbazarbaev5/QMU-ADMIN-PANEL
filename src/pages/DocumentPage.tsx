@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react'
 import { useLanguage } from '../hooks/useLanguage'
 import { PageHeader } from '../helpers/PageHeader'
 import { DataTable } from '../helpers/DataTable'
-import { Dialog, DialogContent } from '../components/ui/dialog'
-import { TranslatedForm } from '../helpers/TranslatedForm'
-import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { format } from 'date-fns'
-import {fetchWithAuth} from "../api/api.ts";
+import { fetchWithAuth, getAuthHeader } from "../api/api.ts"
+import { useNavigate } from 'react-router-dom'
+import { Pencil, Trash2 } from 'lucide-react'
 
 interface DocumentTranslation {
   title: string | null
@@ -32,20 +31,24 @@ const translatedFields = [
 
 export function DocumentPage() {
   const [documents, setDocuments] = useState<Document[]>([])
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingDocument, setEditingDocument] = useState<Document | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [menuId, ] = useState<number>(2) // You might want to make this dynamic
   const currentLanguage = useLanguage()
+  const navigate = useNavigate()
 
   const fetchDocuments = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/document/`)
+      const response = await fetchWithAuth(`https://debttracker.uz/menus/document/`, {
+        method: 'GET',
+        headers: {
+          ...getAuthHeader(),
+        },
+      })
       if (!response.ok) throw new Error('Failed to fetch documents')
       const data = await response.json()
       console.log('Fetched documents:', data)
-      setDocuments(data)
+      setDocuments(data.results)
     } catch (error) {
       console.error('Error fetching documents:', error)
     }
@@ -70,20 +73,19 @@ export function DocumentPage() {
         formData.append('file', selectedFile)
       }
 
-      const url = editingDocument 
-        ? `https://debttracker.uz/menus/document/${editingDocument.id}/`
-        : `https://debttracker.uz/menus/document/`
+      const url = `https://debttracker.uz/menus/document/`
 
       const response = await fetchWithAuth(url, {
-        method: editingDocument ? 'PUT' : 'POST',
-        body: formData
+        method: 'POST',
+        body: formData,
+        headers: {
+          ...getAuthHeader(),
+        },
       })
 
       if (!response.ok) throw new Error('Failed to save document')
       
       await fetchDocuments()
-      setIsDialogOpen(false)
-      setEditingDocument(null)
       setSelectedFile(null)
     } catch (error) {
       console.error('Error saving document:', error)
@@ -96,9 +98,13 @@ export function DocumentPage() {
     if (!window.confirm('Are you sure you want to delete this document?')) return
 
     try {
-      const response = await fetch(
+      const response = await fetchWithAuth(
         `https://debttracker.uz/menus/document/${document.id}/`,
-        { method: 'DELETE' }
+        { method: 'DELETE',
+        headers: {
+          ...getAuthHeader(),
+        },
+      }
       )
       
       if (!response.ok) throw new Error('Failed to delete document')
@@ -148,22 +154,13 @@ export function DocumentPage() {
     }
   ]
 
-  const handleEdit = (document: Document) => {
-    console.log('Editing document:', document)
-    setEditingDocument(document)
-    setSelectedFile(null)
-    setIsDialogOpen(true)
-  }
-
   return (
     <div className="p-6 mt-[50px]">
       <PageHeader
         title="Documents"
         createButtonLabel="Add Document"
         onCreateClick={() => {
-          setEditingDocument(null)
-          setSelectedFile(null)
-          setIsDialogOpen(true)
+          navigate('/documents/create')
         }}
       />
 
@@ -178,7 +175,7 @@ export function DocumentPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                handleEdit(item)
+                navigate(`/documents/edit/${item.id}`)
               }}
             >
               <Pencil className="h-4 w-4" />
@@ -196,43 +193,6 @@ export function DocumentPage() {
           </div>
         )}
       />
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <h2 className="text-lg font-semibold mb-4">
-            {editingDocument ? 'Edit Document' : 'Create Document'}
-          </h2>
-          
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">File</label>
-            {editingDocument && (
-              <div className="mb-2">
-                <a 
-                  href={editingDocument.file}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  View Current File
-                </a>
-              </div>
-            )}
-            <input
-              type="file"
-              onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              className="w-full"
-            />
-          </div>
-
-          <TranslatedForm
-            fields={translatedFields}
-            languages={['en', 'ru', 'uz', 'kk']}
-            onSubmit={handleSubmit}
-            initialData={editingDocument?.translations}
-            isLoading={isLoading}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

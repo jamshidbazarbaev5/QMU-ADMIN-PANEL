@@ -8,6 +8,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { useNavigate } from 'react-router-dom'
+import { fetchWithAuth, getAuthHeader } from '../api/api'
 
 interface AgencyTranslation {
   name: string
@@ -55,7 +56,9 @@ export function AgencyPage() {
 
   const fetchAgencies = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/agency/`)
+      const response = await fetchWithAuth(`https://debttracker.uz/menus/agency/`,{
+        headers:getAuthHeader()
+      })
       if (!response.ok) throw new Error('Failed to fetch agencies')
       const data = await response.json()
       setAgencies(Array.isArray(data) ? data : [data])
@@ -66,7 +69,7 @@ export function AgencyPage() {
 
   const fetchMenus = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/main/`)
+      const response = await fetchWithAuth(`https://debttracker.uz/menus/main/`,{headers:getAuthHeader()})
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
       setMenus(data)
@@ -97,12 +100,13 @@ export function AgencyPage() {
       }
 
       const url = editingAgency 
-        ? `https://debttracker.uz/menus/agency/${editingAgency.id}/`
+        ? `https://debttracker.uz/menus/agency/${editingAgency.translations.en.slug}/`
         : `https://debttracker.uz/menus/agency/`
 
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method: editingAgency ? 'PUT' : 'POST',
-        body: formData
+        body: formData,
+        headers: getAuthHeader()
       })
 
       if (!response.ok) throw new Error('Failed to save agency')
@@ -123,9 +127,10 @@ export function AgencyPage() {
     if (!window.confirm('Are you sure you want to delete this agency?')) return
 
     try {
-      const response = await fetch(
-        `https://debttracker.uz/menus/agency/${agency.id}/`,
-        { method: 'DELETE' }
+      const response = await fetchWithAuth(
+        `https://debttracker.uz/menus/agency/${agency.translations.en.slug}/`,
+        { method: 'DELETE',headers:getAuthHeader()}
+
       )
       
       if (!response.ok) throw new Error('Failed to delete agency')
@@ -185,7 +190,7 @@ export function AgencyPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                navigate(`/agencies/${item.id}/edit`)
+                navigate(`/agencies/${item.translations.en.slug}/edit`)
               }}
             >
               <Pencil className="h-4 w-4" />
