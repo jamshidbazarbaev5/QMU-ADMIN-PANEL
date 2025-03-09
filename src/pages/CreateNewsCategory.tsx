@@ -17,7 +17,7 @@ interface FormValues {
 
 export default function CreateNewsCategory() {
   const navigate = useNavigate()
-  const [currentLanguage] = useState<string>(() => {
+  const [] = useState<string>(() => {
     return localStorage.getItem('language') || 'ru'
   })
 

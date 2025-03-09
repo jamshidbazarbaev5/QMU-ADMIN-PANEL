@@ -5,7 +5,7 @@ import { DataTable } from '../helpers/DataTable'
 import { useNavigate } from 'react-router-dom'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
-import { getAuthHeader } from '../api/api'
+
 
 interface DepartmentTranslation {
   name: string
@@ -21,10 +21,7 @@ interface Department {
   }
 }
 
-const translatedFields = [
-  { name: 'name', label: 'Name', type: 'text' as const, required: true },
-  { name: 'description', label: 'Description', type: 'richtext' as const, required: true },
-]
+
 
 export function DepartmentPage() {
   const [departments, setDepartments] = useState<Department[]>([])
