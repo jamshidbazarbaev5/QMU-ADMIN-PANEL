@@ -8,7 +8,7 @@ import { Input } from '../components/ui/input'
 import { Textarea } from '../components/ui/textarea'
 import { Button } from '../components/ui/button'
 import { useForm } from 'react-hook-form'
-import { getAuthHeader } from '../api/api'
+import { fetchWithAuth, getAuthHeader } from '../api/api'
 
 interface FeedbackFormValues {
   full_name: string
@@ -39,7 +39,7 @@ export default function FeedbackForm() {
   const fetchFeedback = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/feedback/${id}/`, {
+      const response = await fetch(`https://debttracker.uz/feedback/${id}/`, {
         headers: {
           ...getAuthHeader()
         }
@@ -62,10 +62,10 @@ export default function FeedbackForm() {
   const onSubmit = async (values: FeedbackFormValues) => {
     try {
       setIsLoading(true)
-      const url = `https://debttracker.uz/${currentLanguage}/feedback/${id ? `${id}/` : ''}`
+      const url = `https://debttracker.uz/feedback/${id ? `${id}/` : ''}`
       const method = id ? 'PUT' : 'POST'
 
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method,
         headers: {
           'Content-Type': 'application/json',

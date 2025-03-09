@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '../helpers/PageHeader'
-import { createQuantity, fetchWithAuth, updateQuantity } from '../api/api'
+import { createQuantity, fetchWithAuth, getAuthHeader, updateQuantity } from '../api/api'
 import { TranslatedForm } from '../helpers/TranslatedForm'
 
 interface QuantityFormProps {
@@ -36,19 +36,20 @@ export function QuantityForm({ isEditing }: QuantityFormProps) {
     }
 
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/publications/quantities/${id}/`, {
+      const response = await fetchWithAuth(`https://debttracker.uz/publications/quantities/${id}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          ...getAuthHeader()
         }
       })
       if (!response.ok) throw new Error('Failed to fetch')
       const data = await response.json()
-      // Set the same title and quantity for all languages initially
+      
+      // Update to use translations from the API response
       setFormData({
-        en: { title: data.title, quantity: data.quantity.toString() },
-        ru: { title: data.title, quantity: data.quantity.toString() },
-        uz: { title: data.title, quantity: data.quantity.toString() },
-        kk: { title: data.title, quantity: data.quantity.toString() }
+        en: { title: data.translations.en.title, quantity: data.quantity.toString() },
+        ru: { title: data.translations.ru.title, quantity: data.quantity.toString() },
+        uz: { title: data.translations.uz.title, quantity: data.quantity.toString() },
+        kk: { title: data.translations.kk.title, quantity: data.quantity.toString() }
       })
     } catch (error) {
       console.error('Error:', error)

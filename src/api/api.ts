@@ -109,7 +109,7 @@ export const updateQuantity = async (id: string, data: QuantityData) => {
         ...getAuthHeader(),
     };
 
-    const response = await fetchWithAuth(`https://debttracker.uz/en/publications/quantities/${id}`, {
+    const response = await fetchWithAuth(`https://debttracker.uz/publications/quantities/${id}/`, {
         method: 'PUT',
         headers: headerObj,
         body: JSON.stringify(data),

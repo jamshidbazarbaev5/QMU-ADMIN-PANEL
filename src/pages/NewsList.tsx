@@ -54,6 +54,28 @@ export default function NewsList() {
     }
   }
 
+  const handleDelete = async (slug: string) => {
+    if (window.confirm('Are you sure you want to delete this news item?')) {
+      try {
+        const response = await fetchWithAuth(
+          `https://debttracker.uz/news/posts/${slug}/`,
+          {
+            method: 'DELETE',
+            headers: {
+              ...getAuthHeader()
+            }
+          }
+        )
+        if (!response.ok) throw new Error('Failed to delete news')
+        // Refresh the news list after successful deletion
+        fetchNews()
+      } catch (error) {
+        console.error('Error deleting news:', error)
+        alert('Error: Could not delete this news item')
+      }
+    }
+  }
+
   // Debounced search function
   const debouncedSearch = debounce((searchValue: string) => {
     fetchNews(searchValue)
@@ -100,7 +122,6 @@ export default function NewsList() {
       header: 'Actions',
       accessor: 'actions',
       cell: (item: NewsPost) => {
-        // Get the slug from the current language or fall back to other available languages
         const slug = item.translations[currentLanguage]?.slug || 
                     item.translations.ru?.slug ||
                     item.translations.en?.slug ||
@@ -122,6 +143,15 @@ export default function NewsList() {
               className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               Edit
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDelete(item.translations[currentLanguage]?.slug || item.translations.en?.slug || item.translations.ru?.slug || item.translations.uz?.slug || item.translations.kk?.slug)
+              }}
+              className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              Delete
             </button>
           </div>
         )

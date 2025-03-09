@@ -94,6 +94,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
         setPostData(data)
         setSelectedMenu(data.menu || '')
         setSelectedFooterMenu(data.footer_menu || '')
+        setExistingImages(data.images || [])
       } catch (error) {
         console.error('Error fetching post:', error)
         navigate('/posts')

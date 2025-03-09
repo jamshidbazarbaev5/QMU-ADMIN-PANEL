@@ -118,10 +118,11 @@ export default function CreateNews() {
         if (!response.ok) throw new Error('Failed to fetch news data')
         
         const data = await response.json()
+        console.log('Fetched news data:', data)
         
         form.reset({
           category: data.category?.toString() || "",
-          goals: data.goals?.map((g:any )=> g.toString()) || [],
+          goals: data.display_goals?.map((g: any) => g.id.toString()) || [],
           title_ru: data.translations?.ru?.title || "",
           title_en: data.translations?.en?.title || "",
           title_uz: data.translations?.uz?.title || "",
@@ -132,18 +133,29 @@ export default function CreateNews() {
           description_kk: data.translations?.kk?.description || "",
         })
 
-        // Handle existing images
-        if (data.images && Array.isArray(data.images)) {
-          setExistingImages(data.images)
+        // Initialize images array
+        let images: NewsImage[] = []
+
+        // Add main image if it exists
+        if (data.main_image) {
+          images.push({
+            id: -1, // Special ID for main image
+            image: data.main_image
+          })
         }
 
-        // Show the main image if it exists
-        if (data.main_image) {
-          setExistingImages(prev => [{
-            id: -1, // Use a special ID for main image
-            image: data.main_image
-          }, ...prev])
+        // Add additional images if they exist
+        if (data.images && Array.isArray(data.images)) {
+          // Ensure each image has an id property
+          const additionalImages = data.images.map((img: any, index: number) => ({
+            id: img.id || `temp_${index}`, // Use temp id if no id exists
+            image: typeof img === 'string' ? img : img.image
+          }))
+          images = [...images, ...additionalImages]
         }
+
+        console.log('Setting existing images:', images)
+        setExistingImages(images)
       } catch (error) {
         console.error('Error fetching news data:', error)
         alert('Failed to load news data')
@@ -188,17 +200,70 @@ export default function CreateNews() {
 
   const handleAdditionalImages = (files: FileList | null) => {
     if (files) {
+      console.log('Current uploadedImages:', uploadedImages)
+      console.log('Current existingImages:', existingImages)
+      console.log('New files being added:', Array.from(files))
+
       const newFiles = Array.from(files)
-      setUploadedImages(prev => [...prev, ...newFiles])
+      setUploadedImages(prev => {
+        const updatedFiles = [...prev, ...newFiles]
+        console.log('Combined uploaded files:', updatedFiles)
+        
+        // Create a new FormData that includes ALL images
+        const formData = new FormData()
+        
+        // Add existing images that are already on the server
+        existingImages
+          .filter(img => img.id !== -1) // Exclude main image
+          .forEach(img => {
+            console.log('Adding existing server image:', img.image)
+            if (typeof img.id === 'string' && img.id.startsWith('temp_')) {
+              formData.append('images', img.image)
+            } else {
+              formData.append('existing_images', img.id.toString())
+            }
+          })
+        
+        // Add newly uploaded images
+        updatedFiles.forEach(file => {
+          console.log('Adding new uploaded file:', file.name)
+          formData.append('uploaded_images', file)
+        })
+        
+        // Create DataTransfer for form control
+        const dataTransfer = new DataTransfer()
+        
+        // Add all files to DataTransfer
+        updatedFiles.forEach(file => {
+          dataTransfer.items.add(file)
+        })
+        
+        console.log('Final DataTransfer files:', Array.from(dataTransfer.files))
+        form.setValue('uploaded_images', dataTransfer.files)
+        
+        return updatedFiles
+      })
+    }
+  }
+
+  const handleDeleteUploadedImage = (index: number) => {
+    console.log('Deleting image at index:', index)
+    
+    setUploadedImages(prev => {
+      const updatedFiles = prev.filter((_, i) => i !== index)
+      console.log('Files after deletion:', updatedFiles)
       
       const dataTransfer = new DataTransfer()
-      const allFiles = [...uploadedImages, ...newFiles]
-      allFiles.forEach(file => {
+      updatedFiles.forEach(file => {
+        console.log('Re-adding file to DataTransfer:', file.name)
         dataTransfer.items.add(file)
       })
       
+      console.log('Final DataTransfer files after deletion:', Array.from(dataTransfer.files))
       form.setValue('uploaded_images', dataTransfer.files)
-    }
+      
+      return updatedFiles
+    })
   }
 
   async function onSubmit(values: FormValues) {
@@ -210,37 +275,64 @@ export default function CreateNews() {
     try {
       const formData = new FormData()
       
-      formData.append('category', values.category)
-      values.goals.forEach(goalId => {
-        formData.append('goals', goalId)
-      })
+      // Add category if it exists
+      if (values.category) {
+        formData.append('category', values.category)
+      }
+
+      // Add goals
+      if (values.goals && Array.isArray(values.goals)) {
+        values.goals
+          .filter(goalId => goalId != null)
+          .forEach(goalId => {
+            formData.append('goals', goalId.toString())
+          })
+      }
       
+      // Add main image if it exists
       if (values.main_image?.[0]) {
         formData.append('main_image', values.main_image[0])
       }
 
-      if (values.uploaded_images) {
+      // Add existing images that weren't deleted
+      existingImages
+        .filter(img => img && img.id !== -1) // Filter out main image
+        .forEach(img => {
+          if (img && (typeof img.id === 'number' || typeof img.id === 'string')) {
+            // If it's a temporary ID (string starting with 'temp_'), send the image URL
+            if (typeof img.id === 'string' && img.id.startsWith('temp_')) {
+              formData.append('images', img.image)
+            } else {
+              formData.append('existing_images', img.id.toString())
+            }
+          }
+        })
+
+      // Add newly uploaded images
+      if (values.uploaded_images && values.uploaded_images.length > 0) {
         Array.from(values.uploaded_images).forEach((file) => {
-          formData.append(`uploaded_images`, file)
+          if (file) {
+            formData.append('uploaded_images', file)
+          }
         })
       }
 
       const translations = {
         ru: {
-          title: values.title_ru,
-          description: values.description_ru,
+          title: values.title_ru || '',
+          description: values.description_ru || '',
         },
         en: {
-          title: values.title_en,
-          description: values.description_en,
+          title: values.title_en || '',
+          description: values.description_en || '',
         },
         uz: {
-          title: values.title_uz,
-          description: values.description_uz,
+          title: values.title_uz || '',
+          description: values.description_uz || '',
         },
         kk: {
-          title: values.title_kk,
-          description: values.description_kk,
+          title: values.title_kk || '',
+          description: values.description_kk || '',
         }
       }
 
@@ -249,6 +341,14 @@ export default function CreateNews() {
       const url = isEditing 
         ? `https://debttracker.uz/news/posts/${newsId}/`
         : `https://debttracker.uz/news/posts/`
+
+      console.log('Submitting form data:', {
+        category: values.category,
+        goals: values.goals,
+        existingImages: existingImages,
+        uploadedImages: Array.from(values.uploaded_images || []),
+        translations
+      })
 
       const response = await fetchWithAuth(url, {
         method: isEditing ? 'PUT' : 'POST',
@@ -500,16 +600,7 @@ export default function CreateNews() {
                                     <button
                                       type="button"
                                       className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
-                                      onClick={() => {
-                                        const updatedFiles = uploadedImages.filter((_, i) => i !== index)
-                                        setUploadedImages(updatedFiles)
-                                        
-                                        const dataTransfer = new DataTransfer()
-                                        updatedFiles.forEach(file => {
-                                          dataTransfer.items.add(file)
-                                        })
-                                        form.setValue('uploaded_images', dataTransfer.files)
-                                      }}
+                                      onClick={() => handleDeleteUploadedImage(index)}
                                     >
                                       ×
                                     </button>

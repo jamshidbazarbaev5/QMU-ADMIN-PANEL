@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
-import { Pencil } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { DataTable } from '../helpers/DataTable'
 import { PageHeader } from'../helpers/PageHeader'
 import { Input } from "../components/ui/input"
 import { useLanguage } from '../hooks/useLanguage'
+import { fetchWithAuth, getAuthHeader } from '../api/api'
 
 interface Announcement {
   id: number
@@ -65,6 +66,29 @@ export default function Announcements() {
     navigate(`/edit-announcement/${slug}?id=${announcement.id}`)
   }
 
+  const handleDelete = async (announcement: Announcement) => {
+    const slug = announcement.translations[currentLanguage]?.slug
+    if (!slug) return
+
+    try {
+      const response = await fetchWithAuth(`https://debttracker.uz/announcements/${slug}/`, {
+        method: 'DELETE',
+        headers: {
+          ...getAuthHeader()
+        }
+      })
+      
+      if (response.ok) {
+        // Refresh the announcements list after successful deletion
+        fetchAnnouncements(currentLanguage, searchQuery)
+      } else {
+        console.error('Failed to delete announcement:', response.status, response.statusText)
+      }
+    } catch (error) {
+      console.error('Error deleting announcement:', error)
+    }
+  }
+
   const columns: Column[] = [
     {
       header: 'ID',
@@ -101,16 +125,28 @@ export default function Announcements() {
   ]
 
   const renderActions = (item: Announcement) => (
-    <button
-      onClick={(e) => {
-        e.stopPropagation()
-        handleEdit(item)
-      }}
-      className="flex items-center gap-2 px-3 py-1 text-[#6C5DD3] hover:bg-[#6C5DD3]/10 rounded-md transition-colors"
-    >
-      <Pencil className="h-4 w-4" />
-      Edit
-    </button>
+    <div className="flex items-center gap-2">
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          handleEdit(item)
+        }}
+        className="flex items-center gap-2 px-3 py-1 text-[#6C5DD3] hover:bg-[#6C5DD3]/10 rounded-md transition-colors"
+      >
+        <Pencil className="h-4 w-4" />
+        Edit
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          handleDelete(item)
+        }}
+        className="flex items-center gap-2 px-3 py-1 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+      >
+        <Trash2 className="h-4 w-4" />
+        Delete
+      </button>
+    </div>
   )
 
   return (
