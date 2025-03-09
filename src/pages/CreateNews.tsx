@@ -118,11 +118,10 @@ export default function CreateNews() {
         if (!response.ok) throw new Error('Failed to fetch news data')
         
         const data = await response.json()
-        console.log('Fetched news data:', data)
         
         form.reset({
           category: data.category?.toString() || "",
-          goals: data.display_goals?.map((g: any) => g.id.toString()) || [],
+          goals: data.goals?.map((g:any )=> g.toString()) || [],
           title_ru: data.translations?.ru?.title || "",
           title_en: data.translations?.en?.title || "",
           title_uz: data.translations?.uz?.title || "",
@@ -133,29 +132,18 @@ export default function CreateNews() {
           description_kk: data.translations?.kk?.description || "",
         })
 
-        // Initialize images array
-        let images: NewsImage[] = []
-
-        // Add main image if it exists
-        if (data.main_image) {
-          images.push({
-            id: -1, // Special ID for main image
-            image: data.main_image
-          })
-        }
-
-        // Add additional images if they exist
+        // Handle existing images
         if (data.images && Array.isArray(data.images)) {
-          // Ensure each image has an id property
-          const additionalImages = data.images.map((img: any, index: number) => ({
-            id: img.id || `temp_${index}`, // Use temp id if no id exists
-            image: typeof img === 'string' ? img : img.image
-          }))
-          images = [...images, ...additionalImages]
+          setExistingImages(data.images)
         }
 
-        console.log('Setting existing images:', images)
-        setExistingImages(images)
+        // Show the main image if it exists
+        if (data.main_image) {
+          setExistingImages(prev => [{
+            id: -1, // Use a special ID for main image
+            image: data.main_image
+          }, ...prev])
+        }
       } catch (error) {
         console.error('Error fetching news data:', error)
         alert('Failed to load news data')
@@ -217,11 +205,7 @@ export default function CreateNews() {
           .filter(img => img.id !== -1) // Exclude main image
           .forEach(img => {
             console.log('Adding existing server image:', img.image)
-            if (typeof img.id === 'string' && img.id.startsWith('temp_')) {
-              formData.append('images', img.image)
-            } else {
-              formData.append('existing_images', img.id.toString())
-            }
+            formData.append('existing_images', img.id.toString())
           })
         
         // Add newly uploaded images
@@ -232,8 +216,6 @@ export default function CreateNews() {
         
         // Create DataTransfer for form control
         const dataTransfer = new DataTransfer()
-        
-        // Add all files to DataTransfer
         updatedFiles.forEach(file => {
           dataTransfer.items.add(file)
         })
@@ -280,10 +262,10 @@ export default function CreateNews() {
         formData.append('category', values.category)
       }
 
-      // Add goals
+      // Filter out any null/undefined goals before appending
       if (values.goals && Array.isArray(values.goals)) {
         values.goals
-          .filter(goalId => goalId != null)
+          .filter(goalId => goalId != null) // Filter out null/undefined values
           .forEach(goalId => {
             formData.append('goals', goalId.toString())
           })
@@ -296,15 +278,10 @@ export default function CreateNews() {
 
       // Add existing images that weren't deleted
       existingImages
-        .filter(img => img && img.id !== -1) // Filter out main image
+        .filter(img => img && img.id !== -1) // Filter out null/undefined and main image
         .forEach(img => {
-          if (img && (typeof img.id === 'number' || typeof img.id === 'string')) {
-            // If it's a temporary ID (string starting with 'temp_'), send the image URL
-            if (typeof img.id === 'string' && img.id.startsWith('temp_')) {
-              formData.append('images', img.image)
-            } else {
-              formData.append('existing_images', img.id.toString())
-            }
+          if (img && img.id) {
+            formData.append('existing_images', img.id.toString())
           }
         })
 
