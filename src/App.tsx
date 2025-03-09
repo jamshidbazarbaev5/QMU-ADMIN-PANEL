@@ -83,6 +83,7 @@ function App() {
             <Route path="/create-news-category" element={<PrivateRoute><CreateNewsCategory /></PrivateRoute>} />
             <Route path="/news-categories" element={<PrivateRoute><NewsCategories /></PrivateRoute>} />
             <Route path="/create-news" element={<PrivateRoute><CreateNews /></PrivateRoute>} />
+            <Route path="/edit-news-category/:id" element={<PrivateRoute><CreateNews /></PrivateRoute>} />
             <Route path="/feedback" element={<PrivateRoute><FeedbackList /></PrivateRoute>} />
             <Route path="/feedback/create" element={<PrivateRoute><FeedbackForm /></PrivateRoute>} />
             <Route path="/feedback/edit/:id" element={<PrivateRoute><FeedbackForm /></PrivateRoute>} />

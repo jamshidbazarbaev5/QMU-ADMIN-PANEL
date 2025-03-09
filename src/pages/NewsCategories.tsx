@@ -38,7 +38,7 @@ export default function NewsCategories() {
     const fetchCategories = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`https://debttracker.uz/${currentLanguage}/news/category/`)
+        const response = await fetch(`https://debttracker.uz/news/category/`)
         if (!response.ok) {
           throw new Error('Failed to fetch categories')
         }

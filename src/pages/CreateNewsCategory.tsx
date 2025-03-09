@@ -51,7 +51,7 @@ export default function CreateNewsCategory() {
         }
       }
 
-      const response = await fetch(`https://debttracker.uz/${currentLanguage}/news/category/`, {
+      const response = await fetch(`https://debttracker.uz/news/category/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

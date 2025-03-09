@@ -30,7 +30,7 @@ export function LinksPage() {
   const currentLanguage = useLanguage()
 
   const fetchLinks = async () => {
-    const response = await fetchWithAuth('https://debttracker.uz/ru/references/links/', {
+    const response = await fetchWithAuth('https://debttracker.uz/references/links/', {
       headers: getAuthHeader()
     });
     const data = await response.json();
@@ -45,8 +45,8 @@ export function LinksPage() {
     setIsLoading(true)
     try {
       const url = editingLink 
-        ? `https://debttracker.uz/ru/references/links/${editingLink.id}/`
-        : 'https://debttracker.uz/ru/references/links/'
+        ? `https://debttracker.uz/references/links/${editingLink.id}/`
+        : 'https://debttracker.uz/references/links/'
       
       const submitData = new FormData()
       
@@ -113,21 +113,21 @@ export function LinksPage() {
     setIsDialogOpen(true)
     
     // Fetch translations for the link
-    const response = await fetchWithAuth(`https://debttracker.uz/ru/references/links/${link.id}/`, {
+    const response = await fetchWithAuth(`https://debttracker.uz/references/links/${link.id}/`, {
       headers: getAuthHeader()
     });
     const linkData = await response.json();
     
-    // Prepare initial data with translations for all languages
-    const translatedData = Object.keys(linkData.translations).reduce((acc, lang) => {
+    // Initialize data for all supported languages
+    const translatedData = ['uz', 'ru', 'en', 'kk'].reduce((acc, lang) => {
       acc[lang] = {
-        name: linkData.translations[lang].name,
-        url: linkData.url // URL is shared across all languages
+        name: linkData.translations[lang]?.name,  
+        url: linkData.url  // URL is shared across all languages
       };
       return acc;
     }, {} as Record<string, any>);
     
-    setEditingLink({ ...link, translations: translatedData });
+    setEditingLink({ ...linkData, translations: translatedData });
   }
 
   return (

@@ -57,6 +57,8 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [menuItems, setMenuItems] = useState<MainMenuItem[]>([])
   const [footerMenuItems, setFooterMenuItems] = useState<FooterMenuItem[]>([])
+  const [uploadedImages, setUploadedImages] = useState<File[]>([])
+  const [existingImages, setExistingImages] = useState<any[]>([])
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -144,6 +146,13 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
     fetchMenuItems()
   }, [token])
 
+  const handleAdditionalImages = (files: FileList | null) => {
+    if (files) {
+      const newFiles = Array.from(files)
+      setUploadedImages(prev => [...prev, ...newFiles])
+    }
+  }
+
   if (isLoading) {
     return <div className="container mx-auto p-6 mt-[50px]">Loading...</div>
   }
@@ -165,9 +174,15 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
     try {
       setIsSubmitting(true)
       const formData = new FormData()
+      
       if (selectedImage) {
         formData.append('main_image', selectedImage)
       }
+
+      uploadedImages.forEach((file) => {
+        formData.append('uploaded_images', file)
+      })
+
       formData.append('menu', selectedMenu || '')
       formData.append('footer_menu', selectedFooterMenu || '')
       formData.append('translations', JSON.stringify(translations))
@@ -272,6 +287,59 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Additional Images
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => handleAdditionalImages(e.target.files)}
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#6C5DD3] file:text-white hover:file:bg-[#5b4eb8]"
+          />
+          
+          <div className="grid grid-cols-4 gap-4 mt-4">
+            {existingImages.map((image, index) => (
+              <div key={index} className="relative">
+                <img 
+                  src={image.image} 
+                  alt={`Existing ${index + 1}`}
+                  className="w-full h-24 object-cover rounded"
+                />
+                <button
+                  type="button"
+                  className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
+                  onClick={() => {
+                    setExistingImages(prev => prev.filter((_, i) => i !== index))
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            
+            {uploadedImages.map((file, index) => (
+              <div key={index} className="relative">
+                <img 
+                  src={URL.createObjectURL(file)} 
+                  alt={`Preview ${index + 1}`}
+                  className="w-full h-24 object-cover rounded"
+                />
+                <button
+                  type="button"
+                  className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
+                  onClick={() => {
+                    setUploadedImages(prev => prev.filter((_, i) => i !== index))
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         <TranslatedForm

@@ -33,7 +33,7 @@ export function GoalsPage() {
 
   const fetchGoals = async () => {
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/${currentLanguage}/news/goals/`, {
+      const response = await fetchWithAuth(`https://debttracker.uz/news/goals/`, {
         headers: getAuthHeader()
       })
       const data = await response.json()
@@ -59,8 +59,8 @@ export function GoalsPage() {
       )
 
       const url = editingGoal 
-        ? `https://debttracker.uz/${currentLanguage}/news/goals/${editSlug}/`
-        : `https://debttracker.uz/${currentLanguage}/news/goals/`
+        ? `https://debttracker.uz/news/goals/${editSlug}/`
+        : `https://debttracker.uz/news/goals/`
 
       const translations = Object.entries(formData).reduce((acc, [lang, data]: [string, any]) => {
         if (lang !== 'goals' && lang !== 'color' && data.name) {  // Only include languages with names
@@ -103,7 +103,7 @@ export function GoalsPage() {
 
     try {
       const response = await fetchWithAuth(
-        `https://debttracker.uz/${currentLanguage}/news/goals/${goal.translations[currentLanguage].slug}/`,
+          `https://debttracker.uz/news/goals/${goal.translations.slug}/`,
         { 
           method: 'DELETE',
           headers: getAuthHeader()
