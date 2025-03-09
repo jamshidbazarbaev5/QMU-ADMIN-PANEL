@@ -24,16 +24,9 @@ interface Document {
   }
 }
 
-const translatedFields = [
-  { name: 'title', label: 'Title', type: 'text' as const, required: true },
-  { name: 'description', label: 'Description', type: 'richtext' as const, required: true },
-]
 
 export function DocumentPage() {
   const [documents, setDocuments] = useState<Document[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [menuId, ] = useState<number>(2) // You might want to make this dynamic
   const currentLanguage = useLanguage()
   const navigate = useNavigate()
 
@@ -58,41 +51,41 @@ export function DocumentPage() {
     fetchDocuments()
   }, [currentLanguage])
 
-  const handleSubmit = async (translationData: any) => {
-    console.log('Submitting translations:', translationData)
-    setIsLoading(true)
-    try {
-      const formData = new FormData()
-      formData.append('menu', menuId.toString())
+  // const handleSubmit = async (translationData: any) => {
+  //   console.log('Submitting translations:', translationData)
+  //   setIsLoading(true)
+  //   try {
+  //     const formData = new FormData()
+  //     formData.append('menu', menuId.toString())
       
-      // Add translations
-      formData.append('translations', JSON.stringify(translationData))
+  //     // Add translations
+  //     formData.append('translations', JSON.stringify(translationData))
       
-      // Add file if selected
-      if (selectedFile) {
-        formData.append('file', selectedFile)
-      }
+  //     // Add file if selected
+  //     if (selectedFile) {
+  //       formData.append('file', selectedFile)
+  //     }
 
-      const url = `https://debttracker.uz/menus/document/`
+  //     const url = `https://debttracker.uz/menus/document/`
 
-      const response = await fetchWithAuth(url, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          ...getAuthHeader(),
-        },
-      })
+  //     const response = await fetchWithAuth(url, {
+  //       method: 'POST',
+  //       body: formData,
+  //       headers: {
+  //         ...getAuthHeader(),
+  //       },
+  //     })
 
-      if (!response.ok) throw new Error('Failed to save document')
+  //     if (!response.ok) throw new Error('Failed to save document')
       
-      await fetchDocuments()
-      setSelectedFile(null)
-    } catch (error) {
-      console.error('Error saving document:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  //     await fetchDocuments()
+  //     setSelectedFile(null)
+  //   } catch (error) {
+  //     console.error('Error saving document:', error)
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
 
   const handleDelete = async (document: Document) => {
     if (!window.confirm('Are you sure you want to delete this document?')) return
