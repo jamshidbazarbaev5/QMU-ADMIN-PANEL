@@ -50,6 +50,8 @@ interface FormValues {
   description_en: string
   description_uz: string
   description_kk: string
+  date_posted_date: string
+  date_posted_time: string
   date_posted: string
 }
 
@@ -62,12 +64,15 @@ const formatDateForInput = (dateString: string) => {
   // Adjust for local timezone
   const tzOffset = date.getTimezoneOffset() * 60000 // offset in milliseconds
   const localDate = new Date(date.getTime() - tzOffset)
-  return localDate.toISOString().slice(0, 16) // Format as YYYY-MM-DDThh:mm
+  return {
+    date: localDate.toISOString().split('T')[0], // YYYY-MM-DD
+    time: localDate.toISOString().split('T')[1].slice(0, 5) // HH:mm
+  }
 }
 
-const formatDateForServer = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toISOString() // Format as YYYY-MM-DDThh:mm:ss.sssZ
+const formatDateForServer = (date: string, time: string) => {
+  const combined = `${date}T${time}:00.000Z`
+  return new Date(combined).toISOString()
 }
 
 export default function CreateNews() {
@@ -136,6 +141,8 @@ export default function CreateNews() {
         
         const data = await response.json()
         
+        const { date, time } = formatDateForInput(data.date_posted || new Date().toISOString())
+        
         form.reset({
           category: data.category?.toString() || "",
           goals: data.goals?.map((g:any )=> g.toString()) || [],
@@ -147,6 +154,8 @@ export default function CreateNews() {
           description_en: data.translations?.en?.description || "",
           description_uz: data.translations?.uz?.description || "",
           description_kk: data.translations?.kk?.description || "",
+          date_posted_date: date,
+          date_posted_time: time,
           date_posted: data.date_posted || new Date().toISOString(),
         })
 
@@ -187,6 +196,8 @@ export default function CreateNews() {
       description_en: "",
       description_uz: "",
       description_kk: "",
+      date_posted_date: new Date().toISOString().split('T')[0],
+      date_posted_time: new Date().toISOString().split('T')[1].slice(0, 5),
       date_posted: new Date().toISOString(),
     },
   })
@@ -441,28 +452,58 @@ export default function CreateNews() {
                 {/* Images Step */}
                 <TabsContent value="images">
                   <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="date_posted"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Publication Date</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="datetime-local"
-                              {...field}
-                              onChange={(e) => {
-                                const formattedDate = formatDateForServer(e.target.value)
-                                field.onChange(formattedDate)
-                              }}
-                              value={field.value ? formatDateForInput(field.value) : ''}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="date_posted_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Publication Date</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="date"
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e.target.value)
+                                  const newDateTime = formatDateForServer(
+                                    e.target.value,
+                                    form.getValues('date_posted_time')
+                                  )
+                                  form.setValue('date_posted', newDateTime)
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
+                      <FormField
+                        control={form.control}
+                        name="date_posted_time"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Publication Time</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="time"
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e.target.value)
+                                  const newDateTime = formatDateForServer(
+                                    form.getValues('date_posted_date'),
+                                    e.target.value
+                                  )
+                                  form.setValue('date_posted', newDateTime)
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
                     <FormField
                       control={form.control}
                       name="category"
