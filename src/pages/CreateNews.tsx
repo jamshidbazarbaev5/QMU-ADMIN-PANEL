@@ -50,10 +50,25 @@ interface FormValues {
   description_en: string
   description_uz: string
   description_kk: string
+  date_posted: string
 }
 
 const STEPS = ["images", "ru", "en", "uz", "kk", "review"] as const
 type Step = typeof STEPS[number]
+
+// Helper function to handle date conversion
+const formatDateForInput = (dateString: string) => {
+  const date = new Date(dateString)
+  // Adjust for local timezone
+  const tzOffset = date.getTimezoneOffset() * 60000 // offset in milliseconds
+  const localDate = new Date(date.getTime() - tzOffset)
+  return localDate.toISOString().slice(0, 16) // Format as YYYY-MM-DDThh:mm
+}
+
+const formatDateForServer = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toISOString() // Format as YYYY-MM-DDThh:mm:ss.sssZ
+}
 
 export default function CreateNews() {
   const navigate = useNavigate()
@@ -132,6 +147,7 @@ export default function CreateNews() {
           description_en: data.translations?.en?.description || "",
           description_uz: data.translations?.uz?.description || "",
           description_kk: data.translations?.kk?.description || "",
+          date_posted: data.date_posted || new Date().toISOString(),
         })
 
         // Handle existing images
@@ -171,6 +187,7 @@ export default function CreateNews() {
       description_en: "",
       description_uz: "",
       description_kk: "",
+      date_posted: new Date().toISOString(),
     },
   })
 
@@ -295,6 +312,9 @@ export default function CreateNews() {
           }
         })
       }
+
+      // Add date_posted to formData
+      formData.append('date_posted', values.date_posted)
 
       const translations = {
         ru: {
@@ -421,6 +441,28 @@ export default function CreateNews() {
                 {/* Images Step */}
                 <TabsContent value="images">
                   <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="date_posted"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Publication Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="datetime-local"
+                              {...field}
+                              onChange={(e) => {
+                                const formattedDate = formatDateForServer(e.target.value)
+                                field.onChange(formattedDate)
+                              }}
+                              value={field.value ? formatDateForInput(field.value) : ''}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name="category"

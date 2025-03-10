@@ -98,7 +98,7 @@ export function GoalsPage() {
         if (typeof errorData === 'object') {
           setError(errorData)
         } else {
-          setError(`Failed to ${isEditing ? 'update' : 'create'} news post`)
+          setError(`Failed to ${editingGoal ? 'update' : 'create'} goal`)
         }
         return
       }
