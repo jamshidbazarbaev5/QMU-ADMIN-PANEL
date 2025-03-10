@@ -7,6 +7,7 @@ import { useLanguage } from '../hooks/useLanguage'
 import { Input } from '../components/ui/input'
 import debounce from 'lodash/debounce'
 import {fetchWithAuth, getAuthHeader} from '../api/api'
+import { Pagination } from '../components/ui/Pagination'
 
 interface NewsPost {
   id: number
@@ -24,17 +25,27 @@ interface NewsPost {
   }
 }
 
+interface PaginatedResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: NewsPost[];
+}
+
 export default function NewsList() {
   const navigate = useNavigate()
   const currentLanguage = useLanguage()
   const [news, setNews] = useState<NewsPost[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [, setSearchTitle] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
 
-  const fetchNews = async (title?: string) => {
+  const fetchNews = async (title?: string, page: number = 1) => {
     try {
       const queryParams = new URLSearchParams()
       if (title) queryParams.append('title', title)
+      if (page > 1) queryParams.append('page', page.toString())
       
       const response = await fetchWithAuth(
         `https://debttracker.uz/news/posts/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
@@ -45,8 +56,9 @@ export default function NewsList() {
         }
       )
       if (!response.ok) throw new Error('Failed to fetch news')
-      const data = await response.json()
+      const data: PaginatedResponse = await response.json()
       setNews(data.results)
+      setTotalPages(Math.ceil(data.count / 10)) // Assuming 10 items per page
     } catch (error) {
       console.error('Error fetching news:', error)
     } finally {
@@ -78,12 +90,13 @@ export default function NewsList() {
 
   // Debounced search function
   const debouncedSearch = debounce((searchValue: string) => {
-    fetchNews(searchValue)
+    setCurrentPage(1)
+    fetchNews(searchValue, 1)
   }, 300)
 
   useEffect(() => {
-    fetchNews()
-  }, [currentLanguage])
+    fetchNews(undefined, currentPage)
+  }, [currentLanguage, currentPage])
 
   const columns = [
     {
@@ -193,6 +206,11 @@ export default function NewsList() {
           data={news}
           columns={columns}
           onRowClick={(item) => navigate(`/news/${item.id}`)}
+        />
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
         />
       </div>
     </div>
