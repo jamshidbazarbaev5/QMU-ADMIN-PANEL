@@ -8,6 +8,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { getAuthHeader, fetchWithAuth } from '../api/api'
 import { Button } from '../components/ui/button'
 import { ChromePicker } from 'react-color'
+import {ErrorModal} from "../components/ui/errorModal.tsx";
 
 interface Goal {
   id: number
@@ -31,6 +32,7 @@ export function GoalsPage() {
   const currentLanguage = useLanguage()
   const [color, setColor] = useState('#ffffff')
   const [goalsValue, setGoalsValue] = useState<number>(0)
+  const [error, setError] = useState<Record<string, string[]> | string | null>(null)
 
   const fetchGoals = async () => {
     try {
@@ -87,11 +89,20 @@ export function GoalsPage() {
         body: JSON.stringify(payload)
       })
 
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Server response:', errorData)
-        throw new Error('Failed to save goal')
+        const errorData = await response.json()
+        console.error('Server Error Response:', errorData)
+
+        // Set error state with the error data
+        if (typeof errorData === 'object') {
+          setError(errorData)
+        } else {
+          setError(`Failed to ${isEditing ? 'update' : 'create'} news post`)
+        }
+        return
       }
+
       
       await fetchGoals()
       setIsDialogOpen(false)
@@ -202,6 +213,11 @@ export function GoalsPage() {
 
   return (
     <div className="p-6 mt-[50px]">
+      <ErrorModal
+          isOpen={!!error}
+          onClose={() => setError(null)}
+          errors={error || {}}
+      />
       <PageHeader
         title="Цели"
         createButtonLabel="Добавить цель"

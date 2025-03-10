@@ -4,7 +4,7 @@ import { PageHeader } from '../helpers/PageHeader'
 import { DataTable } from '../helpers/DataTable'
 import { Dialog, DialogContent, DialogTitle } from '../components/ui/dialog'
 import { TranslatedForm } from '../helpers/TranslatedForm'
-import { Pencil } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { useNavigate } from 'react-router-dom'
@@ -108,21 +108,24 @@ export function FacultyPage() {
     }
   }
 
-//   const handleDelete = async (faculty: Faculty) => {
-//     if (!window.confirm('Are you sure you want to delete this faculty?')) return
+  const handleDelete = async (faculty: Faculty) => {
+    if (!window.confirm('Are you sure you want to delete this faculty?')) return
 
-//     try {
-//       const response = await fetch(
-//         `https://debttracker.uz/${currentLanguage}/menus/faculty/${faculty.translations[currentLanguage].slug}`,
-//         { method: 'DELETE' }
-//       )
+    try {
+      const response = await fetch(
+        `https://debttracker.uz/menus/faculty/${faculty.translations[currentLanguage].slug}/`,
+        { 
+          method: 'DELETE',
+          credentials: 'include'
+        }
+      )
       
-//       if (!response.ok) throw new Error('Failed to delete faculty')
-//       await fetchFaculties()
-//     } catch (error) {
-//       console.error('Error deleting faculty:', error)
-//     }
-//   }
+      if (!response.ok) throw new Error('Failed to delete faculty')
+      await fetchFaculties()
+    } catch (error) {
+      console.error('Error deleting faculty:', error)
+    }
+  }
 
   const columns = [
     { 
@@ -141,7 +144,18 @@ export function FacultyPage() {
     { 
       header: 'Description',
       accessor: 'translations',
-      cell: (item: Faculty) => item.translations[currentLanguage]?.description
+      cell: (item: Faculty) => {
+        const description = item.translations[currentLanguage]?.description || '-';
+        // Create a temporary element to decode HTML entities
+        const doc = new DOMParser().parseFromString(description, 'text/html');
+        // Strip HTML tags and decode entities
+        const strippedText = doc.body.textContent || '';
+        const truncatedText = strippedText.length > 100 
+          ? strippedText.substring(0, 100) + '...' 
+          : strippedText;
+        
+        return <div className="max-w-md">{truncatedText}</div>;
+      }
     },
     {
       header: 'Actions',
@@ -157,16 +171,16 @@ export function FacultyPage() {
           >
             <Pencil className="h-4 w-4" />
           </Button>
-          {/* <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation()
-                handleDelete(item)
-              }}
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </Button> */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDelete(item)
+            }}
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </Button>
         </div>
       )
     }
