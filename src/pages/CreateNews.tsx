@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import {fetchWithAuth, getAuthHeader} from "../api/api"
 import { RichTextEditor } from '../components/ckeditor/RichTextEditor'
+import { ErrorModal } from '../components/ui/errorModal'
 
 interface Translation {
   name: string
@@ -69,6 +70,7 @@ export default function CreateNews() {
   const [existingImages, setExistingImages] = useState<NewsImage[]>([])
   const [isLoadingInitialData, setIsLoadingInitialData] = useState(isEditing)
   const [isGoalsDropdownOpen, setIsGoalsDropdownOpen] = useState(false)
+  const [error, setError] = useState<Record<string, string[]> | string | null>(null)
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -338,13 +340,20 @@ export default function CreateNews() {
       if (!response.ok) {
         const errorData = await response.json()
         console.error('Server Error Response:', errorData)
-        throw new Error(`Failed to ${isEditing ? 'update' : 'create'} news post`)
+        
+        // Set error state with the error data
+        if (typeof errorData === 'object') {
+          setError(errorData)
+        } else {
+          setError(`Failed to ${isEditing ? 'update' : 'create'} news post`)
+        }
+        return
       }
 
       navigate('/news')
     } catch (error) {
       console.error(`Error ${isEditing ? 'updating' : 'creating'} news post:`, error)
-      alert(`Failed to ${isEditing ? 'update' : 'create'} news post`)
+      setError(`Failed to ${isEditing ? 'update' : 'create'} news post. Please try again.`)
     }
   }
 
@@ -386,6 +395,12 @@ export default function CreateNews() {
 
   return (
     <div className="container mx-auto p-6 mt-[50px]">
+      <ErrorModal
+        isOpen={!!error}
+        onClose={() => setError(null)}
+        errors={error || {}}
+      />
+      
       <Card>
         <CardHeader>
           <CardTitle>{isEditing ? 'Edit News Post' : 'Create News Post'} - Step {STEPS.indexOf(currentStep) + 1}</CardTitle>
