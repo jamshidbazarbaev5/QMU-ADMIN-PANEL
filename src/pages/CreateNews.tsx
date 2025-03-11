@@ -82,7 +82,7 @@ export default function CreateNews() {
   const isEditing = !!newsId
   const [currentStep, setCurrentStep] = useState<Step>("images")
   const [currentLanguage] = useState<string>(() => {
-    return localStorage.getItem('language') || 'ru'
+    return localStorage.getItem('language') || 'kk'
   })
   const [categories, setCategories] = useState<Category[]>([])
   const [goals, setGoals] = useState<Goal[]>([])

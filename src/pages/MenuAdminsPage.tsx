@@ -230,7 +230,7 @@ export function MenuAdminsPage() {
     { 
       header: 'Full Name',
       accessor: 'translations',
-      cell: (item: MenuAdmin) => item.translations[currentLanguage]?.full_name || '-'
+      cell: (item: MenuAdmin) => item.translations['en']?.full_name || '-'
     },
     {
       header: 'Email',

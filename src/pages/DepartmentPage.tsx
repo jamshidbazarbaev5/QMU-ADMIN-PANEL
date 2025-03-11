@@ -47,7 +47,7 @@ export function DepartmentPage() {
   }, [currentLanguage])
 
   const handleEdit = (department: Department) => {
-    navigate(`/departments/${department.translations[currentLanguage].slug}/edit`)
+    navigate(`/departments/${department.translations['kk'].slug}/edit`)
   }
 
   const handleDelete = async (department: Department) => {
@@ -66,7 +66,7 @@ export function DepartmentPage() {
     { 
       header: 'Name',
       accessor: 'translations',
-      cell: (item: Department) => item.translations[currentLanguage]?.name
+      cell: (item: Department) => item.translations['kk']?.name
     },
     { 
       header: 'Description',
@@ -74,7 +74,7 @@ export function DepartmentPage() {
       cell: (item: Department) =>  <div 
       className="max-w-md truncate"
       dangerouslySetInnerHTML={{ 
-        __html: item.translations[currentLanguage]?.description || '-'
+        __html: item.translations['kk']?.description || '-'
       }}
     />
     },

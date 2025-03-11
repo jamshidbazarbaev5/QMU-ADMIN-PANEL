@@ -69,8 +69,8 @@ export function Posts() {
   // Helper function to get menu name
   const getMenuName = (menuId: number) => {
     const menu = menus.find(m => m.id === menuId)
-    if (menu && menu.translations && menu.translations[currentLanguage]) {
-      return menu.translations[currentLanguage].name
+    if (menu && menu.translations && menu.translations['kk']) {
+      return menu.translations['kk'].name
     }
    
   }
@@ -87,7 +87,7 @@ export function Posts() {
       header: 'Title',
       accessor: `translations.${currentLanguage}.title`,
       cell: (item: any) => {
-        const translation = item.translations[currentLanguage]
+        const translation = item.translations['kk']
         return translation ? translation.title : '-'
       }
     },

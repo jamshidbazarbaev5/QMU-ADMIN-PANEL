@@ -10,7 +10,6 @@ export function QuantityList() {
   const [quantities, setQuantities] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const token = localStorage.getItem('accessToken')
-  const  currentLanguage  = useLanguage()
 
   useEffect(() => {
     fetchQuantities()
@@ -51,7 +50,7 @@ export function QuantityList() {
   }
 
   const columns = [
-    { header: 'Title', accessor: 'title', cell: (item: any) => item.translations[currentLanguage]?.title || '-' },
+    { header: 'Title', accessor: 'title', cell: (item: any) => item.translations['kk']?.title || '-' },
     { header: 'Quantity', accessor: 'quantity' },
   ]
 

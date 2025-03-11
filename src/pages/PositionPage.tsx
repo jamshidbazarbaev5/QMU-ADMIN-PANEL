@@ -121,7 +121,7 @@ export function PositionPage() {
           { 
             header: 'Name',
             accessor: 'translations',
-            cell: (item: Position) => item.translations[currentLanguage]?.name || '-'
+            cell: (item: Position) => item.translations['kk']?.name || '-'
           },
          
           { 

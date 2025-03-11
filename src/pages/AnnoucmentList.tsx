@@ -30,8 +30,8 @@ interface Column {
 export default function Announcements() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [searchQuery, setSearchQuery] = useState('')
-  const currentLanguage = useLanguage()
   const navigate = useNavigate()
+  const currentLanguage = useLanguage()
 
   const fetchAnnouncements = async (lang: string, query?: string) => {
     try {

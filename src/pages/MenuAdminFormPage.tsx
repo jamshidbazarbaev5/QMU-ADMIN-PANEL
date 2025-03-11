@@ -290,17 +290,22 @@ export function MenuAdminFormPage() {
   }
 
   useEffect(() => {
-    // Fetch all necessary data
-    fetchMenus()
+    // First fetch menus
+    const initializeData = async () => {
+      await fetchMenus()
+      // Only fetch admin details after menus are loaded
+      if (id) {
+        fetchAdminDetails()
+      }
+    }
+    
+    // Fetch other data in parallel
     fetchFaculties()
     fetchDepartments()
     fetchAgencies()
     fetchPositions()
-
-    // If editing (id exists), fetch the admin data
-    if (id) {
-      fetchAdminDetails()
-    }
+    
+    initializeData()
   }, [id, currentLanguage])
 
   const fetchAdminDetails = async () => {
@@ -310,11 +315,18 @@ export function MenuAdminFormPage() {
       if (!response.ok) throw new Error('Failed to fetch admin details')
       const data = await response.json()
       setEditingAdmin(data)
+      
+      // Find the menu in childMenus to get its parent
+      const menuItem = childMenus.find(menu => menu.id === data.menu)
+      if (menuItem?.parent) {
+        setSelectedParentMenu(menuItem.parent.toString())
+      }
+      
       // Set all the form fields with the fetched data
       setSelectedMenu(data.menu.toString())
-      setSelectedFaculty(data.faculty.toString())
-      setSelectedDepartment(data.department.toString())
-      setSelectedAgency(data.agency.toString())
+      if (data.faculty) setSelectedFaculty(data.faculty.toString())
+      if (data.department) setSelectedDepartment(data.department.toString())
+      if (data.agency) setSelectedAgency(data.agency.toString())
       setPosition(data.position.toString())
       setNewAdminEmail(data.email)
       setNewAdminPhone(data.phone_number)

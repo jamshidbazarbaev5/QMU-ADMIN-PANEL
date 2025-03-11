@@ -148,7 +148,7 @@ export function DepartmentFormPage() {
                 <SelectContent>
                   {faculties?.map((faculty) => (
                     <SelectItem key={faculty.id} value={String(faculty.id)}>
-                      {faculty.translations[currentLanguage]?.name ||
+                      {faculty.translations['kk']?.name ||
                        faculty.translations.en?.name ||
                        faculty.translations.ru?.name}
                     </SelectItem>

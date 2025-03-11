@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 
 export const useLanguage = () => {
-  const [currentLanguage, setCurrentLanguage] = useState<string>('en')
+  const [currentLanguage, setCurrentLanguage] = useState<string>('kk')
 
   useEffect(() => {
     const handleStorageChange = () => {
-      const lang = localStorage.getItem('language') || 'en'
+      const lang = localStorage.getItem('language') || 'kk'
       setCurrentLanguage(lang)
     }
 

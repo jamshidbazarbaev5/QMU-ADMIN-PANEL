@@ -144,7 +144,7 @@ export function AgencyPage() {
     { 
       header: 'Name',
       accessor: 'translations',
-      cell: (item: Agency) => item.translations[currentLanguage]?.name || '-'
+      cell: (item: Agency) => item.translations['kk']?.name || '-'
     },
     { 
       header: 'Description',
@@ -153,7 +153,7 @@ export function AgencyPage() {
         <div 
           className="max-w-md truncate"
           dangerouslySetInnerHTML={{ 
-            __html: item.translations[currentLanguage]?.description || '-'
+            __html: item.translations['kk']?.description || '-'
           }}
         />
       )
