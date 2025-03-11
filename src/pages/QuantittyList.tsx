@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { DataTable } from '../helpers/DataTable'
 import { PageHeader } from '../helpers/PageHeader'
 import { Edit, Trash2 } from 'lucide-react'
-gt
+
 export function QuantityList() {
   const navigate = useNavigate()
   const [quantities, setQuantities] = useState([])
