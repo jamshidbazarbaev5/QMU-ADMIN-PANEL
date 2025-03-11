@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
 import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
@@ -34,6 +34,8 @@ export function DepartmentFormPage() {
   const [faculties, setFaculties] = useState<Faculty[]>([])
   const [selectedFaculty, setSelectedFaculty] = useState<string>('')
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null)
+  const [searchParams] = useSearchParams()
+  const facultyId = searchParams.get('faculty')
 
   const translatedFields = [
     { name: 'name', label: 'Name', type: 'text' as const, required: true },
@@ -44,8 +46,10 @@ export function DepartmentFormPage() {
     fetchFaculties()
     if (id) {
       fetchDepartment(id)
+    } else if (facultyId) {
+      setSelectedFaculty(facultyId)
     }
-  }, [id])
+  }, [id, facultyId])
 
   const fetchFaculties = async () => {
     try {

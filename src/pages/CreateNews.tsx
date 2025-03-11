@@ -218,39 +218,24 @@ export default function CreateNews() {
 
   const handleAdditionalImages = (files: FileList | null) => {
     if (files) {
-      console.log('Current uploadedImages:', uploadedImages)
-      console.log('Current existingImages:', existingImages)
-      console.log('New files being added:', Array.from(files))
-
+      console.log('=== Adding new images ===')
+      console.log('Current uploaded images:', uploadedImages.map(f => f.name))
+      console.log('New files to add:', Array.from(files).map(f => f.name))
+      
       const newFiles = Array.from(files)
       setUploadedImages(prev => {
         const updatedFiles = [...prev, ...newFiles]
-        console.log('Combined uploaded files:', updatedFiles)
-        
-        // Create a new FormData that includes ALL images
-        const formData = new FormData()
-        
-        // Add existing images that are already on the server
-        existingImages
-          .filter(img => img.id !== -1) // Exclude main image
-          .forEach(img => {
-            console.log('Adding existing server image:', img.image)
-            formData.append('existing_images', img.id.toString())
-          })
-        
-        // Add newly uploaded images
-        updatedFiles.forEach(file => {
-          console.log('Adding new uploaded file:', file.name)
-          formData.append('uploaded_images', file)
-        })
+        console.log('Updated uploaded images:', updatedFiles.map(f => f.name))
         
         // Create DataTransfer for form control
         const dataTransfer = new DataTransfer()
+        
+        // Add all uploaded files to DataTransfer
         updatedFiles.forEach(file => {
           dataTransfer.items.add(file)
         })
         
-        console.log('Final DataTransfer files:', Array.from(dataTransfer.files))
+        // Update the form value with all files
         form.setValue('uploaded_images', dataTransfer.files)
         
         return updatedFiles
@@ -259,11 +244,13 @@ export default function CreateNews() {
   }
 
   const handleDeleteUploadedImage = (index: number) => {
+    console.log('=== Deleting uploaded image ===')
     console.log('Deleting image at index:', index)
+    console.log('Current uploaded images:', uploadedImages.map(f => f.name))
     
     setUploadedImages(prev => {
       const updatedFiles = prev.filter((_, i) => i !== index)
-      console.log('Files after deletion:', updatedFiles)
+      console.log('Files after deletion:', updatedFiles.map(f => f.name))
       
       const dataTransfer = new DataTransfer()
       updatedFiles.forEach(file => {
@@ -271,7 +258,6 @@ export default function CreateNews() {
         dataTransfer.items.add(file)
       })
       
-      console.log('Final DataTransfer files after deletion:', Array.from(dataTransfer.files))
       form.setValue('uploaded_images', dataTransfer.files)
       
       return updatedFiles
@@ -286,6 +272,10 @@ export default function CreateNews() {
 
     try {
       const formData = new FormData()
+      console.log('=== Starting form submission ===')
+      console.log('Is editing mode:', isEditing)
+      console.log('Current existing images:', existingImages)
+      console.log('Current uploaded images:', uploadedImages)
       
       // Add category if it exists
       if (values.category) {
@@ -295,32 +285,23 @@ export default function CreateNews() {
       // Filter out any null/undefined goals before appending
       if (values.goals && Array.isArray(values.goals)) {
         values.goals
-          .filter(goalId => goalId != null) // Filter out null/undefined values
+          .filter(goalId => goalId != null)
           .forEach(goalId => {
             formData.append('goals', goalId.toString())
           })
       }
       
-      // Add main image if it exists
+      // Add main image only if a new one is selected
       if (values.main_image?.[0]) {
+        console.log('Adding new main image:', values.main_image[0].name)
         formData.append('main_image', values.main_image[0])
       }
 
-      // Add existing images that weren't deleted
-      existingImages
-        .filter(img => img && img.id !== -1) // Filter out null/undefined and main image
-        .forEach(img => {
-          if (img && img.id) {
-            formData.append('existing_images', img.id.toString())
-          }
-        })
-
-      // Add newly uploaded images
-      if (values.uploaded_images && values.uploaded_images.length > 0) {
-        Array.from(values.uploaded_images).forEach((file) => {
-          if (file) {
-            formData.append('uploaded_images', file)
-          }
+      // Only add uploaded_images if there are new images to add
+      if (uploadedImages.length > 0) {
+        console.log('Adding new uploaded images:', uploadedImages.map(f => f.name))
+        uploadedImages.forEach((file) => {
+          formData.append('uploaded_images', file)
         })
       }
 
@@ -352,13 +333,10 @@ export default function CreateNews() {
         ? `https://debttracker.uz/news/posts/${newsId}/`
         : `https://debttracker.uz/news/posts/`
 
-      console.log('Submitting form data:', {
-        category: values.category,
-        goals: values.goals,
-        existingImages: existingImages,
-        uploadedImages: Array.from(values.uploaded_images || []),
-        translations
-      })
+      console.log('=== FormData contents ===')
+      for (let [key, value] of formData.entries()) {
+        console.log(key, ':', typeof value === 'string' ? value : 'File:', value instanceof File ? value.name : '')
+      }
 
       const response = await fetchWithAuth(url, {
         method: isEditing ? 'PUT' : 'POST',
@@ -371,13 +349,7 @@ export default function CreateNews() {
       if (!response.ok) {
         const errorData = await response.json()
         console.error('Server Error Response:', errorData)
-        
-        // Set error state with the error data
-        if (typeof errorData === 'object') {
-          setError(errorData)
-        } else {
-          setError(`Failed to ${isEditing ? 'update' : 'create'} news post`)
-        }
+        setError(errorData)
         return
       }
 

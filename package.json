@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "mkdir -p public/tinymce && cp node_modules/tinymce/tinymce.min.js public/tinymce/ && cp -r node_modules/tinymce/skins public/tinymce/ && cp -r node_modules/tinymce/themes public/tinymce/ && cp -r node_modules/tinymce/icons public/tinymce/ && cp -r node_modules/tinymce/plugins public/tinymce/ && cp -r node_modules/tinymce/models public/tinymce/"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^44.2.1",
@@ -47,6 +48,7 @@
     "react-router-dom": "^7.2.0",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
+    "tinymce": "^6.8.3",
     "zod": "^3.24.2"
   },
   "devDependencies": {

@@ -15,6 +15,7 @@ interface MenuAdminTranslation {
 
 interface Menu {
   id: number
+  parent: number | null
   translations: {
     [key: string]: {
       name: string
@@ -100,11 +101,60 @@ export function MenuAdminFormPage() {
 
   // Add state for image
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
-  const [menus, setMenus] = useState<Menu[]>([])
   const [faculties, setFaculties] = useState<Faculty[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
   const [agencies, setAgencies] = useState<Agency[]>([])
   const [positions, setPositions] = useState<Position[]>([])
+
+  // Add new state for parent menu
+  const [parentMenus, setParentMenus] = useState<Menu[]>([])
+  const [childMenus, setChildMenus] = useState<Menu[]>([])
+  const [selectedParentMenu, setSelectedParentMenu] = useState<string>('')
+
+  // Add these helper functions
+  const isDisabledBySelection = (field: 'faculty' | 'department' | 'agency') => {
+    switch (field) {
+      case 'faculty':
+        return !!selectedDepartment || !!selectedAgency;
+      case 'department':
+        return !!selectedAgency || !!selectedFaculty;
+      case 'agency':
+        return !!selectedDepartment || !!selectedFaculty;
+      default:
+        return false;
+    }
+  }
+
+  // Add reset handlers
+  const handleAgencyChange = (value: string) => {
+    if (value) {
+      setSelectedAgency(value);
+      setSelectedDepartment('');
+      setSelectedFaculty('');
+    } else {
+      setSelectedAgency('');
+    }
+  }
+
+  const handleDepartmentChange = (value: string) => {
+    if (value) {
+      setSelectedDepartment(value);
+      setSelectedFaculty('');
+      setSelectedAgency('');
+    } else {
+      setSelectedDepartment('');
+    }
+  }
+
+  const handleFacultyChange = (value: string) => {
+    if (value) {
+      setSelectedFaculty(value);
+      setSelectedDepartment('');
+      setSelectedAgency('');
+    } else {
+      setSelectedFaculty('');
+    }
+  }
 
   // Update fetch functions to use correct endpoints
   const fetchMenus = async () => {
@@ -112,7 +162,13 @@ export function MenuAdminFormPage() {
       const response = await fetch(`https://debttracker.uz/menus/main/`)
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
-      setMenus(data)
+      
+      // Separate menus into parent and child
+      const parents = data.filter((menu: Menu) => !menu.parent)
+      const children = data.filter((menu: Menu) => menu.parent)
+      
+      setParentMenus(parents)
+      setChildMenus(children)
     } catch (error) {
       console.error('Error fetching menus:', error)
     }
@@ -166,10 +222,22 @@ export function MenuAdminFormPage() {
     }
   }
 
+  // Add handler for parent menu selection
+  const handleParentMenuChange = (value: string) => {
+    setSelectedParentMenu(value)
+    setSelectedMenu('') // Reset child menu selection when parent changes
+  }
+
+  // Filter child menus based on selected parent
+  const filteredChildMenus = childMenus.filter(
+    menu => menu.parent === Number(selectedParentMenu)
+  )
+
   // Update handleSubmit function
   const handleSubmit = async (translationData: any) => {
-    if (!selectedMenu || !selectedFaculty || !selectedDepartment || !selectedAgency || !position) {
-      alert('Please select all required fields')
+    // Check for required fields
+    if (!selectedMenu || !position) {
+      alert('Please select Menu and Position')
       return
     }
 
@@ -179,9 +247,18 @@ export function MenuAdminFormPage() {
       
       formData.append('position', position)
       formData.append('menu', selectedMenu)
-      formData.append('faculty', selectedFaculty)
-      formData.append('department', selectedDepartment)
-      formData.append('agency', selectedAgency)
+      
+      // Only append the selected fields if they have values
+      if (selectedFaculty) {
+        formData.append('faculty', selectedFaculty)
+      }
+      if (selectedDepartment) {
+        formData.append('department', selectedDepartment)
+      }
+      if (selectedAgency) {
+        formData.append('agency', selectedAgency)
+      }
+      
       formData.append('phone_number', editingAdmin?.phone_number || newAdminPhone)
       formData.append('email', editingAdmin?.email || newAdminEmail)
       formData.append('translations', JSON.stringify(translationData))
@@ -283,13 +360,40 @@ export function MenuAdminFormPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Menu</label>
-            <Select value={selectedMenu} onValueChange={setSelectedMenu}>
+            <label className="block text-sm font-medium mb-2">Parent Menu</label>
+            <Select 
+              value={selectedParentMenu} 
+              onValueChange={handleParentMenuChange}
+            >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a menu" />
+                <SelectValue placeholder="Select a parent menu" />
               </SelectTrigger>
               <SelectContent className="min-w-[600px]">
-                {menus.map((menu) => (
+                {parentMenus.map((menu) => (
+                  <SelectItem 
+                    key={menu.id} 
+                    value={menu.id.toString()}
+                    className="whitespace-normal py-2 break-words"
+                  >
+                    {menu.translations[currentLanguage]?.name || `Menu ${menu.id}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Child Menu</label>
+            <Select 
+              value={selectedMenu} 
+              onValueChange={setSelectedMenu}
+              disabled={!selectedParentMenu}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={selectedParentMenu ? "Select a child menu" : "Select parent menu first"} />
+              </SelectTrigger>
+              <SelectContent className="min-w-[600px]">
+                {filteredChildMenus.map((menu) => (
                   <SelectItem 
                     key={menu.id} 
                     value={menu.id.toString()}
@@ -304,9 +408,13 @@ export function MenuAdminFormPage() {
 
           <div>
             <label className="block text-sm font-medium mb-2">Faculty</label>
-            <Select value={selectedFaculty} onValueChange={setSelectedFaculty}>
+            <Select 
+              value={selectedFaculty} 
+              onValueChange={handleFacultyChange}
+              disabled={isDisabledBySelection('faculty')}
+            >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a faculty" />
+                <SelectValue placeholder="Select a faculty (optional)" />
               </SelectTrigger>
               <SelectContent className="min-w-[600px]">
                 {faculties.map((faculty) => (
@@ -324,9 +432,13 @@ export function MenuAdminFormPage() {
 
           <div>
             <label className="block text-sm font-medium mb-2">Department</label>
-            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+            <Select 
+              value={selectedDepartment} 
+              onValueChange={handleDepartmentChange}
+              disabled={isDisabledBySelection('department')}
+            >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a department" />
+                <SelectValue placeholder="Select a department (optional)" />
               </SelectTrigger>
               <SelectContent className="min-w-[600px]">
                 {departments.map((department) => (
@@ -344,9 +456,13 @@ export function MenuAdminFormPage() {
 
           <div>
             <label className="block text-sm font-medium mb-2">Agency</label>
-            <Select value={selectedAgency} onValueChange={setSelectedAgency}>
+            <Select 
+              value={selectedAgency} 
+              onValueChange={handleAgencyChange}
+              disabled={isDisabledBySelection('agency')}
+            >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select an agency" />
+                <SelectValue placeholder="Select an agency (optional)" />
               </SelectTrigger>
               <SelectContent className="min-w-[600px]">
                 {agencies.map((agency) => (

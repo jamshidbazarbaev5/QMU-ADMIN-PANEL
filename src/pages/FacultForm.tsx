@@ -7,6 +7,8 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Loader2 } from 'lucide-react'
 import { fetchWithAuth, getAuthHeader } from '../api/api'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+import {  Plus } from 'lucide-react'
 
 const translatedFields = [
   { name: 'name', label: 'Name', type: 'text' as const, required: true },
@@ -23,6 +25,17 @@ const translatedFields = [
   }
 ]
 
+interface Department {
+  id: number
+  faculty: number
+  translations: {
+    [key: string]: {
+      name: string
+      description: string
+    }
+  }
+}
+
 export default function FacultyForm() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -32,10 +45,12 @@ export default function FacultyForm() {
   const [currentLogo, setCurrentLogo] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [initialData, setInitialData] = useState(null)
+  const [, setDepartments] = useState<Department[]>([])
 
   useEffect(() => {
     if (id) {
       fetchFaculty()
+      fetchDepartments()
     }
   }, [id, currentLanguage])
 
@@ -55,6 +70,21 @@ export default function FacultyForm() {
       setIsLoading(false)
     }
   }
+
+  const fetchDepartments = async () => {
+    if (!id) return
+    try {
+      const response = await fetchWithAuth(`https://debttracker.uz/menus/department/?faculty=${id}`, {
+        headers: getAuthHeader(),
+      })
+      const data = await response.json()
+      setDepartments(data)
+    } catch (error) {
+      console.error('Error fetching departments:', error)
+    }
+  }
+
+ 
 
   const handleSubmit = async (translationData: any) => {
     setIsLoading(true)
@@ -114,44 +144,68 @@ export default function FacultyForm() {
           <CardTitle>{id ? 'Edit' : 'Create'} Faculty</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Logo</label>
-              {currentLogo && (
-                <div className="mb-4">
-                  <img 
-                    src={currentLogo} 
-                    alt="Current logo" 
-                    className="max-w-[200px] h-auto"
+          <Tabs defaultValue="general">
+            <TabsList>
+              <TabsTrigger value="general">General Information</TabsTrigger>
+              <TabsTrigger value="departments" disabled={!id}>Departments</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="general">
+              <div className="space-y-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Logo</label>
+                  {currentLogo && (
+                    <div className="mb-4">
+                      <img 
+                        src={currentLogo} 
+                        alt="Current logo" 
+                        className="max-w-[200px] h-auto"
+                      />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setSelectedLogo(e.target.files?.[0] || null)}
+                    className="w-full"
                   />
                 </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setSelectedLogo(e.target.files?.[0] || null)}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-          </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">Email</label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
 
-          <TranslatedForm
-            fields={translatedFields}
-            languages={['en', 'ru', 'uz', 'kk']}
-            onSubmit={handleSubmit}
-            initialData={initialData}
-            isLoading={isLoading}
-          />
+              <TranslatedForm
+                fields={translatedFields}
+                languages={['en', 'ru', 'uz', 'kk']}
+                onSubmit={handleSubmit}
+                initialData={initialData}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+
+            <TabsContent value="departments">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Departments</h3>
+                  <Button
+                    onClick={() => navigate(`/departments/create?faculty=${id}`)}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Department
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           <div className="flex justify-end gap-4 mt-6">
             <Button

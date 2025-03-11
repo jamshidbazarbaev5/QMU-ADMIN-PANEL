@@ -8,6 +8,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { useNavigate } from 'react-router-dom'
+import { fetchWithAuth, getAuthHeader } from '../api/api'
 
 interface FacultyTranslation {
   name: string
@@ -112,11 +113,13 @@ export function FacultyPage() {
     if (!window.confirm('Are you sure you want to delete this faculty?')) return
 
     try {
-      const response = await fetch(
-        `https://debttracker.uz/menus/faculty/${faculty.translations[currentLanguage].slug}/`,
+      const response = await fetchWithAuth(
+        `https://debttracker.uz/menus/faculty/${faculty.translations.en.slug}/`,
         { 
           method: 'DELETE',
-          credentials: 'include'
+          headers: {
+            ...getAuthHeader()
+          }
         }
       )
       

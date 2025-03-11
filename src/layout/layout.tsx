@@ -19,34 +19,65 @@ import {
   UserSquare2,
   Video,
   KeyRound,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select"
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "../components/ui/select"
 
 
-type Language = 'en' | 'ru' | 'uz' | 'kk'
 
 export default function Layout() {
-  const [currentLanguage, setCurrentLanguage] = useState<Language>('en')
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(true)
+  const [openSections, setOpenSections] = useState<string[]>(['main'])
 
-  const handleLanguageChange = (value: Language) => {
-    setCurrentLanguage(value)
-    localStorage.setItem('language', value)
-    window.dispatchEvent(new Event('storage'))
-    }
+
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken")
     localStorage.removeItem("refreshToken")
     window.dispatchEvent(new Event('auth-change'))
     navigate("/login")
+  }
+
+  const toggleSection = (section: string) => {
+    setOpenSections(prev => 
+      prev.includes(section) 
+        ? prev.filter(s => s !== section)
+        : [...prev, section]
+    )
+  }
+
+  // Organize menu items into sections
+  const menuSections = {
+    главная: [
+      {icon: Plus, text: "Объявления", href: "/annoucment-list"},
+      {icon: MessageSquare, text: "Обратная связь", href: "/feedback"},
+      {icon: Newspaper, text: "Новости", href: "/news"},
+      {icon: Grid, text: "Категории новостей", href: "/news-categories"},
+    ],
+    структура: [
+      {icon: School, text: "Факультеты", href: "/faculty"},
+      {icon: Building2, text: "Кафедры", href: "/department"},
+    ],
+    контент: [
+      {icon: LinkIcon, text: "Полезные ссылки", href: "/links"},
+      {icon: List, text: "Меню", href: "/menus"},
+      {icon: FileSpreadsheet, text: "Документы", href: "/document"},
+      {icon: Newspaper, text: "Публикации", href: "/posts"},
+      {icon: Video, text: "Видео", href: "/videos"},
+    ],
+    управление: [
+      {icon: UserCog, text: "Администрация", href: "/menu-admins"},
+      {icon: UserSquare2, text: "Должности", href: "/position"},
+      {icon: BuildingIcon, text: "Отделы", href: "/agency"},
+    ],
   }
 
   return (
@@ -59,9 +90,9 @@ export default function Layout() {
         <Menu className="h-6 w-6" />
       </button>
 
-      {/* Language Selector - Positioned at the very top */}
-      <div className="fixed top-0 right-0 p-4 z-50">
-        <Select
+      {/* Top Right Controls - Language, Password, Logout */}
+      <div className="fixed top-0 right-0 p-4 z-50 flex items-center gap-2">
+        {/* <Select
           value={currentLanguage}
           onValueChange={(value: Language) => handleLanguageChange(value)}
         >
@@ -74,10 +105,26 @@ export default function Layout() {
             <SelectItem value="uz">O'zbekcha</SelectItem>
             <SelectItem value="kk">Qaraqalpaq</SelectItem>
           </SelectContent>
-        </Select>
+        </Select> */}
+
+        <Link
+          to="/change-password"
+          className="p-2 rounded-lg hover:bg-gray-100 flex items-center gap-2"
+          title="Изменить пароль"
+        >
+          <KeyRound className="h-5 w-5" />
+        </Link>
+
+        <button
+          onClick={handleLogout}
+          className="p-2 rounded-lg hover:bg-gray-100 flex items-center gap-2 text-red-600"
+          title="Выход"
+        >
+          <LogOut className="h-5 w-5" />
+        </button>
       </div>
 
-      {/* Sidebar - Modified to show icons when collapsed */}
+      {/* Sidebar */}
       <div className={`fixed left-0 top-0 h-full ${
         isMenuOpen ? 'w-64' : 'w-16'
       } transform transition-all duration-300 ease-in-out flex flex-col border-r bg-white z-40`}>
@@ -86,86 +133,56 @@ export default function Layout() {
           {isMenuOpen && <h1 className="text-xl font-bold">Admin Panel</h1>}
         </div>
 
-        {/* Navigation - Added overflow-y-auto */}
-        <nav className="flex-1 space-y-6 p-4 overflow-y-auto">
-          {/* Main Menu */}
-          <div>
-            {/* {isMenuOpen && (
-              <h2 className="mb-2 px-2 text-sm font-medium text-gray-500">ГЛАВНОЕ МЕНЮ</h2>
-            )} */}
-            {/* <Link to="/annoucment-list">
-              <button className={`w-full flex items-center ${
-                isMenuOpen ? 'gap-3 px-4' : 'justify-center'
-              } py-2 rounded-xl  font-medium hover:bg-gray-100 `}>
-                <Plus className="h-5 w-5" />
-                {isMenuOpen && "Создать объявление"}
+        {/* Navigation */}
+        <nav className="flex-1 space-y-2 p-4 overflow-y-auto">
+          {Object.entries(menuSections).map(([section, items]) => (
+            <div key={section} className="space-y-1">
+              <button
+                onClick={() => toggleSection(section)}
+                className={`w-full flex items-center ${
+                  isMenuOpen ? 'gap-3 px-4' : 'justify-center'
+                } py-2 rounded-xl font-medium hover:bg-gray-100`}
+              >
+                {isMenuOpen ? (
+                  <>
+                    {openSections.includes(section) ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                    <span className="capitalize">{section}</span>
+                  </>
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
               </button>
-            </Link> */}
-          </div>
 
-          {/* Others - Settings Section */}
-          <div>
-            {/* {isMenuOpen && (
-              <h2 className="mb-2 px-2 text-sm font-medium text-gray-500">ДРУГОЕ</h2>
-            )} */}
-            <div className="space-y-1">
-              {[
-                {icon:Plus,text:"Объявления",href:"/annoucment-list"},
-                { icon: MessageSquare, text: "Обратная связь", href: "/feedback" },
-                { icon: Newspaper, text: "Новости", href: "/news" },
-                { icon: Grid, text: "Категории новостей", href: "/news-categories" },
-                { icon: LinkIcon, text: "Полезные ссылки", href: "/links" },
-                { icon: List, text: "Меню", href: "/menus" },
-                { icon: School, text: "Факультеты", href: "/faculty" },
-                { icon: Building2, text: "Кафедры", href: "/department" },
-                { icon: FileSpreadsheet, text: "Документы", href: "/document" },
-                { icon: UserCog, text: "Администраторы меню", href: "/menu-admins" },
-                { icon: BuildingIcon, text: "Агентство", href: "/agency" },
-                { icon: UserSquare2, text: "Должности", href: "/position" },
-                { icon: Newspaper, text: "Публикации", href: "/posts" },
-                { icon: Video, text: "Видео", href: "/videos" },
-                { icon: List, text: "Количество", href: "/quantities" },
-                {icon:Grid,text:"Услуги",href:"/services"},
-                {icon:Grid,text:"Цели",href:"/goals"},
-                { icon: KeyRound, text: "Изменить пароль", href: "/change-password" },
-                
-              ].map((item, index) => (
-                <Link
-                  key={index}
-                  to={item.href}
-                  className={`w-full flex items-center ${
-                    isMenuOpen ? 'gap-3 px-4' : 'justify-center'
-                  } py-2 rounded-xl font-medium hover:bg-gray-100`}
-                  title={!isMenuOpen ? item.text : undefined}
-                >
-                  <item.icon className="h-5 w-5" />
-                  {isMenuOpen && item.text}
-                </Link>
-              ))}
+              {openSections.includes(section) && (
+                <div className="space-y-1 ml-4">
+                  {items.map((item, index) => (
+                    <Link
+                      key={index}
+                      to={item.href}
+                      className={`w-full flex items-center ${
+                        isMenuOpen ? 'gap-3 px-4' : 'justify-center'
+                      } py-2 rounded-xl font-medium hover:bg-gray-100`}
+                      title={!isMenuOpen ? item.text : undefined}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {isMenuOpen && item.text}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          ))}
         </nav>
-
-        <div className="p-4">
-          <button
-            onClick={handleLogout}
-            className={`w-full flex items-center ${
-              isMenuOpen ? 'gap-3 px-4' : 'justify-center'
-            } py-2 rounded-xl font-medium text-red-600 hover:bg-red-50`}
-            title={!isMenuOpen ? "Logout" : undefined}
-          >
-            <LogOut className="h-5 w-5" />
-            {isMenuOpen && "Выход"}
-          </button>
-        </div>
       </div>
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col ${isMenuOpen ? 'ml-64' : 'ml-16'} transition-all duration-300`}>
-        {/* Top Header */}
-       
-
-        {/* Page Content */}
+      <div className={`flex-1 flex flex-col ${
+        isMenuOpen ? 'ml-64' : 'ml-16 w-[calc(100%-4rem)]'
+      } transition-all duration-300`}>
         <div className="flex-1 overflow-auto">
           <Outlet />
         </div>

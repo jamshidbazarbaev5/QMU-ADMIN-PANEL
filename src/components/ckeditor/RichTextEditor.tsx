@@ -9,10 +9,13 @@ interface RichTextEditorProps {
 export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
   return (
     <Editor
-      apiKey="fu6z5mrrefbmryy7w66yyh4653o1rh9pxrukdby6v1nlozuj" // You can get a free API key from TinyMCE website
+      tinymceScriptSrc="/tinymce/tinymce.min.js"
       init={{
         height: 300,
         menubar: true,
+        base_url: '/tinymce',
+        suffix: '.min',
+        model: 'dom',
         plugins: [
           'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
           'preview', 'anchor', 'searchreplace', 'visualblocks',
