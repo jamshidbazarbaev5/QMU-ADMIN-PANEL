@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { useLanguage } from '../hooks/useLanguage'
+
 import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { fetchWithAuth, getAuthHeader } from '../api/api'
@@ -29,7 +29,6 @@ interface Department {
 export function DepartmentFormPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const currentLanguage = useLanguage()
   const [isLoading, setIsLoading] = useState(false)
   const [faculties, setFaculties] = useState<Faculty[]>([])
   const [selectedFaculty, setSelectedFaculty] = useState<string>('')
