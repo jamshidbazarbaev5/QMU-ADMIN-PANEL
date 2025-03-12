@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Pencil, Loader2 } from 'lucide-react'
+import { Pencil, Loader2, Trash2 } from 'lucide-react'
 import { useLanguage } from '../hooks/useLanguage'
 import { PageHeader } from '../helpers/PageHeader'
 import { DataTable } from '../helpers/DataTable'
@@ -42,6 +42,25 @@ export default function FeedbackList() {
     }
   }
 
+  const deleteFeedback = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this feedback?')) return
+
+    try {
+      const response = await fetchWithAuth(
+        `https://debttracker.uz/feedback/${id}/`,
+        {
+          method: 'DELETE',
+          headers: getAuthHeader()
+        }
+      )
+      if (!response.ok) throw new Error('Failed to delete feedback')
+      // Refresh the feedbacks list
+      fetchFeedbacks()
+    } catch (error) {
+      console.error('Error deleting feedback:', error)
+    }
+  }
+
   const columns = [
     {
       header: 'Full Name',
@@ -61,15 +80,26 @@ export default function FeedbackList() {
   ]
 
   const renderActions = (item: Feedback) => (
-    <button
-      onClick={(e) => {
-        e.stopPropagation()
-        navigate(`/feedback/edit/${item.id}`)
-      }}
-      className="p-2 hover:bg-gray-100 rounded-full"
-    >
-      <Pencil className="h-4 w-4 text-gray-600" />
-    </button>
+    <div className="flex gap-2">
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          navigate(`/feedback/edit/${item.id}`)
+        }}
+        className="p-2 hover:bg-gray-100 rounded-full"
+      >
+        <Pencil className="h-4 w-4 text-gray-600" />
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          deleteFeedback(item.id)
+        }}
+        className="p-2 hover:bg-gray-100 rounded-full"
+      >
+        <Trash2 className="h-4 w-4 text-red-600" />
+      </button>
+    </div>
   )
 
   if (isLoading) {
