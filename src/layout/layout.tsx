@@ -73,6 +73,7 @@ export default function Layout() {
       {icon: Newspaper, text: "Публикации", href: "/posts"},
       {icon: Video, text: "Видео", href: "/videos"},
       {icon: FileSpreadsheet, text: "Количества", href: "/quantities"},
+      {icon:List,text:"Интерактивные услуги",href:"/services"}
     ],
     управление: [
       {icon: UserCog, text: "Администрация", href: "/menu-admins"},
