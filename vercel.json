@@ -1,8 +1,23 @@
 {
   "rewrites": [
     {
-      "source": "karsu-admin-panel/(.*)",
-      "destination": "/index.html"
+      "source": "/karsu-admin-panel/(.*)",
+      "destination": "/karsu-admin-panel/$1"
+    },
+    {
+      "source": "/karsu-admin-panel",
+      "destination": "/karsu-admin-panel/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        }
+      ]
     }
   ]
 }
