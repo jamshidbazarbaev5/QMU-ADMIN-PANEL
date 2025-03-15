@@ -6,10 +6,18 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   base: '/karsu-admin-panel/',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: true
+  },
+  server: {
+    port: 3000
+  },
   resolve: {
-    alias: [
-      { find: '@', replacement: path.resolve(__dirname, 'src') }
-    ]
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
   },
   publicDir: 'public'
 })
