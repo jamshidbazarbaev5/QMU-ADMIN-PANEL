@@ -8,16 +8,6 @@
       "source": "/karsu-admin-panel",
       "destination": "/karsu-admin-panel/index.html"
     }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/javascript"
-        }
-      ]
-    }
   ]
+ 
 }
