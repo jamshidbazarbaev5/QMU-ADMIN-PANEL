@@ -1,12 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/karsu-admin-panel/",
-      "destination": "/index.html"
-    },
-    {
       "source": "/karsu-admin-panel/(.*)",
-      "destination": "/$1"
+      "destination": "/index.html"
     }
   ]
 }

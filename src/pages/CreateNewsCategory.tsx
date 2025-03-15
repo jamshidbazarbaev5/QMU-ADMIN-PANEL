@@ -45,7 +45,6 @@ export default function CreateNewsCategory() {
         
         const data = await response.json()
         
-        // Safely access translations with default empty strings
         form.reset({
           name_ru: data.translations?.ru?.name || "",
           name_en: data.translations?.en?.name || "",
