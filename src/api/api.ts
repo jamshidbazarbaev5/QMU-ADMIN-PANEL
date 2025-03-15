@@ -55,7 +55,7 @@ interface LoginCredentials {
         ...getAuthHeader(),
     };
 
-    const response = await fetchWithAuth('https://debttracker.uz/admin/change-credentials/', {
+    const response = await fetchWithAuth('https://karsu.uz/api/admin/change-credentials/', {
         method: 'POST',
         headers: headerObj,
         body: JSON.stringify({

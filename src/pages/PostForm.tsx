@@ -290,8 +290,8 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       formData.append('translations', JSON.stringify(translations.translations || {}))
 
       const url = isEditing 
-        ? `https://debttracker.uz/publications/posts/${slug}/`
-        : `https://debttracker.uz/publications/posts/`
+        ? `https://karsu.uz/api/publications/posts/${slug}/`
+        : `https://karsu.uz/api/publications/posts/`
       
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',

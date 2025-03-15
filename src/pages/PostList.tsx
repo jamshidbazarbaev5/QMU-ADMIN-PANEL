@@ -26,12 +26,12 @@ export function Posts() {
   const fetchPosts = async () => {
     try {
       setLoading(true)
-      const url = searchQuery 
-        ? `https://karsu.uz/api/publications/posts/?title=${encodeURIComponent(searchQuery)}`
-        : `https://karsu.uz/api/publications/posts/`
-      
+      const url = searchQuery
+          ? `https://karsu.uz/api/publications/posts/?title=${encodeURIComponent(searchQuery)}`
+          : `https://karsu.uz/api/publications/posts/`
+
       const response = await fetch(url)
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -72,7 +72,7 @@ export function Posts() {
     if (menu && menu.translations && menu.translations['kk']) {
       return menu.translations['kk'].name
     }
-   
+
   }
 
   const getPostSlug = (item: any) => {
@@ -104,7 +104,7 @@ export function Posts() {
       header: 'Image',
       accessor: 'main_image',
       cell: (item: any) => item.main_image ? (
-        <img src={item.main_image} alt="" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
+          <img src={item.main_image} alt="" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
       ) : '-'
     },
     {
@@ -112,11 +112,11 @@ export function Posts() {
       accessor: `translations.${currentLanguage}.title`,
       cell: (item: any) => {
         // Try to get title in current language, if not available, try other languages
-        const title = item.translations[currentLanguage]?.title || 
-                     item.translations.en?.title ||
-                     item.translations.ru?.title ||
-                     item.translations.uz?.title ||
-                     item.translations.kk?.title;
+        const title = item.translations[currentLanguage]?.title ||
+            item.translations.en?.title ||
+            item.translations.ru?.title ||
+            item.translations.uz?.title ||
+            item.translations.kk?.title;
         return title || '-';
       }
     },
@@ -149,64 +149,64 @@ export function Posts() {
   }
 
   return (
-    <div className="container mx-auto p-6 mt-[50px]">
-      <PageHeader
-        title="Posts"
-        createButtonLabel="Create Post"
-        onCreateClick={() => navigate('/karsu-admin-panel/posts/new')}
-      />
-
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Search posts..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-2 rounded-lg border border-gray-300"
+      <div className="container mx-auto p-6 mt-[50px]">
+        <PageHeader
+            title="Posts"
+            createButtonLabel="Create Post"
+            onCreateClick={() => navigate('/karsu-admin-panel/posts/new')}
         />
-      </div>
 
-      <div className="bg-white rounded-lg shadow">
-        <DataTable
-          data={posts}
-          columns={columns}
-          onRowClick={(item) => {
-            const slug = getPostSlug(item);
-            if (slug) {
-              navigate(`/karsu-admin-panel/posts/${slug}/edit`);
-            }
-          }}
-          actions={(item) => (
-            <div className="flex gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const slug = getPostSlug(item);
-                  if (slug) {
-                    navigate(`/karsu-admin-panel/posts/${slug}/edit`);
-                  }
-                }}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                Edit
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const slug = getPostSlug(item);
-                  if (slug) {
-                    handleDelete(slug);
-                  }
-                }}
-                className="text-red-600 hover:text-red-800"
-              >
-                Delete
-              </button>
-            </div>
-          )}
-        />
+        <div className="mb-4">
+          <input
+              type="text"
+              placeholder="Search posts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300"
+          />
+        </div>
+
+        <div className="bg-white rounded-lg shadow">
+          <DataTable
+              data={posts}
+              columns={columns}
+              onRowClick={(item) => {
+                const slug = getPostSlug(item);
+                if (slug) {
+                  navigate(`/karsu-admin-panel/posts/${slug}/edit`);
+                }
+              }}
+              actions={(item) => (
+                  <div className="flex gap-2">
+                    <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const slug = getPostSlug(item);
+                          if (slug) {
+                            navigate(`/karsu-admin-panel/posts/${slug}/edit`);
+                          }
+                        }}
+                        className="text-blue-600 hover:text-blue-800"
+                    >
+                      Edit
+                    </button>
+                    <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const slug = getPostSlug(item);
+                          if (slug) {
+                            handleDelete(slug);
+                          }
+                        }}
+                        className="text-red-600 hover:text-red-800"
+                    >
+                      Delete
+                    </button>
+                  </div>
+              )}
+          />
+        </div>
       </div>
-    </div>
   )
 
 }
