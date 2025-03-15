@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { DataTable } from '../helpers/DataTable'
 import { PageHeader } from '../helpers/PageHeader'
 import { useLanguage } from '../hooks/useLanguage'
-import { fetchWithAuth, getAuthHeader } from '../api/api'
 
 interface MenuTranslation {
   name: string;
@@ -28,14 +27,10 @@ export function Posts() {
     try {
       setLoading(true)
       const url = searchQuery 
-        ? `https:debttracker.uz/publications/posts/?title=${encodeURIComponent(searchQuery)}`
-        : `https:debttracker.uz/publications/posts/`
+        ? `https://karsu.uz/api/publications/posts/?title=${encodeURIComponent(searchQuery)}`
+        : `https://karsu.uz/api/publications/posts/`
       
-      const response = await fetchWithAuth(url, {
-        headers: {
-          ...getAuthHeader(),
-        },
-      })
+      const response = await fetch(url)
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -80,40 +75,28 @@ export function Posts() {
    
   }
 
-  const getFirstAvailableTranslation = (translations: any) => {
-    // Priority order for languages
-    const languageOrder = ['ru', 'en', 'uz', 'kk'];
-    
-    // First try the current language
-    if (translations[currentLanguage]) {
-      return {
-        translation: translations[currentLanguage],
-        language: currentLanguage
-      };
+  const getPostSlug = (item: any) => {
+    // Try to get any available slug from translations
+    if (!item.translations) {
+      console.error('No translations found for post:', item);
+      return '';
     }
 
-    // Then try each language in order until we find one
-    for (const lang of languageOrder) {
-      if (translations[lang]) {
-        return {
-          translation: translations[lang],
-          language: lang
-        };
+    // First try the current language
+    if (item.translations[currentLanguage]?.slug) {
+      return item.translations[currentLanguage].slug;
+    }
+
+    // Then try other languages in order
+    const languages = ['en', 'ru', 'uz', 'kk'];
+    for (const lang of languages) {
+      if (item.translations[lang]?.slug) {
+        return item.translations[lang].slug;
       }
     }
 
-    return null;
-  };
-
-  const handleEdit = (item: any) => {
-    const availableTranslation = getFirstAvailableTranslation(item.translations);
-    if (!availableTranslation) {
-      console.error('No available translation found');
-      return;
-    }
-    
-    const slug = availableTranslation.translation.slug;
-    navigate(`/karsu-admin-panel/posts/${slug}/edit`);
+    console.error('No slug found in any language for post:', item);
+    return '';
   };
 
   const columns = [
@@ -128,8 +111,13 @@ export function Posts() {
       header: 'Title',
       accessor: `translations.${currentLanguage}.title`,
       cell: (item: any) => {
-        const translation = item.translations['kk']
-        return translation ? translation.title : '-'
+        // Try to get title in current language, if not available, try other languages
+        const title = item.translations[currentLanguage]?.title || 
+                     item.translations.en?.title ||
+                     item.translations.ru?.title ||
+                     item.translations.uz?.title ||
+                     item.translations.kk?.title;
+        return title || '-';
       }
     },
     {
@@ -182,13 +170,21 @@ export function Posts() {
         <DataTable
           data={posts}
           columns={columns}
-          onRowClick={handleEdit}
+          onRowClick={(item) => {
+            const slug = getPostSlug(item);
+            if (slug) {
+              navigate(`/karsu-admin-panel/posts/${slug}/edit`);
+            }
+          }}
           actions={(item) => (
             <div className="flex gap-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleEdit(item);
+                  const slug = getPostSlug(item);
+                  if (slug) {
+                    navigate(`/karsu-admin-panel/posts/${slug}/edit`);
+                  }
                 }}
                 className="text-blue-600 hover:text-blue-800"
               >
@@ -197,9 +193,9 @@ export function Posts() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  const availableTranslation = getFirstAvailableTranslation(item.translations);
-                  if (availableTranslation) {
-                    handleDelete(availableTranslation.translation.slug);
+                  const slug = getPostSlug(item);
+                  if (slug) {
+                    handleDelete(slug);
                   }
                 }}
                 className="text-red-600 hover:text-red-800"
@@ -212,4 +208,5 @@ export function Posts() {
       </div>
     </div>
   )
+
 }

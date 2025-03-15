@@ -83,26 +83,51 @@ export default function NewsCategories() {
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [currentLanguage])
 
-  const handleDelete = async (slug: string) => {
+  const getAvailableSlug = (category: Category) => {
+    if (!category.translations) {
+      console.error('No translations found for category:', category);
+      return '';
+    }
+
+    // Try to get slug from any available language
+    const availableSlug = 
+      category.translations.en?.slug || 
+      category.translations.ru?.slug || 
+      category.translations.uz?.slug || 
+      category.translations.kk?.slug;
+
+    if (!availableSlug) {
+      console.error('No slug found in any language for category:', category);
+      return '';
+    }
+
+    return availableSlug;
+  };
+
+  const handleDelete = async (category: Category) => {
+    const slug = getAvailableSlug(category);
+    if (!slug) {
+      console.error('No slug available for deletion');
+      return;
+    }
+
     try {
       const response = await fetchWithAuth(`https://karsu.uz/api/news/category/${slug}/`, {
         method: 'DELETE',
         headers: getAuthHeader()
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to delete category')
+        throw new Error('Failed to delete category');
       }
 
       // Refresh the categories list
-      setCategories(categories.filter(category => 
-        category.translations[currentLanguage]?.slug !== slug
-      ))
+      setCategories(categories.filter(cat => cat.id !== category.id));
     } catch (error) {
-      console.error('Error deleting category:', error)
-      alert('Failed to delete category')
+      console.error('Error deleting category:', error);
+      alert('Failed to delete category');
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -135,62 +160,74 @@ export default function NewsCategories() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {categories.map((category, index) => (
-              <TableRow key={category.id}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>
-                  {category.translations[currentLanguage]?.name || '-'}
-                </TableCell>
-                <TableCell className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      const slug = category.translations[currentLanguage]?.slug
-                      if (slug) {
-                        navigate(`/karsu-admin-panel/create-news-category?slug=${slug}`)
-                      }
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+            {categories.map((category, index) => {
+              const displayName = 
+                category.translations[currentLanguage]?.name || 
+                category.translations.en?.name ||
+                category.translations.ru?.name ||
+                category.translations.uz?.name ||
+                category.translations.kk?.name ||
+                '-';
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Category</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this category? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          className="bg-red-600 hover:bg-red-700"
-                          onClick={() => {
-                            const slug = category.translations[currentLanguage]?.slug
-                            if (slug) {
-                              handleDelete(slug)
-                            }
-                          }}
+              return (
+                <TableRow key={category.id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{displayName}</TableCell>
+                  <TableCell className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        try {
+                          const slug = getAvailableSlug(category);
+                          if (!slug) {
+                            console.error('No valid slug found for category:', category);
+                            alert('Error: Unable to edit category due to missing slug');
+                            return;
+                          }
+                          console.log('Navigating to edit with slug:', slug);
+                          navigate(`/karsu-admin-panel/create-news-category?slug=${slug}`);
+                        } catch (error) {
+                          console.error('Error navigating to edit category:', error);
+                          alert('Error: Unable to edit category');
+                        }
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-600 hover:text-red-700"
                         >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TableCell>
-              </TableRow>
-            ))}
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this category? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-red-600 hover:bg-red-700"
+                            onClick={() => handleDelete(category)}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

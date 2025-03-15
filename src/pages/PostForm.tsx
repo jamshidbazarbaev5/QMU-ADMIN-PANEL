@@ -31,11 +31,11 @@ interface MainMenuItem {
   translations: {
     [key: string]: {
       name: string
-      title?: string
+      title: string
       slug: string
     }
   }
-  menu_posts?: number[]
+  menu_posts: number[]
 }
 
 interface FooterMenuItem {
@@ -49,8 +49,6 @@ interface FooterMenuItem {
   }
   footer_menu_posts: number[]
 }
-
-type PostType = 'with_images' | 'without_images' | null;
 
 export function PostForm({ initialData, isEditing }: PostFormProps) {
   const navigate = useNavigate()
@@ -71,38 +69,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
   const [selectedParentMenu, setSelectedParentMenu] = useState<string>('')
   const [selectedParentFooterMenu, setSelectedParentFooterMenu] = useState<string>('')
   const [activeMenuType, setActiveMenuType] = useState<'header' | 'footer' | null>(null);
-  const [postType, setPostType] = useState<PostType>(null);
-
-  const findParentMenu = (menuId: number, items: MainMenuItem[]): number | null => {
-    const menu = items.find(item => item.id === menuId);
-    if (!menu) return null;
-    return menu.parent;
-  };
-
-  const getFirstAvailableTranslation = (translations: any) => {
-    // Priority order for languages
-    const languageOrder = ['ru', 'en', 'uz', 'kk'];
-    
-    // First try the current language
-    if (translations[currentLanguage]) {
-      return {
-        translation: translations[currentLanguage],
-        language: currentLanguage
-      };
-    }
-
-    // Then try each language in order until we find one
-    for (const lang of languageOrder) {
-      if (translations[lang]) {
-        return {
-          translation: translations[lang],
-          language: lang
-        };
-      }
-    }
-
-    return null;
-  };
+  const [hasImages, setHasImages] = useState<boolean | null>(initialData ? (!!initialData.main_image || !!initialData.images?.length) : null);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -131,53 +98,40 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
             navigate('/karsu-admin-panel/login');
             return;
           }
-          if (response.status === 404) {
-            // If the current slug is not found, try to find an available translation
-            const data = await response.json();
-            if (data.translations) {
-              const availableTranslation = getFirstAvailableTranslation(data.translations);
-              if (availableTranslation) {
-                // Redirect to the available translation's slug
-                navigate(`/karsu-admin-panel/posts/${availableTranslation.translation.slug}/edit`, { replace: true });
-                return;
-              }
-            }
-          }
           throw new Error('Failed to fetch post');
         }
 
         const data = await response.json();
-        setPostData(data);
         
-        // Check if we need to redirect to a different translation's slug
-        const availableTranslation = getFirstAvailableTranslation(data.translations);
-        if (availableTranslation && availableTranslation.translation.slug !== slug) {
-          navigate(`/karsu-admin-panel/posts/${availableTranslation.translation.slug}/edit`, { replace: true });
-          return;
-        }
-        
-        if (data.menu) {
-          setActiveMenuType('header');
-          const parentMenuId = findParentMenu(data.menu, menuItems);
-          if (parentMenuId) {
-            setSelectedParentMenu(parentMenuId.toString());
-            setSelectedMenu(data.menu.toString());
-          } else {
-            setSelectedParentMenu(data.menu.toString());
-          }
-        } else if (data.footer_menu) {
-          setActiveMenuType('footer');
-          const parentMenuId = findParentMenu(data.footer_menu, footerMenuItems);
-          if (parentMenuId) {
-            setSelectedParentFooterMenu(parentMenuId.toString());
-            setSelectedFooterMenu(data.footer_menu.toString());
-          } else {
-            setSelectedParentFooterMenu(data.footer_menu.toString());
-          }
+        // Initialize empty translations for all languages if they don't exist
+        const fullTranslations = {
+          en: { title: '', description: '', slug: '' },
+          ru: { title: '', description: '', slug: '' },
+          uz: { title: '', description: '', slug: '' },
+          kk: { title: '', description: '', slug: '' },
+          ...data.translations
+        };
+
+        // Set the same slug for all languages
+        const availableSlug = data.translations.en?.slug || 
+                             data.translations.ru?.slug || 
+                             data.translations.uz?.slug || 
+                             data.translations.kk?.slug;
+
+        if (availableSlug) {
+          Object.keys(fullTranslations).forEach(lang => {
+            if (fullTranslations[lang]) {
+              fullTranslations[lang].slug = availableSlug;
+            }
+          });
         }
 
-        setSelectedMenu(data.menu?.toString() || '');
-        setSelectedFooterMenu(data.footer_menu?.toString() || '');
+        setPostData({
+          ...data,
+          translations: fullTranslations
+        });
+        setSelectedMenu(data.menu || '');
+        setSelectedFooterMenu(data.footer_menu || '');
         setExistingImages(data.images || []);
       } catch (error) {
         console.error('Error fetching post:', error);
@@ -187,10 +141,8 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       }
     };
 
-    if (menuItems.length > 0 && footerMenuItems.length > 0) {
-      fetchPost();
-    }
-  }, [slug, currentLanguage, isEditing, token, navigate, menuItems, footerMenuItems]);
+    fetchPost();
+  }, [slug, isEditing, token, navigate]);
 
   useEffect(() => {
     const fetchMenuItems = async () => {
@@ -206,7 +158,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
             }
           ),
           fetchWithAuth(
-            'https://karsu.uz/api/menus/footer/',
+              'https://karsu.uz/api/menus/footer/',
             {
               headers: {
                 ...getAuthHeader(),
@@ -217,21 +169,21 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
         ]);
 
         if (!mainMenuResponse.ok || !footerMenuResponse.ok) {
-          throw new Error('Failed to fetch menu items');
+          throw new Error('Failed to fetch menu items')
         }
 
-        const mainMenuData = await mainMenuResponse.json();
-        const footerMenuData = await footerMenuResponse.json();
+        const mainMenuData = await mainMenuResponse.json()
+        const footerMenuData = await footerMenuResponse.json()
         
-        setMenuItems(mainMenuData);
-        setFooterMenuItems(footerMenuData);
+        setMenuItems(mainMenuData)
+        setFooterMenuItems(footerMenuData)
       } catch (error) {
-        console.error('Error fetching menu items:', error);
+        console.error('Error fetching menu items:', error)
       }
-    };
+    }
 
-    fetchMenuItems();
-  }, [token]);
+    fetchMenuItems()
+  }, [token])
 
   useEffect(() => {
     if (initialData?.menu) {
@@ -241,16 +193,6 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
     }
   }, [initialData]);
 
-  useEffect(() => {
-    if (isEditing && postData) {
-      if (postData.main_image || (postData.images && postData.images.length > 0)) {
-        setPostType('with_images');
-      } else {
-        setPostType('without_images');
-      }
-    }
-  }, [isEditing, postData]);
-
   const handleAdditionalImages = (files: FileList | null) => {
     if (files) {
       const newFiles = Array.from(files)
@@ -258,34 +200,28 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
     }
   }
 
-  if (!postType && !isEditing) {
+  if (!isEditing && hasImages === null) {
     return (
       <div className="container mx-auto p-6 mt-[50px]">
         <PageHeader
-          title="Выберите тип поста"
-          createButtonLabel="Назад"
+          title="Create Post"
+          createButtonLabel="Back to Posts"
           onCreateClick={() => navigate('/karsu-admin-panel/posts')}
         />
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="space-y-4">
+          <h2 className="text-xl font-semibold mb-6">Would you like to include images in this post?</h2>
+          <div className="flex gap-4">
             <button
-              onClick={() => setPostType('with_images')}
-              className="w-full p-4 text-left border rounded-lg hover:bg-gray-50 transition-colors"
+              onClick={() => setHasImages(true)}
+              className="px-6 py-3 bg-[#6C5DD3] text-white rounded-lg hover:bg-[#5b4eb8] transition-colors"
             >
-              <h3 className="text-lg font-medium">С изображениями</h3>
-              <p className="text-sm text-gray-500">
-                Создать пост с главным изображением и дополнительными изображениями
-              </p>
+              Yes, include images
             </button>
-
             <button
-              onClick={() => setPostType('without_images')}
-              className="w-full p-4 text-left border rounded-lg hover:bg-gray-50 transition-colors"
+              onClick={() => setHasImages(false)}
+              className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
             >
-              <h3 className="text-lg font-medium">Без изображений</h3>
-              <p className="text-sm text-gray-500">
-                Создать пост только с текстовым содержанием
-              </p>
+              No, text only
             </button>
           </div>
         </div>
@@ -305,6 +241,24 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
   const handleSubmit = async (translations: any) => {
     setErrorMessage(null)
     
+    // Validate translations
+    if (!translations || Object.keys(translations).length === 0) {
+      setErrorMessage('Please fill in at least one translation')
+      return
+    }
+
+    // Check if at least one language has both title and description
+    const hasValidTranslation = Object.values(translations.translations || {}).some((lang: any) => {
+      return lang && typeof lang === 'object' && 
+             typeof lang.title === 'string' && lang.title.trim() !== '' &&
+             typeof lang.description === 'string' && lang.description.trim() !== ''
+    })
+
+    if (!hasValidTranslation) {
+      setErrorMessage('Please fill in at least one complete translation (title and description)')
+      return
+    }
+
     if (!token) {
       console.error('No token found')
       navigate('/karsu-admin-panel/login')
@@ -323,19 +277,27 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
         formData.append('uploaded_images', file)
       })
 
-      formData.append('menu', selectedMenu || '')
-      formData.append('footer_menu', selectedFooterMenu || '')
-      formData.append('translations', JSON.stringify(translations))
+      // Only append menu IDs if they are actually selected
+      if (selectedMenu && selectedMenu !== '_none') {
+        formData.append('menu', selectedMenu)
+      }
+      
+      if (selectedFooterMenu && selectedFooterMenu !== '_none') {
+        formData.append('footer_menu', selectedFooterMenu)
+      }
+
+      // Format translations correctly
+      formData.append('translations', JSON.stringify(translations.translations || {}))
 
       const url = isEditing 
-        ? `https:debttracker.uz/publications/posts/${slug}/`
-        : `https:debttracker.uz/publications/posts/`
+        ? `https://debttracker.uz/publications/posts/${slug}/`
+        : `https://debttracker.uz/publications/posts/`
       
-      const response = await fetchWithAuth(url, {
+      const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
         body: formData,
         headers: {
-            ...getAuthHeader(),
+          ...getAuthHeader(),
         },
       })
 
@@ -382,12 +344,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       <PageHeader
         title={isEditing ? 'Edit Post' : 'Create Post'}
         createButtonLabel="Back to Posts"
-        onCreateClick={() => {
-          if (!isEditing) {
-            setPostType(null);
-          }
-          navigate('/karsu-admin-panel/posts');
-        }}
+        onCreateClick={() => navigate('/karsu-admin-panel/posts')}
       />
 
       <div className="bg-white rounded-lg shadow p-6">
@@ -501,7 +458,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
           </div>
         </div>
 
-        {postType === 'with_images' && (
+        {hasImages && (
           <>
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -513,8 +470,8 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
                 onChange={(e) => setSelectedImage(e.target.files?.[0] || null)}
                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#6C5DD3] file:text-white hover:file:bg-[#5b4eb8]"
               />
-              {postData?.main_image && (
-                <img src={postData.main_image} alt="Current" className="mt-2 h-32 object-cover rounded" />
+              {initialData?.main_image && (
+                <img src={initialData.main_image} alt="Current" className="mt-2 h-32 object-cover rounded" />
               )}
             </div>
 

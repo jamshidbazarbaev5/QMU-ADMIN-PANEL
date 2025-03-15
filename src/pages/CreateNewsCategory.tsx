@@ -37,18 +37,20 @@ export default function CreateNewsCategory() {
 
       setIsLoading(true)
       try {
-        const response = await fetch(`https://karsu.uz/api/news/category/${slug}`, {
+        const response = await fetchWithAuth(`https://karsu.uz/api/news/category/${slug}/`, {
           headers: getAuthHeader()
         })
         
         if (!response.ok) throw new Error('Failed to fetch category')
         
         const data = await response.json()
+        
+        // Safely access translations with default empty strings
         form.reset({
-          name_ru: data.translations.ru.name,
-          name_en: data.translations.en.name,
-          name_uz: data.translations.uz.name,
-          name_kk: data.translations.kk.name,
+          name_ru: data.translations?.ru?.name || "",
+          name_en: data.translations?.en?.name || "",
+          name_uz: data.translations?.uz?.name || "",
+          name_kk: data.translations?.kk?.name || "",
         })
       } catch (error) {
         console.error('Error fetching category:', error)

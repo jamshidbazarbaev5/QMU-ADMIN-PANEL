@@ -98,30 +98,37 @@ export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoa
     const filteredTranslations: { [key: string]: any } = {}
     
     languages.forEach(lang => {
-      // Check if any field in this language has content
-      const hasContent = Object.entries(formData[lang]).some(([_, value]) => {
-        if (typeof value === 'string') {
-          // For rich text content, remove HTML tags and check if there's text
-          const plainText = value.replace(/<[^>]*>/g, '').trim()
-          return plainText !== ''
-        }
-        return false
-      })
+      // Check if all required fields in this language have content
+      const hasRequiredContent = fields
+        .filter(field => field.required)
+        .every(field => {
+          const value = formData[lang]?.[field.name]
+          if (typeof value === 'string') {
+            // For rich text content, remove HTML tags and check if there's text
+            const plainText = value.replace(/<[^>]*>/g, '').trim()
+            return plainText !== ''
+          }
+          return false
+        })
 
-      // Only include languages that have content
-      if (hasContent) {
-        filteredTranslations[lang] = formData[lang]
+      // Only include languages that have all required content
+      if (hasRequiredContent) {
+        filteredTranslations[lang] = {
+          ...formData[lang],
+          // Generate slug from title if not provided
+          slug: formData[lang].slug || formData[lang].title?.toLowerCase().replace(/\s+/g, '-') || ''
+        }
       }
     })
 
     // Check if at least one language has content
     if (Object.keys(filteredTranslations).length === 0) {
-      setError('Please fill in at least one language')
+      setError('Please fill in at least one complete translation')
       return
     }
 
     try {
-      // Send only the translations that have content
+      // Send the translations wrapped in a translations object
       await onSubmit({ translations: filteredTranslations })
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An unexpected error occurred')
