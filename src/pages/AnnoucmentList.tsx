@@ -40,7 +40,7 @@ export default function Announcements() {
         searchParams.append('title', query)
       }
       
-      const url = `https://debttracker.uz/announcements/${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+      const url = `https://karsu.uz/api/announcements/${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
@@ -63,7 +63,7 @@ export default function Announcements() {
 
   const handleEdit = (announcement: Announcement) => {
     const slug = announcement.translations[currentLanguage]?.slug || ''
-    navigate(`/edit-announcement/${slug}?id=${announcement.id}`)
+    navigate(`/karsu-admin-panel/edit-announcement/${slug}?id=${announcement.id}`)
   }
 
   const handleDelete = async (announcement: Announcement) => {
@@ -71,7 +71,7 @@ export default function Announcements() {
     if (!slug) return
 
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/announcements/${slug}/`, {
+      const response = await fetchWithAuth(`https://karsu.uz/api/announcements/${slug}/`, {
         method: 'DELETE',
         headers: {
           ...getAuthHeader()
@@ -154,7 +154,7 @@ export default function Announcements() {
       <PageHeader
         title="Announcements"
         createButtonLabel="Create Announcement"
-        onCreateClick={() => navigate('/create-announcement')}
+        onCreateClick={() => navigate('/karsu-admin-panel/create-announcement')}
       />
 
       <div className="mb-6">

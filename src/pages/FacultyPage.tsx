@@ -53,7 +53,7 @@ export function FacultyPage() {
 
   const fetchFaculties = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/faculty/`)
+      const response = await fetch(`https://karsu.uz/api/menus/faculty/`)
       if (!response.ok) throw new Error('Failed to fetch faculties')
       const data = await response.json()
       setFaculties(data)
@@ -83,8 +83,8 @@ export function FacultyPage() {
       formData.append('translations', JSON.stringify(translationData))
 
       const url = editingFaculty 
-        ? `https://debttracker.uz/menus/faculty/${editingFaculty.translations[currentLanguage].slug}/`
-        : `https://debttracker.uz/menus/faculty/`
+        ? `https://karsu.uz/api/menus/faculty/${editingFaculty.translations[currentLanguage].slug}/`
+        : `https://karsu.uz/api/menus/faculty/`
 
       const response = await fetch(url, {
         method: editingFaculty ? 'PUT' : 'POST',
@@ -114,7 +114,7 @@ export function FacultyPage() {
 
     try {
       const response = await fetchWithAuth(
-        `https://debttracker.uz/menus/faculty/${faculty.translations.en.slug}/`,
+        `https://karsu.uz/api/menus/faculty/${faculty.translations.en.slug}/`,
         { 
           method: 'DELETE',
           headers: {
@@ -169,7 +169,7 @@ export function FacultyPage() {
             size="icon"
             onClick={(e) => {
               e.stopPropagation()
-              navigate(`/faculties/${item.translations[currentLanguage].slug}/edit`)
+              navigate(`/karsu-admin-panel/faculties/${item.translations[currentLanguage].slug}/edit`)
             }}
           >
             <Pencil className="h-4 w-4" />
@@ -200,7 +200,7 @@ export function FacultyPage() {
       <PageHeader
         title="Faculties"
         createButtonLabel="Add Faculty"
-        onCreateClick={() => navigate('/faculties/new')}
+        onCreateClick={() => navigate('/karsu-admin-panel/faculties/new')}
       />
 
       <DataTable

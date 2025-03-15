@@ -52,7 +52,7 @@ export function DepartmentFormPage() {
 
   const fetchFaculties = async () => {
     try {
-      const response = await fetchWithAuth('https://debttracker.uz/menus/faculty/', {
+      const response = await fetchWithAuth('https://karsu.uz/api/menus/faculty/', {
         headers: getAuthHeader(),
       })
       const data = await response.json()
@@ -64,7 +64,7 @@ export function DepartmentFormPage() {
 
   const fetchDepartment = async (departmentId: string) => {
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/menus/department/${departmentId}/`, {
+      const response = await fetchWithAuth(`https://karsu.uz/api/menus/department/${departmentId}/`, {
         headers: getAuthHeader(),
       });
       const data = await response.json();
@@ -84,8 +84,8 @@ export function DepartmentFormPage() {
     setIsLoading(true)
     try {
       const endpoint = id
-        ? `https://debttracker.uz/menus/department/${id}/`
-        : 'https://debttracker.uz/menus/department/'
+        ? `https://karsu.uz/api/menus/department/${id}/`
+        : 'https://karsu.uz/api/menus/department/'
 
       const method = id ? 'PUT' : 'POST'
 
@@ -102,7 +102,7 @@ export function DepartmentFormPage() {
       })
 
       if (response.ok) {
-        navigate('/department')
+        navigate('/karsu-admin-panel/department')
       }
     } catch (error) {
       console.error('Error saving department:', error)
@@ -169,7 +169,7 @@ export function DepartmentFormPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/departments')}
+              onClick={() => navigate('/karsu-admin-panel/departments')}
             >
               Cancel
             </Button>

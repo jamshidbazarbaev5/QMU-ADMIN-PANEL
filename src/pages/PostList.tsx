@@ -27,8 +27,8 @@ export function Posts() {
     try {
       setLoading(true)
       const url = searchQuery 
-        ? `https://debttracker.uz/publications/posts/?title=${encodeURIComponent(searchQuery)}`
-        : `https://debttracker.uz/publications/posts/`
+        ? `https://karsu.uz/api/publications/posts/?title=${encodeURIComponent(searchQuery)}`
+        : `https://karsu.uz/api/publications/posts/`
       
       const response = await fetch(url)
       
@@ -48,7 +48,7 @@ export function Posts() {
 
   const fetchMenus = async () => {
     try {
-      const response = await fetch('https://debttracker.uz/menus/main/')
+      const response = await fetch('https://karsu.uz/api/menus/main/')
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
@@ -107,7 +107,7 @@ export function Posts() {
     if (!confirm('Are you sure you want to delete this post?')) return
 
     try {
-      const response = await fetch(`https://debttracker.uz/publications/posts/${slug}/`, {
+      const response = await fetch(`https://karsu.uz/api/publications/posts/${slug}/`, {
         method: 'DELETE'
       })
 
@@ -145,7 +145,7 @@ export function Posts() {
       <PageHeader
         title="Posts"
         createButtonLabel="Create Post"
-        onCreateClick={() => navigate('/posts/new')}
+        onCreateClick={() => navigate('/karsu-admin-panel/posts/new')}
       />
 
       <div className="mb-4">
@@ -165,7 +165,7 @@ export function Posts() {
           onRowClick={(item) => {
             const slug = getPostSlug(item);
             if (slug) {
-              navigate(`/posts/${slug}/edit`);
+              navigate(`/karsu-admin-panel/posts/${slug}/edit`);
             }
           }}
           actions={(item) => (
@@ -175,7 +175,7 @@ export function Posts() {
                   e.stopPropagation();
                   const slug = getPostSlug(item);
                   if (slug) {
-                    navigate(`/posts/${slug}/edit`);
+                    navigate(`/karsu-admin-panel/posts/${slug}/edit`);
                   }
                 }}
                 className="text-blue-600 hover:text-blue-800"

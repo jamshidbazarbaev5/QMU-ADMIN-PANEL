@@ -159,7 +159,7 @@ export function MenuAdminFormPage() {
   // Update fetch functions to use correct endpoints
   const fetchMenus = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/main/`)
+      const response = await fetch(`https://karsu.uz/api/menus/main/`)
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
       
@@ -176,7 +176,7 @@ export function MenuAdminFormPage() {
 
   const fetchFaculties = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/faculty/`)
+      const response = await fetch(`https://karsu.uz/api/menus/faculty/`)
       if (!response.ok) throw new Error('Failed to fetch faculties')
       const data = await response.json()
       setFaculties(data)
@@ -187,7 +187,7 @@ export function MenuAdminFormPage() {
 
   const fetchDepartments = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/department/`)
+      const response = await fetch(`https://karsu.uz/api/menus/department/`)
       if (!response.ok) throw new Error('Failed to fetch departments')
       const data = await response.json()
       setDepartments(data)
@@ -198,7 +198,7 @@ export function MenuAdminFormPage() {
 
   const fetchAgencies = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/agency/`)
+      const response = await fetch(`https://karsu.uz/api/menus/agency/`)
       if (!response.ok) throw new Error('Failed to fetch agencies')
       const data = await response.json()
       setAgencies(data)
@@ -209,7 +209,7 @@ export function MenuAdminFormPage() {
 
   const fetchPositions = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/position/`)
+      const response = await fetch(`https://karsu.uz/api/menus/position/`)
       if (!response.ok) throw new Error('Failed to fetch positions')
       const data = await response.json()
       // Ensure we always have an array of positions
@@ -268,8 +268,8 @@ export function MenuAdminFormPage() {
       }
 
       const url = id 
-        ? `https://debttracker.uz/menus/admin/${id}/`
-        : `https://debttracker.uz/menus/admin/`
+        ? `https://karsu.uz/api/menus/admin/${id}/`
+        : `https://karsu.uz/api/menus/admin/`
 
       const response = await fetchWithAuth(url, {
         method: id ? 'PUT' : 'POST',
@@ -281,7 +281,7 @@ export function MenuAdminFormPage() {
 
       if (!response.ok) throw new Error('Failed to save admin')
       
-      navigate('/menu-admins')
+      navigate('/karsu-admin-panel/menu-admins')
     } catch (error) {
       console.error('Error saving admin:', error)
     } finally {
@@ -311,7 +311,7 @@ export function MenuAdminFormPage() {
   const fetchAdminDetails = async () => {
     if (!id) return
     try {
-      const response = await fetch(`https://debttracker.uz/menus/admin/${id}/`)
+      const response = await fetch(`https://karsu.uz/api/menus/admin/${id}/`)
       if (!response.ok) throw new Error('Failed to fetch admin details')
       const data = await response.json()
       setEditingAdmin(data)
@@ -341,7 +341,7 @@ export function MenuAdminFormPage() {
         <h1 className="text-2xl font-bold">
           {id ? 'Edit Administrator' : 'Create Administrator'}
         </h1>
-        <Button variant="outline" onClick={() => navigate('/menu-admins')}>
+        <Button variant="outline" onClick={() => navigate('/karsu-admin-panel/menu-admins')}>
           Back to List
         </Button>
       </div>

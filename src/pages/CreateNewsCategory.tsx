@@ -37,7 +37,7 @@ export default function CreateNewsCategory() {
 
       setIsLoading(true)
       try {
-        const response = await fetch(`https://debttracker.uz/news/category/${slug}`, {
+        const response = await fetch(`https://karsu.uz/api/news/category/${slug}`, {
           headers: getAuthHeader()
         })
         
@@ -53,7 +53,7 @@ export default function CreateNewsCategory() {
       } catch (error) {
         console.error('Error fetching category:', error)
         alert('Failed to fetch category')
-        navigate('/news-categories')
+        navigate('/karsu-admin-panel/news-categories')
       } finally {
         setIsLoading(false)
       }
@@ -84,8 +84,8 @@ export default function CreateNewsCategory() {
       }
 
       const url = isEditMode 
-        ? `https://debttracker.uz/news/category/${slug}/`
-        : `https://debttracker.uz/news/category/`
+        ? `https://karsu.uz/api/news/category/${slug}/`
+        : `https://karsu.uz/api/news/category/`
 
       const response = await fetchWithAuth(url, {
         method: isEditMode ? 'PUT' : 'POST',
@@ -100,7 +100,7 @@ export default function CreateNewsCategory() {
         throw new Error(`Failed to ${isEditMode ? 'update' : 'create'} category`)
       }
 
-      navigate('/news-categories')
+      navigate('/karsu-admin-panel/news-categories')
     } catch (error) {
       console.error(`Error ${isEditMode ? 'updating' : 'creating'} category:`, error)
       alert(`Failed to ${isEditMode ? 'update' : 'create'} category`)
@@ -149,7 +149,7 @@ export default function CreateNewsCategory() {
                   <Button 
                     variant="outline" 
                     type="button"
-                    onClick={() => navigate('/news-categories')}
+                    onClick={() => navigate('/karsu-admin-panel/news-categories')}
                   >
                     Cancel
                   </Button>

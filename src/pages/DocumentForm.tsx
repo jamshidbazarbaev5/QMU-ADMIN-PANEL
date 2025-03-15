@@ -66,7 +66,7 @@ export function DocumentForm() {
   useEffect(() => {
     const fetchMenus = async () => {
       try {
-        const response = await fetchWithAuth('https://debttracker.uz/menus/main/', {
+        const response = await fetchWithAuth('https://karsu.uz/api/menus/main/', {
           headers: getAuthHeader(),
         })
         if (!response.ok) throw new Error('Failed to fetch menus')
@@ -84,7 +84,7 @@ export function DocumentForm() {
     if (id) {
       const fetchDocument = async () => {
         try {
-          const response = await fetchWithAuth(`https://debttracker.uz/menus/document/${id}/`, {
+          const response = await fetchWithAuth(`https://karsu.uz/api/menus/document/${id}/`, {
             headers: getAuthHeader(),
           })
           if (!response.ok) throw new Error('Failed to fetch document')
@@ -134,8 +134,8 @@ export function DocumentForm() {
       }
 
       const url = id 
-        ? `https://debttracker.uz/menus/document/${id}/`
-        : `https://debttracker.uz/menus/document/`
+        ? `https://karsu.uz/api/menus/document/${id}/`
+        : `https://karsu.uz/api/menus/document/`
 
       const response = await fetchWithAuth(url, {
         method: id ? 'PUT' : 'POST',
@@ -151,7 +151,7 @@ export function DocumentForm() {
         throw new Error('Failed to save document')
       }
 
-      navigate('/document')
+      navigate('/karsu-admin-panel/document')
     } catch (error) {
       console.error('Error saving document:', error)
       alert('Failed to save document')
@@ -163,7 +163,7 @@ export function DocumentForm() {
   return (
     <div className="p-6 mt-[50px]">
       <div className="mb-6">
-        <Button variant="outline" onClick={() => navigate('/documents')}>
+        <Button variant="outline" onClick={() => navigate('/karsu-admin-panel//documents')}>
           Back to Documents
         </Button>
       </div>

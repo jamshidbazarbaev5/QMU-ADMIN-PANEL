@@ -52,7 +52,7 @@ export default function NewsCategories() {
     const fetchCategories = async () => {
       try {
         setIsLoading(true)
-        const response = await fetchWithAuth(`https://debttracker.uz/news/category/`, {
+        const response = await fetchWithAuth(`https://karsu.uz/api/news/category/`, {
           headers: getAuthHeader()
         })
         if (!response.ok) {
@@ -85,7 +85,7 @@ export default function NewsCategories() {
 
   const handleDelete = async (slug: string) => {
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/news/category/${slug}/`, {
+      const response = await fetchWithAuth(`https://karsu.uz/api/news/category/${slug}/`, {
         method: 'DELETE',
         headers: getAuthHeader()
       })
@@ -117,7 +117,7 @@ export default function NewsCategories() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-[#6C5DD3]">News Categories</h1>
         <Button
-          onClick={() => navigate('/create-news-category')}
+          onClick={() => navigate('/karsu-admin-panel/create-news-category')}
           className="flex items-center gap-2 px-4 py-2 bg-[#6C5DD3] text-white rounded-lg hover:bg-[#5b4eb8] transition-colors"
         >
           <Plus className="h-5 w-5" />
@@ -148,7 +148,7 @@ export default function NewsCategories() {
                     onClick={() => {
                       const slug = category.translations[currentLanguage]?.slug
                       if (slug) {
-                        navigate(`/create-news-category?slug=${slug}`)
+                        navigate(`/karsu-admin-panel/create-news-category?slug=${slug}`)
                       }
                     }}
                   >

@@ -15,7 +15,7 @@ export function Videos() {
     console.log('Fetching videos for language:', currentLanguage)
     try {
       setLoading(true)
-      const response = await fetchWithAuth(`https://debttracker.uz/publications/videos/`, {
+      const response = await fetchWithAuth(`https://karsu.uz/api/publications/videos/`, {
         headers: {
           'Accept': 'application/json',
         },
@@ -78,7 +78,7 @@ export function Videos() {
     }
 
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/publications/videos/${id}/`, {
+      const response = await fetchWithAuth(`https://karsu.uz/api/publications/videos/${id}/`, {
         method: 'DELETE',
         headers: getAuthHeader(),
       })
@@ -99,20 +99,20 @@ export function Videos() {
       <PageHeader
         title="Videos"
         createButtonLabel="Create Video"
-        onCreateClick={() => navigate('/videos/new')}
+        onCreateClick={() => navigate('/karsu-admin-panel/videos/new')}
       />
 
       <div className="bg-white rounded-lg shadow">
         <DataTable
           data={videos}
           columns={columns}
-          onRowClick={(item) => navigate(`/videos/${item.id}/edit`)}
+          onRowClick={(item) => navigate(`/karsu-admin-panel/videos/${item.id}/edit`)}
           actions={(item) => (
             <div className="flex gap-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  navigate(`/videos/${item.id}/edit`)
+                  navigate(`/karsu-admin-panel/videos/${item.id}/edit`)
                 }}
                 className="text-blue-600 hover:text-blue-800"
               >

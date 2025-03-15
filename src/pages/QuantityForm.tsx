@@ -36,7 +36,7 @@ export function QuantityForm({ isEditing }: QuantityFormProps) {
     }
 
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/publications/quantities/${id}`, {
+      const response = await fetchWithAuth(`https://karsu.uz/api/publications/quantities/${id}`, {
         headers: {
           ...getAuthHeader()
         }
@@ -53,7 +53,7 @@ export function QuantityForm({ isEditing }: QuantityFormProps) {
       })
     } catch (error) {
       console.error('Error:', error)
-      navigate('/quantities')
+      navigate('/karsu-admin-panel/quantities')
     } finally {
       setIsLoading(false)
     }
@@ -61,7 +61,7 @@ export function QuantityForm({ isEditing }: QuantityFormProps) {
 
   const handleSubmit = async (data: any) => {
     if (!token) {
-      navigate('/login')
+      navigate('/karsu-admin-panel/login')
       return
     }
 
@@ -84,14 +84,14 @@ export function QuantityForm({ isEditing }: QuantityFormProps) {
         await createQuantity(submitData)
       }
 
-      navigate('/quantities')
+      navigate('/karsu-admin-panel/quantities')
     } catch (error: any) {
       console.error('Error:', error)
       if (error.response?.status === 401) {
         console.log('Token expired, redirecting to login')
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
-        navigate('/login')
+        navigate('/karsu-admin-panel/login')
         return
       }
       alert(error.message || 'Failed to save quantity. Please check console for details.')
@@ -122,7 +122,7 @@ export function QuantityForm({ isEditing }: QuantityFormProps) {
       <PageHeader
         title={isEditing ? 'Edit Quantity' : 'Create Quantity'}
         createButtonLabel="Back to Quantities"
-        onCreateClick={() => navigate('/quantities')}
+        onCreateClick={() => navigate('/karsu-admin-panel/quantities')}
       />
 
       <div className="bg-white rounded-lg shadow p-6">

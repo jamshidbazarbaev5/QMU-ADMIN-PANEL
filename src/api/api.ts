@@ -9,7 +9,7 @@ export const createAnnouncement = async (data: { translations: { en: { title: st
         ...getAuthHeader(),
     };
 
-    const response = await fetchWithAuth('https://debttracker.uz/ru/announcements/', {
+    const response = await fetchWithAuth('https://karsu.uz/api/announcements/', {
         method: 'POST',
         headers: headerObj,
         body: JSON.stringify(data),
@@ -89,7 +89,7 @@ export const createQuantity = async (data: QuantityData) => {
         ...getAuthHeader(),
     };
 
-    const response = await fetchWithAuth('https://debttracker.uz/en/publications/quantities/', {
+    const response = await fetchWithAuth('https://karsu.uz/api/publications/quantities/', {
         method: 'POST',
         headers: headerObj,
         body: JSON.stringify(data),
@@ -109,7 +109,7 @@ export const updateQuantity = async (id: string, data: QuantityData) => {
         ...getAuthHeader(),
     };
 
-    const response = await fetchWithAuth(`https://debttracker.uz/publications/quantities/${id}/`, {
+    const response = await fetchWithAuth(`https://karsu.uz/api/publications/quantities/${id}/`, {
         method: 'PUT',
         headers: headerObj,
         body: JSON.stringify(data),
@@ -139,7 +139,7 @@ export const refreshAccessToken = async (): Promise<string | null> => {
   if (!refreshToken) return null;
 
   try {
-    const response = await fetch('https://debttracker.uz/token/refresh/', {
+    const response = await fetch('https://karsu.uz/api/token/refresh/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -194,7 +194,7 @@ interface LoginResponse extends TokenResponse {
 
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
     try {
-        const response = await fetch('https://debttracker.uz/token/', {
+        const response = await fetch('https://karsu.uz/api/token/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

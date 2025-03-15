@@ -39,7 +39,7 @@ export default function FeedbackForm() {
   const fetchFeedback = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`https://debttracker.uz/feedback/${id}/`, {
+      const response = await fetch(`https://karsu.uz/api/feedback/${id}/`, {
         headers: {
           ...getAuthHeader()
         }
@@ -62,7 +62,7 @@ export default function FeedbackForm() {
   const onSubmit = async (values: FeedbackFormValues) => {
     try {
       setIsLoading(true)
-      const url = `https://debttracker.uz/feedback/${id ? `${id}/` : ''}`
+      const url = `https://karsu.uz/api/feedback/${id ? `${id}/` : ''}`
       const method = id ? 'PUT' : 'POST'
 
       const response = await fetchWithAuth(url, {
@@ -76,7 +76,7 @@ export default function FeedbackForm() {
 
       if (!response.ok) throw new Error('Failed to save feedback')
       
-      navigate('/feedback')
+      navigate('/karsu-admin-panel/feedback')
     } catch (error) {
       console.error('Error saving feedback:', error)
       alert('Failed to save feedback')
@@ -148,7 +148,7 @@ export default function FeedbackForm() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate('/feedback')}
+                  onClick={() => navigate('/karsu-admin-panel/feedback')}
                 >
                   Cancel
                 </Button>

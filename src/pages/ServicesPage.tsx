@@ -32,7 +32,7 @@ export function ServicesPage() {
   const currentLanguage = useLanguage()
 
   const fetchServices = async () => {
-    const response = await fetchWithAuth('https://debttracker.uz/references/services/', {
+    const response = await fetchWithAuth('https://karsu.uz/api/references/services/', {
       headers: getAuthHeader()
     });
     const data = await response.json();
@@ -52,8 +52,8 @@ export function ServicesPage() {
     setIsLoading(true)
     try {
       const url = editingService 
-        ? `https://debttracker.uz/references/services/${editingService.id}/`
-        : 'https://debttracker.uz/references/services/'
+        ? `https://karsu.uz/api/references/services/${editingService.id}/`
+        : 'https://karsu.uz/api/references/services/'
       
       const submitData = new FormData()
       
@@ -150,7 +150,7 @@ export function ServicesPage() {
     setSelectedImage(null);
     setIsDialogOpen(true);
     
-    const response = await fetchWithAuth(`https://debttracker.uz/ru/references/services/${service.id}/`, {
+    const response = await fetchWithAuth(`https://karsu.uz/api/references/services/${service.id}/`, {
       headers: getAuthHeader()
     });
     const serviceData = await response.json();
@@ -174,7 +174,7 @@ export function ServicesPage() {
   const handleDelete = async (service: Service) => {
     try {
       const response = await fetchWithAuth(
-        `https://debttracker.uz/references/services/${service.id}/`,
+        `https://karsu.uz/api/references/services/${service.id}/`,
         {
           method: 'DELETE',
           headers: getAuthHeader(),

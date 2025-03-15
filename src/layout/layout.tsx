@@ -21,6 +21,7 @@ import {
   KeyRound,
   ChevronDown,
   ChevronRight,
+  Image
 } from "lucide-react"
 // import {
 //   Select,
@@ -43,7 +44,7 @@ export default function Layout() {
     localStorage.removeItem("accessToken")
     localStorage.removeItem("refreshToken")
     window.dispatchEvent(new Event('auth-change'))
-    navigate("/login")
+    navigate("/karsu-admin-panel/login")
   }
 
   const toggleSection = (section: string) => {
@@ -57,28 +58,29 @@ export default function Layout() {
   // Organize menu items into sections
   const menuSections = {
     главная: [
-      {icon: Plus, text: "Объявления", href: "/annoucment-list"},
-      {icon: MessageSquare, text: "Обратная связь", href: "/feedback"},
-      {icon: Newspaper, text: "Новости", href: "/news"},
-      {icon: Grid, text: "Категории новостей", href: "/news-categories"},
+      {icon: Plus, text: "Объявления", href: "/karsu-admin-panel/annoucment-list"},
+      {icon: MessageSquare, text: "Обратная связь", href: "/karsu-admin-panel/feedback"},
+      {icon: Newspaper, text: "Новости", href: "/karsu-admin-panel/news"},
+      {icon: Grid, text: "Категории новостей", href: "/karsu-admin-panel/news-categories"},
+      {icon: Image, text: "Главные изображения", href: "/karsu-admin-panel/main-image-list"},
     ],
     структура: [
-      {icon: School, text: "Факультеты", href: "/faculty"},
-      {icon: Building2, text: "Кафедры", href: "/department"},
+      {icon: School, text: "Факультеты", href: "/karsu-admin-panel/faculty"},
+      {icon: Building2, text: "Кафедры", href: "/karsu-admin-panel/department"},
     ],
     контент: [
-      {icon: LinkIcon, text: "Полезные ссылки", href: "/links"},
-      {icon: List, text: "Меню", href: "/menus"},
-      {icon: FileSpreadsheet, text: "Документы", href: "/document"},
-      {icon: Newspaper, text: "Публикации", href: "/posts"},
-      {icon: Video, text: "Видео", href: "/videos"},
-      {icon: FileSpreadsheet, text: "Количества", href: "/quantities"},
-      {icon:List,text:"Интерактивные услуги",href:"/services"}
+      {icon: LinkIcon, text: "Полезные ссылки", href: "/karsu-admin-panel/links"},
+      {icon: List, text: "Меню", href: "/karsu-admin-panel/menus"},
+      {icon: FileSpreadsheet, text: "Документы", href: "/karsu-admin-panel/document"},
+      {icon: Newspaper, text: "Публикации", href: "/karsu-admin-panel/posts"},
+      {icon: Video, text: "Видео", href: "/karsu-admin-panel/videos"},
+      {icon: FileSpreadsheet, text: "Количества", href: "/karsu-admin-panel/quantities"},
+      {icon:List,text:"Интерактивные услуги",href:"/karsu-admin-panel/services"}
     ],
     управление: [
-      {icon: UserCog, text: "Администрация", href: "/menu-admins"},
-      {icon: UserSquare2, text: "Должности", href: "/position"},
-      {icon: BuildingIcon, text: "Отделы", href: "/agency"},
+      {icon: UserCog, text: "Администрация", href: "/karsu-admin-panel/menu-admins"},
+      {icon: UserSquare2, text: "Должности", href: "/karsu-admin-panel/position"},
+      {icon: BuildingIcon, text: "Отделы", href: "/karsu-admin-panel/agency"},
     ],
   }
 

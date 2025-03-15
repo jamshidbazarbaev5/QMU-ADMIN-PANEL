@@ -56,7 +56,7 @@ export default function EditAnnouncement() {
       
       try {
         setIsLoading(true)
-        const response = await fetch(`https://debttracker.uz/announcements/${slug}/`)
+        const response = await fetch(`https://karsu.uz/api/announcements/${slug}/`)
         
         if (!response.ok) {
           throw new Error('Failed to fetch announcement')
@@ -131,7 +131,7 @@ export default function EditAnnouncement() {
         translations: updatedTranslations
       }
 
-      const response = await fetchWithAuth(`https://debttracker.uz/announcements/${slug}/`, {
+      const response = await fetchWithAuth(`https://karsu.uz/api/announcements/${slug}/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ export default function EditAnnouncement() {
         throw new Error('Failed to update announcement')
       }
 
-      navigate('/annoucment-list')
+      navigate('/karsu-admin-panel/annoucment-list')
     } catch (error) {
       console.error('Error updating announcement:', error)
       alert('Failed to update announcement')

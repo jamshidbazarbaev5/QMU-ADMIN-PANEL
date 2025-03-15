@@ -56,7 +56,7 @@ export function AgencyPage() {
 
   const fetchAgencies = async () => {
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/menus/agency/`,{
+      const response = await fetchWithAuth(`https://karsu.uz/api/menus/agency/`,{
         headers:getAuthHeader()
       })
       if (!response.ok) throw new Error('Failed to fetch agencies')
@@ -69,7 +69,7 @@ export function AgencyPage() {
 
   const fetchMenus = async () => {
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/menus/main/`,{headers:getAuthHeader()})
+      const response = await fetchWithAuth(`https://karsu.uz/api/menus/main/`,{headers:getAuthHeader()})
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
       setMenus(data)
@@ -100,8 +100,8 @@ export function AgencyPage() {
       }
 
       const url = editingAgency 
-        ? `https://debttracker.uz/menus/agency/${editingAgency.translations.en.slug}/`
-        : `https://debttracker.uz/menus/agency/`
+        ? `https://karsu.uz/api/menus/agency/${editingAgency.translations.en.slug}/`
+        : `https://karsu.uz/api/menus/agency/`
 
       const response = await fetchWithAuth(url, {
         method: editingAgency ? 'PUT' : 'POST',
@@ -128,7 +128,7 @@ export function AgencyPage() {
 
     try {
       const response = await fetchWithAuth(
-        `https://debttracker.uz/menus/agency/${agency.translations.en.slug}/`,
+        `https://karsu.uz/api/menus/agency/${agency.translations.en.slug}/`,
         { method: 'DELETE',headers:getAuthHeader()}
 
       )
@@ -176,7 +176,7 @@ export function AgencyPage() {
       <PageHeader
         title="Agencies"
         createButtonLabel="Add Agency"
-        onCreateClick={() => navigate('/agencies/new')}
+        onCreateClick={() => navigate('/karsu-admin-panel/agencies/new')}
       />
 
       <DataTable
@@ -190,7 +190,7 @@ export function AgencyPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                navigate(`/agencies/${item.translations.en.slug}/edit`)
+                navigate(`/karsu-admin-panel/agencies/${item.translations.en.slug}/edit`)
               }}
             >
               <Pencil className="h-4 w-4" />

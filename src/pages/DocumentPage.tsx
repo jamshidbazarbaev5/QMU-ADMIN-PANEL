@@ -32,7 +32,7 @@ export function DocumentPage() {
 
   const fetchDocuments = async () => {
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/menus/document/`, {
+      const response = await fetchWithAuth(`https://karsu.uz/api/menus/document/`, {
         method: 'GET',
         headers: {
           ...getAuthHeader(),
@@ -92,7 +92,7 @@ export function DocumentPage() {
 
     try {
       const response = await fetchWithAuth(
-        `https://debttracker.uz/menus/document/${document.id}/`,
+        `https://karsu.uz/api/menus/document/${document.id}/`,
         { method: 'DELETE',
         headers: {
           ...getAuthHeader(),

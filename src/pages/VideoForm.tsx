@@ -29,14 +29,14 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
     const fetchVideo = async () => {
       if (!isEditing || !id) return
       if (!token) {
-        navigate('/login')
+        navigate('/karsu-admin-panel/login')
         return
       }
 
       try {
         setIsLoading(true)
         const response = await fetchWithAuth(
-          `https://debttracker.uz/publications/videos/${id}`,
+          `https://karsu.uz/api/publications/videos/${id}`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -56,9 +56,9 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
         console.error('Error fetching video:', error)
         if ((error as any)?.response?.status === 403) {
           localStorage.removeItem('accessToken')
-          navigate('/login')
+          navigate('/karsu-admin-panel/login')
         } else {
-          navigate('/videos')
+          navigate('/karsu-admin-panel/videos')
         }
       } finally {
         setIsLoading(false)
@@ -109,7 +109,7 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
     
     if (!token) {
       console.log('No token found, redirecting to login')
-      navigate('/login')
+      navigate('/karsu-admin-panel/login')
       return
     }
 
@@ -125,8 +125,8 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
       console.log('Submitting payload:', payload)
 
       const url = isEditing 
-        ? `https://debttracker.uz/publications/videos/${id}/`
-        : `https://debttracker.uz/publications/videos/`
+        ? `https://karsu.uz/api/publications/videos/${id}/`
+        : `https://karsu.uz/api/publications/videos/`
       console.log('Submitting to URL:', url)
       
       const response = await fetchWithAuth(url, {
@@ -147,13 +147,13 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
         throw new Error(`Failed to save video: ${response.status}`)
       }
 
-      navigate('/videos')
+      navigate('/karsu-admin-panel/videos')
     } catch (error) {
       console.error('Detailed error:', error)
       if ((error as any)?.response?.status === 403) {
         console.log('403 error detected, clearing token')
         localStorage.removeItem('accessToken')
-        navigate('/login')
+        navigate('/karsu-admin-panel/login')
       }
     } finally {
       setIsSubmitting(false)

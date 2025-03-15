@@ -57,7 +57,7 @@ export default function FacultyForm() {
   const fetchFaculty = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`https://debttracker.uz/menus/faculty/${id}/`)
+      const response = await fetch(`https://karsu.uz/api/menus/faculty/${id}/`)
       if (!response.ok) throw new Error('Failed to fetch faculty')
       const data = await response.json()
       console.log('Fetched data:', data)
@@ -74,7 +74,7 @@ export default function FacultyForm() {
   const fetchDepartments = async () => {
     if (!id) return
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/menus/department/?faculty=${id}`, {
+      const response = await fetchWithAuth(`https://karsu.uz/api/menus/department/?faculty=${id}`, {
         headers: getAuthHeader(),
       })
       const data = await response.json()
@@ -99,8 +99,8 @@ export default function FacultyForm() {
       formData.append('translations', JSON.stringify(translationData))
 
       const url = id 
-        ? `https://debttracker.uz/menus/faculty/${id}/`
-        : `https://debttracker.uz/menus/faculty/`
+        ? `https://karsu.uz/api/menus/faculty/${id}/`
+        : `https://karsu.uz/api/menus/faculty/`
 
       const response = await fetchWithAuth(url, {
         method: id ? 'PUT' : 'POST',
@@ -113,7 +113,7 @@ export default function FacultyForm() {
 
       if (!response.ok) throw new Error('Failed to save faculty')
       
-      navigate('/faculty')
+      navigate('/karsu-admin-panel/faculty')
     } catch (error) {
       console.error('Error saving faculty:', error)
     } finally {
@@ -196,7 +196,7 @@ export default function FacultyForm() {
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-medium">Departments</h3>
                   <Button
-                    onClick={() => navigate(`/departments/create?faculty=${id}`)}
+                    onClick={() => navigate(`/karsu-admin-panel/departments/create?faculty=${id}`)}
                     className="flex items-center gap-2"
                   >
                     <Plus className="h-4 w-4" />
@@ -211,7 +211,7 @@ export default function FacultyForm() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/faculties')}
+              onClick={() => navigate('/karsu-admin-panel/faculties')}
             >
               Cancel
             </Button>

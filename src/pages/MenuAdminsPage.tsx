@@ -96,7 +96,7 @@ export function MenuAdminsPage() {
 
   const fetchAdmins = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/admin/`)
+      const response = await fetch(`https://karsu.uz/api/menus/admin/`)
       if (!response.ok) throw new Error('Failed to fetch admins')
       const data = await response.json()
       setAdmins(Array.isArray(data) ? data : [data])
@@ -107,7 +107,7 @@ export function MenuAdminsPage() {
 
   const fetchMenus = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/main/`)
+      const response = await fetch(`https://karsu.uz/api/menus/main/`)
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
       setMenus(data)
@@ -118,7 +118,7 @@ export function MenuAdminsPage() {
 
   const fetchFaculties = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/faculty/`)
+      const response = await fetch(`https://karsu.uz/api/menus/faculty/`)
       if (!response.ok) throw new Error('Failed to fetch faculties')
       const data = await response.json()
       setFaculties(data)
@@ -129,7 +129,7 @@ export function MenuAdminsPage() {
 
   const fetchDepartments = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/department/`)
+      const response = await fetch(`https://karsu.uz/api/menus/department/`)
       if (!response.ok) throw new Error('Failed to fetch departments')
       const data = await response.json()
       setDepartments(data)
@@ -140,7 +140,7 @@ export function MenuAdminsPage() {
 
   const fetchAgencies = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/agency/`)
+      const response = await fetch(`https://karsu.uz/api/menus/agency/`)
       if (!response.ok) throw new Error('Failed to fetch agencies')
       const data = await response.json()
       setAgencies(data)
@@ -186,8 +186,8 @@ export function MenuAdminsPage() {
       }
 
       const url = editingAdmin 
-        ? `https://debttracker.uz/menus/admin/${editingAdmin.id}/`
-        : `https://debttracker.uz/menus/admin/`
+        ? `https://karsu.uz/api/menus/admin/${editingAdmin.id}/`
+        : `https://karsu.uz/api/menus/admin/`
 
       const response = await fetch(url, {
         method: editingAdmin ? 'PUT' : 'POST',
@@ -215,7 +215,7 @@ export function MenuAdminsPage() {
 
     try {
       const response = await fetch(
-        `https://debttracker.uz/menus/admin/${admin.id}/`,
+        `https://karsu.uz/api/menus/admin/${admin.id}/`,
         { method: 'DELETE' }
       )
       
@@ -259,7 +259,7 @@ export function MenuAdminsPage() {
         title="Menu Administrators"
         createButtonLabel="Add Administrator"
         onCreateClick={() => {
-          navigate('/menu-admins/create')
+          navigate('/karsu-admin-panel/menu-admins/create')
         }}
       />
 
@@ -274,7 +274,7 @@ export function MenuAdminsPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                navigate(`/menu-admins/${item.id}/edit`)
+                navigate(`/karsu-admin-panel/menu-admins/${item.id}/edit`)
               }}
             >
               <Pencil className="h-4 w-4" />

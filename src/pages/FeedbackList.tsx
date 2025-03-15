@@ -27,7 +27,7 @@ export default function FeedbackList() {
   const fetchFeedbacks = async () => {
     try {
       setIsLoading(true)
-      const response = await fetchWithAuth(`https://debttracker.uz/feedback/`,
+      const response = await fetchWithAuth(`https://karsu.uz/api/feedback/`,
         {
           headers: getAuthHeader()
         }
@@ -47,7 +47,7 @@ export default function FeedbackList() {
 
     try {
       const response = await fetchWithAuth(
-        `https://debttracker.uz/feedback/${id}/`,
+        `https://karsu.uz/api/feedback/${id}/`,
         {
           method: 'DELETE',
           headers: getAuthHeader()
@@ -84,7 +84,7 @@ export default function FeedbackList() {
       <button
         onClick={(e) => {
           e.stopPropagation()
-          navigate(`/feedback/edit/${item.id}`)
+          navigate(`/karsu-admin-panel/feedback/edit/${item.id}`)
         }}
         className="p-2 hover:bg-gray-100 rounded-full"
       >
@@ -115,14 +115,14 @@ export default function FeedbackList() {
       <PageHeader
         title="Feedback Management"
         createButtonLabel="Create Feedback"
-        onCreateClick={() => navigate('/feedback/create')}
+        onCreateClick={() => navigate('/karsu-admin-panel/feedback/create')}
       />
       <Card>
         <DataTable
           data={feedbacks}
           columns={columns}
           actions={renderActions}
-          onRowClick={(item) => navigate(`/feedback/edit/${item.id}`)}
+          onRowClick={(item) => navigate(`/karsu-admin-panel/feedback/edit/${item.id}`)}
           currentLanguage={currentLanguage}
         />
       </Card>

@@ -38,7 +38,7 @@ export function PositionPage() {
 
   const fetchPositions = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/position/`, )
+      const response = await fetch(`https://karsu.uz/api/menus/position/`, )
       if (!response.ok) throw new Error('Failed to fetch positions')
       const data = await response.json()
       setPositions(Array.isArray(data) ? data : [data])
@@ -66,8 +66,8 @@ export function PositionPage() {
       }
 
       const url = editingPosition 
-        ? `https://debttracker.uz/menus/position/${editingPosition.id}/`
-        : `https://debttracker.uz/menus/position/`
+        ? `https://karsu.uz/api/menus/position/${editingPosition.id}/`
+        : `https://karsu.uz/api/menus/position/`
 
       const response = await fetch(url, {
         method: editingPosition ? 'PUT' : 'POST',
@@ -96,7 +96,7 @@ export function PositionPage() {
 
     try {
       const response = await fetch(
-        `https://debttracker.uz/menus/position/${position.id}/`,
+        `https://karsu.uz/api/menus/position/${position.id}/`,
         { method: 'DELETE' }
       )
       
@@ -112,7 +112,7 @@ export function PositionPage() {
       <PageHeader
         title="Positions"
         createButtonLabel="Add Position"
-        onCreateClick={() => navigate('/positions/new')}
+        onCreateClick={() => navigate('/karsu-admin-panel/positions/new')}
       />
 
       <DataTable
@@ -138,7 +138,7 @@ export function PositionPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                navigate(`/positions/${item.id}/edit`)
+                navigate(`/karsu-admin-panel/positions/${item.id}/edit`)
               }}
             >
               <Pencil className="h-4 w-4" />

@@ -44,7 +44,7 @@ export default function PositionForm() {
   const fetchPosition = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`https://debttracker.uz/menus/position/${id}/`)
+      const response = await fetch(`https://karsu.uz/api/menus/position/${id}/`)
       
       if (!response.ok) throw new Error('Failed to fetch position')
       const data: Position = await response.json()
@@ -103,8 +103,8 @@ export default function PositionForm() {
       console.log('Sending payload:', payload) // Debug log
 
       const url = id 
-        ? `https://debttracker.uz/menus/position/${id}/`
-        : `https://debttracker.uz/menus/position/`
+        ? `https://karsu.uz/api/menus/position/${id}/`
+        : `https://karsu.uz/api/menus/position/`
 
       const response = await fetchWithAuth(url, {
         method: id ? 'PUT' : 'POST',
@@ -121,7 +121,7 @@ export default function PositionForm() {
         throw new Error(errorData.message || 'Failed to save position')
       }
       
-      navigate('/position')
+      navigate('/karsu-admin-panel/position')
     } catch (error) {
       console.error('Error saving position:', error)
       alert('Failed to save position. Please try again.')
@@ -178,7 +178,7 @@ export default function PositionForm() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate('/positions')}
+                  onClick={() => navigate('/karsu-admin-panel/positions')}
                 >
                   Cancel
                 </Button>

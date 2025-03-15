@@ -95,7 +95,7 @@ export default function CreateNews() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetchWithAuth(`https://debttracker.uz/news/category/`,{
+        const response = await fetchWithAuth(`https://karsu.uz/api/news/category/`,{
           headers:getAuthHeader()
         })
         if (!response.ok) throw new Error('Failed to fetch categories')
@@ -111,7 +111,7 @@ export default function CreateNews() {
   useEffect(() => {
     const fetchGoals = async () => {
       try {
-        const response = await fetchWithAuth(`https://debttracker.uz/news/goals/`,
+        const response = await fetchWithAuth(`https://karsu.uz/api/news/goals/`,
             {
               headers:getAuthHeader(),
             }
@@ -131,7 +131,7 @@ export default function CreateNews() {
       if (!newsId) return
 
       try {
-        const response = await fetchWithAuth(`https://debttracker.uz/news/posts/${newsId}/`, {
+        const response = await fetchWithAuth(`https://karsu.uz/api/news/posts/${newsId}/`, {
           headers: {
             ...getAuthHeader()
           }
@@ -330,8 +330,8 @@ export default function CreateNews() {
       formData.append('translations', JSON.stringify(translations))
 
       const url = isEditing 
-        ? `https://debttracker.uz/news/posts/${newsId}/`
-        : `https://debttracker.uz/news/posts/`
+        ? `https://karsu.uz/api/news/posts/${newsId}/`
+        : `https://karsu.uz/api/news/posts/`
 
       console.log('=== FormData contents ===')
       for (let [key, value] of formData.entries()) {
@@ -353,7 +353,7 @@ export default function CreateNews() {
         return
       }
 
-      navigate('/news')
+      navigate('/karsu-admin-panel/news')
     } catch (error) {
       console.error(`Error ${isEditing ? 'updating' : 'creating'} news post:`, error)
       setError(`Failed to ${isEditing ? 'update' : 'create'} news post. Please try again.`)
@@ -370,7 +370,7 @@ export default function CreateNews() {
   const handleDeleteExistingImage = async (imageId: number) => {
     try {
       const response = await fetchWithAuth(
-        `https://debttracker.uz/news/images/${imageId}/`,
+        `https://karsu.uz/api/news/images/${imageId}/`,
         {
           method: 'DELETE',
           headers: getAuthHeader(),
@@ -828,7 +828,7 @@ export default function CreateNews() {
                 <Button 
                   type="button" 
                   variant="outline"
-                  onClick={() => navigate('/news')}
+                  onClick={() => navigate('/karsu-admin-panel/news')}
                 >
                   Cancel
                 </Button>

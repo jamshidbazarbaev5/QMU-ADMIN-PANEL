@@ -41,7 +41,7 @@ export function LinksPage() {
   const [deletingLink, setDeletingLink] = useState<Link | null>(null)
 
   const fetchLinks = async () => {
-    const response = await fetchWithAuth('https://debttracker.uz/references/links/', {
+    const response = await fetchWithAuth('https://karsu.uz/api/references/links/', {
       headers: getAuthHeader()
     });
     const data = await response.json();
@@ -56,8 +56,8 @@ export function LinksPage() {
     setIsLoading(true)
     try {
       const url = editingLink 
-        ? `https://debttracker.uz/references/links/${editingLink.id}/`
-        : 'https://debttracker.uz/references/links/'
+        ? `https://karsu.uz/api/references/links/${editingLink.id}/`
+        : 'https://karsu.uz/api/references/links/'
       
       const submitData = new FormData()
       
@@ -101,7 +101,7 @@ export function LinksPage() {
   const handleDelete = async (link: Link) => {
     try {
       const response = await fetchWithAuth(
-        `https://debttracker.uz/references/links/${link.id}/`,
+        `https://karsu.uz/api/references/links/${link.id}/`,
         {
           method: 'DELETE',
           headers: getAuthHeader(),
@@ -150,7 +150,7 @@ export function LinksPage() {
     setIsDialogOpen(true)
     
     // Fetch translations for the link
-    const response = await fetchWithAuth(`https://debttracker.uz/references/links/${link.id}/`, {
+    const response = await fetchWithAuth(`https://karsu.uz/api/references/links/${link.id}/`, {
       headers: getAuthHeader()
     });
     const linkData = await response.json();

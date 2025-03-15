@@ -36,7 +36,7 @@ export function GoalsPage() {
 
   const fetchGoals = async () => {
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/news/goals/`, {
+      const response = await fetchWithAuth(`https://karsu.uz/api/news/goals/`, {
         headers: getAuthHeader()
       })
       const data = await response.json()
@@ -62,8 +62,8 @@ export function GoalsPage() {
       )
 
       const url = editingGoal 
-        ? `https://debttracker.uz/news/goals/${editSlug}/`
-        : `https://debttracker.uz/news/goals/`
+        ? `https://karsu.uz/api/news/goals/${editSlug}/`
+        : `https://karsu.uz/api/news/goals/`
 
       const translations = Object.entries(formData).reduce((acc, [lang, data]: [string, any]) => {
         if (lang !== 'goals' && lang !== 'color' && data.name) {
@@ -130,7 +130,7 @@ export function GoalsPage() {
       }
 
       const response = await fetchWithAuth(
-        `https://debttracker.uz/news/goals/${deleteSlug}/`,
+        `https://karsu.uz/api/news/goals/${deleteSlug}/`,
         { 
           method: 'DELETE',
           headers: getAuthHeader()

@@ -16,7 +16,7 @@ export function QuantityList() {
 
   const fetchQuantities = async () => {
     try {
-      const response = await fetch('https://debttracker.uz/publications/quantities', {
+      const response = await fetch('https://karsu.uz/api/publications/quantities', {
         headers: {
           'Authorization': `Bearer ${token}`,
         }
@@ -35,7 +35,7 @@ export function QuantityList() {
     if (!window.confirm('Are you sure you want to delete this item?')) return
 
     try {
-      const response = await fetch(`https://debttracker.uz/publications/quantities/${id}`, {
+      const response = await fetch(`https://karsu.uz/api/publications/quantities/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -56,7 +56,7 @@ export function QuantityList() {
   const renderActions = (item: any) => (
     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
       <button
-        onClick={() => navigate(`/quantities/${item.id}/edit`)}
+        onClick={() => navigate(`/karsu-admin-panel/quantities/${item.id}/edit`)}
         className="p-2 text-blue-600 hover:text-blue-800"
       >
         <Edit size={16} />
@@ -79,13 +79,13 @@ export function QuantityList() {
       <PageHeader
         title="Quantities"
         createButtonLabel="Create Quantity"
-        onCreateClick={() => navigate('/quantities/new')}
+        onCreateClick={() => navigate('/karsu-admin-panel/quantities/new')}
       />
       <DataTable
         data={quantities}
         columns={columns}
         actions={renderActions}
-        onRowClick={(item) => navigate(`/quantities/edit/${item.id}`)}
+        onRowClick={(item) => navigate(`/karsu-admin-panel/quantities/edit/${item.id}`)}
       />
     </div>
   )

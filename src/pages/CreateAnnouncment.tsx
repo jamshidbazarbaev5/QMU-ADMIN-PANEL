@@ -56,7 +56,7 @@ export default function CreateAnnouncement() {
           }
         }
 
-        const response = await fetchWithAuth('https://debttracker.uz/announcements/', {
+        const response = await fetchWithAuth('https://karsu.uz/api/announcements/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export default function CreateAnnouncement() {
         if (response.ok) {
           form.reset()
           setCurrentLanguage('ru')
-          navigate('/annoucment-list')
+          navigate('/karsu-admin-panel/annoucment-list')
         } else {
           const errorData = await response.json()
           console.error('Validation errors:', errorData)

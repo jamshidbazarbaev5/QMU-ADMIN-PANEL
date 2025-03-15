@@ -40,7 +40,7 @@ export function ChangePassword() {
       <PageHeader
         title="Change Password"
         createButtonLabel="Back to Posts"
-        onCreateClick={() => navigate('/posts')}
+        onCreateClick={() => navigate('/karsu-admin-panel/posts')}
       />
 
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-md p-8">

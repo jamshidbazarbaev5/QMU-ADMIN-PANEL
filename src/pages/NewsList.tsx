@@ -48,7 +48,7 @@ export default function NewsList() {
       if (page > 1) queryParams.append('page', page.toString())
       
       const response = await fetchWithAuth(
-        `https://debttracker.uz/news/posts/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
+        `https://karsu.uz/api/news/posts/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
         {
           headers: {
             ...getAuthHeader()
@@ -70,7 +70,7 @@ export default function NewsList() {
     if (window.confirm('Are you sure you want to delete this news item?')) {
       try {
         const response = await fetchWithAuth(
-          `https://debttracker.uz/news/posts/${slug}/`,
+          `https://karsu.uz/api/news/posts/${slug}/`,
           {
             method: 'DELETE',
             headers: {
@@ -147,7 +147,7 @@ export default function NewsList() {
               onClick={(e) => {
                 e.stopPropagation()
                 if (slug) {
-                  navigate(`/create-news?id=${slug}`)
+                  navigate(`/karsu-admin-panel/create-news?id=${slug}`)
                 } else {
                   console.error('No slug found for news item:', item)
                   alert('Error: Could not edit this news item')
@@ -187,7 +187,7 @@ export default function NewsList() {
       <PageHeader
         title="News"
         createButtonLabel="Create News"
-        onCreateClick={() => navigate('/create-news')}
+        onCreateClick={() => navigate('/karsu-admin-panel/create-news')}
       />
       
       <div className="mb-4">
@@ -205,7 +205,7 @@ export default function NewsList() {
         <DataTable
           data={news}
           columns={columns}
-          onRowClick={(item) => navigate(`/news/${item.id}`)}
+          onRowClick={(item) => navigate(`/karsu-admin-panel/news/${item.id}`)}
         />
         <Pagination
           currentPage={currentPage}

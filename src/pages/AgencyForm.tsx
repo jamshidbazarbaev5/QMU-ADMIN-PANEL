@@ -45,7 +45,7 @@ export default function AgencyForm() {
 
   const fetchMenus = async () => {
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/menus/main/`,{
+      const response = await fetchWithAuth(`https://karsu.uz/api/menus/main/`,{
         headers:getAuthHeader()
       })
       if (!response.ok) throw new Error('Failed to fetch menus')
@@ -59,7 +59,7 @@ export default function AgencyForm() {
   const fetchAgency = async () => {
     try {
       setIsLoading(true)
-      const response = await fetchWithAuth(`https://debttracker.uz/menus/agency/${slug}/`, {
+      const response = await fetchWithAuth(`https://karsu.uz/api/menus/agency/${slug}/`, {
         headers: getAuthHeader()
       })
       if (!response.ok) throw new Error('Failed to fetch agency')
@@ -91,8 +91,8 @@ export default function AgencyForm() {
       }
 
       const url = slug 
-        ? `https://debttracker.uz/menus/agency/${slug}/`
-        : `https://debttracker.uz/menus/agency/`
+        ? `https://karsu.uz/api/menus/agency/${slug}/`
+        : `https://karsu.uz/api/menus/agency/`
 
       const response = await fetchWithAuth(url, {
         method: slug ? 'PUT' : 'POST',
@@ -181,7 +181,7 @@ export default function AgencyForm() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/agencies')}
+              onClick={() => navigate('/karsu-admin-panel/agencies')}
             >
               Cancel
             </Button>

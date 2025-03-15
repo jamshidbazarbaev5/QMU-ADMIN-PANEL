@@ -24,7 +24,7 @@ export const Login = ({ setIsAuthenticated }: LoginProps) => {
       localStorage.setItem('refreshToken', response.refresh || '');
       setIsAuthenticated(true);
       window.dispatchEvent(new Event('auth-change'));
-      navigate('/');
+      navigate('/karsu-admin-panel');
     } catch (error: any) {
       setError(error.detail || 'Invalid username or password');
     } finally {

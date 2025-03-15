@@ -83,8 +83,8 @@ export function MenusPage() {
     setIsLoading(true)
     try {
       const url = editingMenu 
-        ? `https://debttracker.uz/menus/${menuType}/${editingMenu.translations[currentLanguage].slug}/`
-        : `https://debttracker.uz/menus/${menuType}/`
+        ? `https://karsu.uz/api/menus/${menuType}/${editingMenu.translations[currentLanguage].slug}/`
+        : `https://karsu.uz/api/menus/${menuType}/`
 
       const response = await fetchWithAuth(url, {
         method: editingMenu ? 'PUT' : 'POST',
@@ -134,7 +134,7 @@ export function MenusPage() {
 
     try {
       const response = await fetchWithAuth(
-        `https://debttracker.uz/menus/${menuType}/${slug}/`,
+        `https://karsu.uz/api/menus/${menuType}/${slug}/`,
         { method: 'DELETE', headers: getAuthHeader() }
       )
       

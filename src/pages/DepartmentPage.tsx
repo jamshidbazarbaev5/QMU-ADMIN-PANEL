@@ -32,7 +32,7 @@ export function DepartmentPage() {
 
   const fetchDepartments = async () => {
     try {
-      const response = await fetch(`https://debttracker.uz/menus/department/`)
+      const response = await fetch(`https://karsu.uz/api/menus/department/`)
       if (!response.ok) throw new Error('Failed to fetch departments')
       const data = await response.json()
       console.log('Fetched departments:', data)
@@ -47,12 +47,12 @@ export function DepartmentPage() {
   }, [currentLanguage])
 
   const handleEdit = (department: Department) => {
-    navigate(`/departments/${department.translations['kk'].slug}/edit`)
+    navigate(`/karsu-admin-panel/departments/${department.translations['kk'].slug}/edit`)
   }
 
   const handleDelete = async (department: Department) => {
     try {
-      await fetchWithAuth(`https://debttracker.uz/menus/department/${department.translations.en.slug}/`, {
+      await fetchWithAuth(`https://karsu.uz/api/menus/department/${department.translations.en.slug}/`, {
         method: 'DELETE',
         headers: getAuthHeader(),
       })
@@ -85,7 +85,7 @@ export function DepartmentPage() {
       <PageHeader
         title="Departments"
         createButtonLabel="Add Department"
-        onCreateClick={() => navigate('/departments/create')}
+        onCreateClick={() => navigate('/karsu-admin-panel/departments/create')}
       />
 
       <DataTable

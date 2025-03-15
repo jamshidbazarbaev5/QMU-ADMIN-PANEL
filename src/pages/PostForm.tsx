@@ -75,14 +75,14 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       if (!isEditing || !slug) return
       if (!token) {
         console.error('No token found')
-        navigate('/login')
+        navigate('/karsu-admin-panel/login')
         return
       }
 
       try {
         setIsLoading(true)
         const response = await fetchWithAuth(
-          `https://debttracker.uz/publications/posts/${slug}/`,
+          `hhttps://karsu.uz/api/publications/posts/${slug}/`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -94,7 +94,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
         if (!response.ok) {
           if (response.status === 401) {
             console.error('Unauthorized access')
-            navigate('/login')
+            navigate('/karsu-admin-panel/login')
             return
           }
           throw new Error('Failed to fetch post')
@@ -107,7 +107,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
         setExistingImages(data.images || [])
       } catch (error) {
         console.error('Error fetching post:', error)
-        navigate('/posts')
+        navigate('/karsu-admin-panel/posts')
       } finally {
         setIsLoading(false)
       }
@@ -121,7 +121,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       try {
         const [mainMenuResponse, footerMenuResponse] = await Promise.all([
           fetchWithAuth(
-            'https://debttracker.uz/menus/main/',
+            'https://karsu.uz/api/menus/main/',
             {
               headers: {
                 ...getAuthHeader(),
@@ -130,7 +130,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
             }
           ),
           fetchWithAuth(
-            'https://debttracker.uz/menus/footer/',
+            'https://karsu.uz/api/menus/footer/',
             {
               headers: {
                 ...getAuthHeader(),
@@ -186,7 +186,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
     
     if (!token) {
       console.error('No token found')
-      navigate('/login')
+      navigate('/karsu-admin-panel/login')
       return
     }
 
@@ -207,8 +207,8 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       formData.append('translations', JSON.stringify(translations))
 
       const url = isEditing 
-        ? `https://debttracker.uz/publications/posts/${slug}/`
-        : `https://debttracker.uz/publications/posts/`
+        ? `https://karsu.uz/api/publications/posts/${slug}/`
+        : `https://karsu.uz/api/publications/posts/`
       
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
@@ -222,14 +222,14 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
         const errorData = await response.json().catch(() => ({ detail: 'An unknown error occurred' }))
         if (response.status === 401) {
           console.error('Unauthorized access')
-          navigate('/login')
+          navigate('/karsu-admin-panel/login')
           return
         }
         setErrorMessage(errorData.detail || 'Failed to save post')
         throw new Error(errorData.detail || 'Failed to save post')
       }
 
-      navigate('/posts')
+      navigate('/karsu-admin-panel/posts')
     } catch (error) {
       console.error('Error saving post:', error)
       if (!errorMessage) {
@@ -261,7 +261,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       <PageHeader
         title={isEditing ? 'Edit Post' : 'Create Post'}
         createButtonLabel="Back to Posts"
-        onCreateClick={() => navigate('/posts')}
+        onCreateClick={() => navigate('/karsu-admin-panel/posts')}
       />
 
       <div className="bg-white rounded-lg shadow p-6">
