@@ -8,15 +8,6 @@
       "source": "/karsu-admin-panel/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "routes": [
-    {
-      "src": "/karsu-admin-panel/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/karsu-admin-panel/(.*)",
-      "dest": "/index.html"
-    }
   ]
+  
 }
