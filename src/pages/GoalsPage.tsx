@@ -8,7 +8,6 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { getAuthHeader, fetchWithAuth } from '../api/api'
 import { Button } from '../components/ui/button'
 import { ChromePicker } from 'react-color'
-import {ErrorModal} from "../components/ui/errorModal.tsx";
 
 interface Goal {
   id: number
@@ -32,7 +31,7 @@ export function GoalsPage() {
   const currentLanguage = useLanguage()
   const [color, setColor] = useState('#ffffff')
   const [goalsValue, setGoalsValue] = useState<number>(0)
-  const [error, setError] = useState<Record<string, string[]> | string | null>(null)
+  const [, setError] = useState<Record<string, string[]> | string | null>(null)
 
   const fetchGoals = async () => {
     try {
@@ -213,11 +212,7 @@ export function GoalsPage() {
 
   return (
     <div className="p-6 mt-[50px]">
-      <ErrorModal
-          isOpen={!!error}
-          onClose={() => setError(null)}
-          errors={error || {}}
-      />
+     
       <PageHeader
         title="Цели"
         createButtonLabel="Добавить цель"

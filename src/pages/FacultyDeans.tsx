@@ -62,6 +62,24 @@ export function FacultyDeansPage() {
     }
   }
 
+  const handleDelete = async (dean: FacultyDean) => {
+    if (!window.confirm('Are you sure you want to delete this dean?')) return
+
+    try {
+      const response = await fetch(`https://karsu.uz/api/menus/admin/${dean.id}/`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) throw new Error('Failed to delete dean')
+      
+      // Refresh the deans list after successful deletion
+      fetchDeans()
+    } catch (error) {
+      console.error('Error deleting dean:', error)
+      alert('Failed to delete dean')
+    }
+  }
+
   useEffect(() => {
     fetchDeans()
     fetchFaculties()
