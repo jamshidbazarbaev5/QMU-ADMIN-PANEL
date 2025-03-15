@@ -40,7 +40,13 @@ import { DepartmentFormPage } from './pages/DepartmentFormPage.tsx';
 import { DocumentForm } from './pages/DocumentForm'
 import { MainImageList } from './pages/MainImageList.tsx'
 import { MainImageForm } from './pages/MainImageForm'
-
+import { FacultyDeansPage } from './pages/FacultyDeans.tsx';
+import { FacultyDeanFormPage } from './pages/FacultyDeanFormPage.tsx';
+import { DepartmentDeanFormPage } from './pages/DepartmentDeansFormPage.tsx';
+import { DepartmentDeansPage } from './pages/DeparmentDeansPage.tsx';
+import { AgencyDeanFormPage } from './pages/AgencyDeansFormPage.tsx';
+import { AgencyDeansPage } from './pages/AgencyDeansPage.tsx';
+import { DocumentPage } from './pages/DocumentPage.tsx';
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('accessToken'));
 
@@ -120,13 +126,24 @@ function App() {
             <Route path="/karsu-admin-panel/goals" element={<PrivateRoute><GoalsPage /></PrivateRoute>} />
             {/* <Route path="/departments/:id/edit" element={<PrivateRoute><DepartmentPage /></PrivateRoute>} /> */}
             {/* <Route path="/departments/create" element={<PrivateRoute><DepartmentFormPage /></PrivateRoute>} /> */}
-            <Route path="/karsu-admin-panel/karsu-admin-panel/departments/create" element={<PrivateRoute><DepartmentFormPage /></PrivateRoute>} />
+            <Route path="/karsu-admin-panel/departments/create" element={<PrivateRoute><DepartmentFormPage /></PrivateRoute>} />
             <Route path="/karsu-admin-panel/departments/:id/edit" element={<PrivateRoute><DepartmentFormPage /></PrivateRoute>} />
+
             <Route path="/karsu-admin-panel/documents/create" element={<PrivateRoute><DocumentForm /></PrivateRoute>} />
+            <Route path="/karsu-admin-panel/document" element={<PrivateRoute><DocumentPage /></PrivateRoute>} />
             <Route path="/karsu-admin-panel/documents/edit/:id" element={<PrivateRoute><DocumentForm /></PrivateRoute>} />
             <Route path="/karsu-admin-panel/main-image-list" element={<PrivateRoute><MainImageList /></PrivateRoute>} />
             <Route path="/karsu-admin-panel/main-images/new" element={<PrivateRoute><MainImageForm /></PrivateRoute>} />
             <Route path="/karsu-admin-panel/main-images/:id/edit" element={<PrivateRoute><MainImageForm /></PrivateRoute>} />
+            <Route path="/karsu-admin-panel/faculty-deans" element={<PrivateRoute><FacultyDeansPage /></PrivateRoute>} />
+            <Route path="/karsu-admin-panel/faculty-deans/new" element={<PrivateRoute><FacultyDeanFormPage /></PrivateRoute>} />
+            <Route path="/karsu-admin-panel/faculty-deans/:id/edit" element={<PrivateRoute><FacultyDeanFormPage /></PrivateRoute>} />
+            <Route path="/karsu-admin-panel/department-deans" element={<PrivateRoute><DepartmentDeansPage /></PrivateRoute>} />
+            <Route path="/karsu-admin-panel/department-deans/create" element={<PrivateRoute><DepartmentDeanFormPage /></PrivateRoute>} />
+            <Route path="/karsu-admin-panel/department-deans/:id/edit" element={<PrivateRoute><DepartmentDeanFormPage /></PrivateRoute>} />
+            <Route path="/karsu-admin-panel/agency-deans" element={<PrivateRoute><AgencyDeansPage /></PrivateRoute>} />
+            <Route path="/karsu-admin-panel/agency-deans/create" element={<PrivateRoute><AgencyDeanFormPage /></PrivateRoute>} />
+            <Route path="/karsu-admin-panel/agency-deans/:id/edit" element={<PrivateRoute><AgencyDeanFormPage /></PrivateRoute>} />
           </Routes>
 
         </div>

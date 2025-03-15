@@ -74,7 +74,7 @@ export default function AgencyForm() {
     }
   }
 
-  const handleSubmit = async (translationData: any) => {
+  const handleSubmit = async (data: any) => {
     if (!selectedMenu) {
       alert('Please select a menu')
       return
@@ -84,7 +84,7 @@ export default function AgencyForm() {
     try {
       const formData = new FormData()
       formData.append('menu', selectedMenu.toString())
-      formData.append('translations', JSON.stringify(translationData))
+      formData.append('translations', JSON.stringify(data.translations))
       
       if (selectedImage) {
         formData.append('main_image', selectedImage)
@@ -103,9 +103,12 @@ export default function AgencyForm() {
         body: formData,
       })
 
-      if (!response.ok) throw new Error('Failed to save agency')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to save agency')
+      }
       
-      navigate('/agency')
+      navigate('/karsu-admin-panel/agency')
     } catch (error) {
       console.error('Error saving agency:', error)
     } finally {

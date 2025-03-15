@@ -31,11 +31,11 @@ interface MainMenuItem {
   translations: {
     [key: string]: {
       name: string
-      title: string
+      title?: string
       slug: string
     }
   }
-  menu_posts: number[]
+  menu_posts?: number[]
 }
 
 interface FooterMenuItem {
@@ -49,6 +49,8 @@ interface FooterMenuItem {
   }
   footer_menu_posts: number[]
 }
+
+type PostType = 'with_images' | 'without_images' | null;
 
 export function PostForm({ initialData, isEditing }: PostFormProps) {
   const navigate = useNavigate()
@@ -69,52 +71,126 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
   const [selectedParentMenu, setSelectedParentMenu] = useState<string>('')
   const [selectedParentFooterMenu, setSelectedParentFooterMenu] = useState<string>('')
   const [activeMenuType, setActiveMenuType] = useState<'header' | 'footer' | null>(null);
+  const [postType, setPostType] = useState<PostType>(null);
+
+  const findParentMenu = (menuId: number, items: MainMenuItem[]): number | null => {
+    const menu = items.find(item => item.id === menuId);
+    if (!menu) return null;
+    return menu.parent;
+  };
+
+  const getFirstAvailableTranslation = (translations: any) => {
+    // Priority order for languages
+    const languageOrder = ['ru', 'en', 'uz', 'kk'];
+    
+    // First try the current language
+    if (translations[currentLanguage]) {
+      return {
+        translation: translations[currentLanguage],
+        language: currentLanguage
+      };
+    }
+
+    // Then try each language in order until we find one
+    for (const lang of languageOrder) {
+      if (translations[lang]) {
+        return {
+          translation: translations[lang],
+          language: lang
+        };
+      }
+    }
+
+    return null;
+  };
 
   useEffect(() => {
     const fetchPost = async () => {
-      if (!isEditing || !slug) return
+      if (!isEditing || !slug) return;
       if (!token) {
-        console.error('No token found')
-        navigate('/karsu-admin-panel/login')
-        return
+        console.error('No token found');
+        navigate('/karsu-admin-panel/login');
+        return;
       }
 
       try {
-        setIsLoading(true)
+        setIsLoading(true);
         const response = await fetchWithAuth(
-          `hhttps://karsu.uz/api/publications/posts/${slug}/`,
+          `https://karsu.uz/api/publications/posts/${slug}/`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
           }
-        )
+        );
 
         if (!response.ok) {
           if (response.status === 401) {
-            console.error('Unauthorized access')
-            navigate('/karsu-admin-panel/login')
-            return
+            console.error('Unauthorized access');
+            navigate('/karsu-admin-panel/login');
+            return;
           }
-          throw new Error('Failed to fetch post')
+          if (response.status === 404) {
+            // If the current slug is not found, try to find an available translation
+            const data = await response.json();
+            if (data.translations) {
+              const availableTranslation = getFirstAvailableTranslation(data.translations);
+              if (availableTranslation) {
+                // Redirect to the available translation's slug
+                navigate(`/karsu-admin-panel/posts/${availableTranslation.translation.slug}/edit`, { replace: true });
+                return;
+              }
+            }
+          }
+          throw new Error('Failed to fetch post');
         }
 
-        const data = await response.json()
-        setPostData(data)
-        setSelectedMenu(data.menu || '')
-        setSelectedFooterMenu(data.footer_menu || '')
-        setExistingImages(data.images || [])
-      } catch (error) {
-        console.error('Error fetching post:', error)
-        navigate('/karsu-admin-panel/posts')
-      } finally {
-        setIsLoading(false)
-      }
-    }
+        const data = await response.json();
+        setPostData(data);
+        
+        // Check if we need to redirect to a different translation's slug
+        const availableTranslation = getFirstAvailableTranslation(data.translations);
+        if (availableTranslation && availableTranslation.translation.slug !== slug) {
+          navigate(`/karsu-admin-panel/posts/${availableTranslation.translation.slug}/edit`, { replace: true });
+          return;
+        }
+        
+        if (data.menu) {
+          setActiveMenuType('header');
+          const parentMenuId = findParentMenu(data.menu, menuItems);
+          if (parentMenuId) {
+            setSelectedParentMenu(parentMenuId.toString());
+            setSelectedMenu(data.menu.toString());
+          } else {
+            setSelectedParentMenu(data.menu.toString());
+          }
+        } else if (data.footer_menu) {
+          setActiveMenuType('footer');
+          const parentMenuId = findParentMenu(data.footer_menu, footerMenuItems);
+          if (parentMenuId) {
+            setSelectedParentFooterMenu(parentMenuId.toString());
+            setSelectedFooterMenu(data.footer_menu.toString());
+          } else {
+            setSelectedParentFooterMenu(data.footer_menu.toString());
+          }
+        }
 
-    fetchPost()
-  }, [slug, currentLanguage, isEditing, token, navigate])
+        setSelectedMenu(data.menu?.toString() || '');
+        setSelectedFooterMenu(data.footer_menu?.toString() || '');
+        setExistingImages(data.images || []);
+      } catch (error) {
+        console.error('Error fetching post:', error);
+        navigate('/karsu-admin-panel/posts');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (menuItems.length > 0 && footerMenuItems.length > 0) {
+      fetchPost();
+    }
+  }, [slug, currentLanguage, isEditing, token, navigate, menuItems, footerMenuItems]);
 
   useEffect(() => {
     const fetchMenuItems = async () => {
@@ -141,21 +217,21 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
         ]);
 
         if (!mainMenuResponse.ok || !footerMenuResponse.ok) {
-          throw new Error('Failed to fetch menu items')
+          throw new Error('Failed to fetch menu items');
         }
 
-        const mainMenuData = await mainMenuResponse.json()
-        const footerMenuData = await footerMenuResponse.json()
+        const mainMenuData = await mainMenuResponse.json();
+        const footerMenuData = await footerMenuResponse.json();
         
-        setMenuItems(mainMenuData)
-        setFooterMenuItems(footerMenuData)
+        setMenuItems(mainMenuData);
+        setFooterMenuItems(footerMenuData);
       } catch (error) {
-        console.error('Error fetching menu items:', error)
+        console.error('Error fetching menu items:', error);
       }
-    }
+    };
 
-    fetchMenuItems()
-  }, [token])
+    fetchMenuItems();
+  }, [token]);
 
   useEffect(() => {
     if (initialData?.menu) {
@@ -165,11 +241,56 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
     }
   }, [initialData]);
 
+  useEffect(() => {
+    if (isEditing && postData) {
+      if (postData.main_image || (postData.images && postData.images.length > 0)) {
+        setPostType('with_images');
+      } else {
+        setPostType('without_images');
+      }
+    }
+  }, [isEditing, postData]);
+
   const handleAdditionalImages = (files: FileList | null) => {
     if (files) {
       const newFiles = Array.from(files)
       setUploadedImages(prev => [...prev, ...newFiles])
     }
+  }
+
+  if (!postType && !isEditing) {
+    return (
+      <div className="container mx-auto p-6 mt-[50px]">
+        <PageHeader
+          title="Выберите тип поста"
+          createButtonLabel="Назад"
+          onCreateClick={() => navigate('/karsu-admin-panel/posts')}
+        />
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="space-y-4">
+            <button
+              onClick={() => setPostType('with_images')}
+              className="w-full p-4 text-left border rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <h3 className="text-lg font-medium">С изображениями</h3>
+              <p className="text-sm text-gray-500">
+                Создать пост с главным изображением и дополнительными изображениями
+              </p>
+            </button>
+
+            <button
+              onClick={() => setPostType('without_images')}
+              className="w-full p-4 text-left border rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <h3 className="text-lg font-medium">Без изображений</h3>
+              <p className="text-sm text-gray-500">
+                Создать пост только с текстовым содержанием
+              </p>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (isLoading) {
@@ -207,10 +328,10 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       formData.append('translations', JSON.stringify(translations))
 
       const url = isEditing 
-        ? `https://karsu.uz/api/publications/posts/${slug}/`
-        : `https://karsu.uz/api/publications/posts/`
+        ? `https:debttracker.uz/publications/posts/${slug}/`
+        : `https:debttracker.uz/publications/posts/`
       
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method: isEditing ? 'PUT' : 'POST',
         body: formData,
         headers: {
@@ -261,7 +382,12 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       <PageHeader
         title={isEditing ? 'Edit Post' : 'Create Post'}
         createButtonLabel="Back to Posts"
-        onCreateClick={() => navigate('/karsu-admin-panel/posts')}
+        onCreateClick={() => {
+          if (!isEditing) {
+            setPostType(null);
+          }
+          navigate('/karsu-admin-panel/posts');
+        }}
       />
 
       <div className="bg-white rounded-lg shadow p-6">
@@ -270,21 +396,6 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
             {errorMessage}
           </div>
         )}
-
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Main Image
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setSelectedImage(e.target.files?.[0] || null)}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#6C5DD3] file:text-white hover:file:bg-[#5b4eb8]"
-          />
-          {initialData?.main_image && (
-            <img src={initialData.main_image} alt="Current" className="mt-2 h-32 object-cover rounded" />
-          )}
-        </div>
 
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -390,58 +501,77 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
           </div>
         </div>
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Additional Images
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => handleAdditionalImages(e.target.files)}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#6C5DD3] file:text-white hover:file:bg-[#5b4eb8]"
-          />
-          
-          <div className="grid grid-cols-4 gap-4 mt-4">
-            {existingImages.map((image, index) => (
-              <div key={index} className="relative">
-                <img 
-                  src={image.image} 
-                  alt={`Existing ${index + 1}`}
-                  className="w-full h-24 object-cover rounded"
-                />
-                <button
-                  type="button"
-                  className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
-                  onClick={() => {
-                    setExistingImages(prev => prev.filter((_, i) => i !== index))
-                  }}
-                >
-                  ×
-                </button>
+        {postType === 'with_images' && (
+          <>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Main Image
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setSelectedImage(e.target.files?.[0] || null)}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#6C5DD3] file:text-white hover:file:bg-[#5b4eb8]"
+              />
+              {postData?.main_image && (
+                <img src={postData.main_image} alt="Current" className="mt-2 h-32 object-cover rounded" />
+              )}
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Additional Images
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => handleAdditionalImages(e.target.files)}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#6C5DD3] file:text-white hover:file:bg-[#5b4eb8]"
+              />
+              
+              <div className="grid grid-cols-4 gap-4 mt-4">
+                {existingImages.map((image, index) => (
+                  <div key={index} className="relative">
+                    <img 
+                      src={image.image} 
+                      alt={`Existing ${index + 1}`}
+                      className="w-full h-24 object-cover rounded"
+                    />
+                    <button
+                      type="button"
+                      className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
+                      onClick={() => {
+                        setExistingImages(prev => prev.filter((_, i) => i !== index))
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                
+                {uploadedImages.map((file, index) => (
+                  <div key={index} className="relative">
+                    <img 
+                      src={URL.createObjectURL(file)} 
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-24 object-cover rounded"
+                    />
+                    <button
+                      type="button"
+                      className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
+                      onClick={() => {
+                        setUploadedImages(prev => prev.filter((_, i) => i !== index))
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
-            
-            {uploadedImages.map((file, index) => (
-              <div key={index} className="relative">
-                <img 
-                  src={URL.createObjectURL(file)} 
-                  alt={`Preview ${index + 1}`}
-                  className="w-full h-24 object-cover rounded"
-                />
-                <button
-                  type="button"
-                  className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
-                  onClick={() => {
-                    setUploadedImages(prev => prev.filter((_, i) => i !== index))
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
 
         <TranslatedForm
           fields={fields}

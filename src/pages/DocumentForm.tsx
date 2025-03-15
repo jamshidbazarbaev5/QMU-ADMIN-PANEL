@@ -52,6 +52,20 @@ const translatedFields = [
   { name: 'description', label: 'Description', type: 'richtext' as const, required: true },
 ]
 
+// Helper function to check if a translation has content
+const hasTranslationContent = (translation: any): boolean => {
+  if (!translation) return false;
+  
+  return Object.values(translation).some(value => {
+    if (typeof value === 'string') {
+      // Remove HTML tags and trim whitespace for rich text
+      const cleanValue = value.replace(/<[^>]*>/g, '').trim();
+      return cleanValue.length > 0;
+    }
+    return false;
+  });
+};
+
 export function DocumentForm() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -125,9 +139,15 @@ export function DocumentForm() {
       const formData = new FormData()
       formData.append('menu', selectedMenu.toString())
       
-      // Use the translationData passed from TranslatedForm
-      console.log('Submitting translations:', translationData) // Debug log
-      formData.append('translations', JSON.stringify(translationData))
+      // Filter out empty translations
+      const filledTranslations = Object.entries(translationData).reduce((acc, [lang, data]) => {
+        if (hasTranslationContent(data)) {
+          acc[lang] = data;
+        }
+        return acc;
+      }, {} as any);
+      
+      formData.append('translations', JSON.stringify(filledTranslations))
       
       if (selectedFile) {
         formData.append('file', selectedFile)

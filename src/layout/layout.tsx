@@ -21,7 +21,8 @@ import {
   KeyRound,
   ChevronDown,
   ChevronRight,
-  Image
+  Image,
+  UserRound
 } from "lucide-react"
 // import {
 //   Select,
@@ -81,6 +82,9 @@ export default function Layout() {
       {icon: UserCog, text: "Администрация", href: "/karsu-admin-panel/menu-admins"},
       {icon: UserSquare2, text: "Должности", href: "/karsu-admin-panel/position"},
       {icon: BuildingIcon, text: "Отделы", href: "/karsu-admin-panel/agency"},
+      {icon: UserRound, text: "Деканы факультетов", href: "/karsu-admin-panel/faculty-deans"},
+      {icon: UserRound, text: "Деканы кафедр", href: "/karsu-admin-panel/department-deans"},
+      {icon: UserRound, text: "Деканы отделов", href: "/karsu-admin-panel/agency-deans"},
     ],
   }
 

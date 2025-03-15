@@ -5,9 +5,10 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import {fetchWithAuth, getAuthHeader} from '../api/api'
+import { ErrorModal } from "../components/ui/errorModal"
 // ... import other necessary types and components
 
-// Add all interfaces from MenuAdminsPage
+// Remove these interfaces as they're no longer needed
 interface MenuAdminTranslation {
   full_name: string
   biography: string
@@ -25,33 +26,6 @@ interface Menu {
   }
 }
 
-interface Faculty {
-  id: number
-  translations: {
-    [key: string]: {
-      name: string
-    }
-  }
-}
-
-interface Department {
-  id: number
-  translations: {
-    [key: string]: {
-      name: string
-    }
-  }
-}
-
-interface Agency {
-  id: number
-  translations: {
-    [key: string]: {
-      name: string
-    }
-  }
-}
-
 interface Position {
   id: number
   email: string
@@ -65,9 +39,6 @@ interface Position {
 interface MenuAdmin {
   id: number
   position: number
-  faculty: number
-  department: number
-  agency: number
   phone_number: string
   email: string
   main_image: string
@@ -90,80 +61,25 @@ export function MenuAdminFormPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [editingAdmin, setEditingAdmin] = useState<MenuAdmin | null>(null)
   
-  // Add missing state declarations
+  // Remove faculty, department, agency states
   const [selectedMenu, setSelectedMenu] = useState<string>('')
-  const [selectedFaculty, setSelectedFaculty] = useState<string>('')
-  const [selectedDepartment, setSelectedDepartment] = useState<string>('')
-  const [selectedAgency, setSelectedAgency] = useState<string>('')
   const [position, setPosition] = useState<string>('')
   const [newAdminEmail, setNewAdminEmail] = useState<string>('')
   const [newAdminPhone, setNewAdminPhone] = useState<string>('')
-
-  // Add state for image
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
-  const [faculties, setFaculties] = useState<Faculty[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [agencies, setAgencies] = useState<Agency[]>([])
   const [positions, setPositions] = useState<Position[]>([])
-
-  // Add new state for parent menu
   const [parentMenus, setParentMenus] = useState<Menu[]>([])
   const [childMenus, setChildMenus] = useState<Menu[]>([])
   const [selectedParentMenu, setSelectedParentMenu] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
 
-  // Add these helper functions
-  const isDisabledBySelection = (field: 'faculty' | 'department' | 'agency') => {
-    switch (field) {
-      case 'faculty':
-        return !!selectedDepartment || !!selectedAgency;
-      case 'department':
-        return !!selectedAgency || !!selectedFaculty;
-      case 'agency':
-        return !!selectedDepartment || !!selectedFaculty;
-      default:
-        return false;
-    }
-  }
-
-  // Add reset handlers
-  const handleAgencyChange = (value: string) => {
-    if (value) {
-      setSelectedAgency(value);
-      setSelectedDepartment('');
-      setSelectedFaculty('');
-    } else {
-      setSelectedAgency('');
-    }
-  }
-
-  const handleDepartmentChange = (value: string) => {
-    if (value) {
-      setSelectedDepartment(value);
-      setSelectedFaculty('');
-      setSelectedAgency('');
-    } else {
-      setSelectedDepartment('');
-    }
-  }
-
-  const handleFacultyChange = (value: string) => {
-    if (value) {
-      setSelectedFaculty(value);
-      setSelectedDepartment('');
-      setSelectedAgency('');
-    } else {
-      setSelectedFaculty('');
-    }
-  }
-
-  // Update fetch functions to use correct endpoints
+  // Keep only necessary fetch functions
   const fetchMenus = async () => {
     try {
       const response = await fetch(`https://karsu.uz/api/menus/main/`)
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
       
-      // Separate menus into parent and child
       const parents = data.filter((menu: Menu) => !menu.parent)
       const children = data.filter((menu: Menu) => menu.parent)
       
@@ -174,47 +90,12 @@ export function MenuAdminFormPage() {
     }
   }
 
-  const fetchFaculties = async () => {
-    try {
-      const response = await fetch(`https://karsu.uz/api/menus/faculty/`)
-      if (!response.ok) throw new Error('Failed to fetch faculties')
-      const data = await response.json()
-      setFaculties(data)
-    } catch (error) {
-      console.error('Error fetching faculties:', error)
-    }
-  }
-
-  const fetchDepartments = async () => {
-    try {
-      const response = await fetch(`https://karsu.uz/api/menus/department/`)
-      if (!response.ok) throw new Error('Failed to fetch departments')
-      const data = await response.json()
-      setDepartments(data)
-    } catch (error) {
-      console.error('Error fetching departments:', error)
-    }
-  }
-
-  const fetchAgencies = async () => {
-    try {
-      const response = await fetch(`https://karsu.uz/api/menus/agency/`)
-      if (!response.ok) throw new Error('Failed to fetch agencies')
-      const data = await response.json()
-      setAgencies(data)
-    } catch (error) {
-      console.error('Error fetching agencies:', error)
-    }
-  }
-
   const fetchPositions = async () => {
     try {
       const response = await fetch(`https://karsu.uz/api/menus/position/`)
       if (!response.ok) throw new Error('Failed to fetch positions')
       const data = await response.json()
-      // Ensure we always have an array of positions
       const positionsArray = Array.isArray(data) ? data : [data]
-      // Filter out any invalid positions
       const validPositions = positionsArray.filter(pos => pos && pos.id !== undefined)
       setPositions(validPositions)
     } catch (error) {
@@ -222,43 +103,26 @@ export function MenuAdminFormPage() {
     }
   }
 
-  // Add handler for parent menu selection
   const handleParentMenuChange = (value: string) => {
     setSelectedParentMenu(value)
-    setSelectedMenu('') // Reset child menu selection when parent changes
+    setSelectedMenu('')
   }
 
-  // Filter child menus based on selected parent
   const filteredChildMenus = childMenus.filter(
     menu => menu.parent === Number(selectedParentMenu)
   )
 
-  // Update handleSubmit function
   const handleSubmit = async (translationData: any) => {
-    // Check for required fields
-    if (!selectedMenu || !position) {
-      alert('Please select Menu and Position')
-      return
-    }
-
-    setIsLoading(true)
     try {
+      if (!selectedMenu || !position) {
+        throw new Error('Please select Menu and Position')
+      }
+
+      setIsLoading(true)
       const formData = new FormData()
       
       formData.append('position', position)
       formData.append('menu', selectedMenu)
-      
-      // Only append the selected fields if they have values
-      if (selectedFaculty) {
-        formData.append('faculty', selectedFaculty)
-      }
-      if (selectedDepartment) {
-        formData.append('department', selectedDepartment)
-      }
-      if (selectedAgency) {
-        formData.append('agency', selectedAgency)
-      }
-      
       formData.append('phone_number', editingAdmin?.phone_number || newAdminPhone)
       formData.append('email', editingAdmin?.email || newAdminEmail)
       formData.append('translations', JSON.stringify(translationData))
@@ -279,32 +143,69 @@ export function MenuAdminFormPage() {
         }
       })
 
-      if (!response.ok) throw new Error('Failed to save admin')
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.log('API Error Response:', errorData) // For debugging
+        
+        if (typeof errorData === 'object') {
+          // Handle API error response
+          const errorMessages = Object.entries(errorData)
+            .map(([field, errors]) => {
+              // Handle non-translation errors
+              if (field !== 'translations' && Array.isArray(errors)) {
+                return `${field}: ${errors.join(', ')}`
+              }
+              // Handle translation errors
+              if (field === 'translations' && typeof errors === 'object') {
+                return Object.entries(errors || {})
+                  .map(([lang, langErrors]: [string, any]) => {
+                    if (typeof langErrors === 'object') {
+                      return Object.entries(langErrors)
+                        .map(([fieldName, fieldError]) => 
+                          `${fieldName} (${lang.toUpperCase()}): ${fieldError}`)
+                        .join('\n')
+                    }
+                    return `${lang}: ${langErrors}`
+                  })
+                  .join('\n')
+              }
+              return `${field}: ${errors}`
+            })
+            .filter(Boolean) // Remove any undefined/empty entries
+            .join('\n')
+          throw new Error(errorMessages)
+        } else if (typeof errorData === 'string') {
+          throw new Error(errorData)
+        } else {
+          throw new Error('Failed to save admin. Please check your input and try again.')
+        }
+      }
       
       navigate('/karsu-admin-panel/menu-admins')
     } catch (error) {
-      console.error('Error saving admin:', error)
+      let errorMessage = 'An unexpected error occurred'
+      
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      }
+
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    // First fetch menus
     const initializeData = async () => {
       await fetchMenus()
-      // Only fetch admin details after menus are loaded
       if (id) {
         fetchAdminDetails()
       }
     }
     
-    // Fetch other data in parallel
-    fetchFaculties()
-    fetchDepartments()
-    fetchAgencies()
     fetchPositions()
-    
     initializeData()
   }, [id, currentLanguage])
 
@@ -316,17 +217,12 @@ export function MenuAdminFormPage() {
       const data = await response.json()
       setEditingAdmin(data)
       
-      // Find the menu in childMenus to get its parent
       const menuItem = childMenus.find(menu => menu.id === data.menu)
       if (menuItem?.parent) {
         setSelectedParentMenu(menuItem.parent.toString())
       }
       
-      // Set all the form fields with the fetched data
       setSelectedMenu(data.menu.toString())
-      if (data.faculty) setSelectedFaculty(data.faculty.toString())
-      if (data.department) setSelectedDepartment(data.department.toString())
-      if (data.agency) setSelectedAgency(data.agency.toString())
       setPosition(data.position.toString())
       setNewAdminEmail(data.email)
       setNewAdminPhone(data.phone_number)
@@ -418,78 +314,6 @@ export function MenuAdminFormPage() {
             </Select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Faculty</label>
-            <Select 
-              value={selectedFaculty} 
-              onValueChange={handleFacultyChange}
-              disabled={isDisabledBySelection('faculty')}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a faculty (optional)" />
-              </SelectTrigger>
-              <SelectContent className="min-w-[600px]">
-                {faculties.map((faculty) => (
-                  <SelectItem 
-                    key={faculty.id} 
-                    value={faculty.id.toString()}
-                    className="whitespace-normal py-2 break-words"
-                  >
-                    {faculty.translations[currentLanguage]?.name || `Faculty ${faculty.id}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Department</label>
-            <Select 
-              value={selectedDepartment} 
-              onValueChange={handleDepartmentChange}
-              disabled={isDisabledBySelection('department')}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a department (optional)" />
-              </SelectTrigger>
-              <SelectContent className="min-w-[600px]">
-                {departments.map((department) => (
-                  <SelectItem 
-                    key={department.id} 
-                    value={department.id.toString()}
-                    className="whitespace-normal py-2 break-words"
-                  >
-                    {department.translations[currentLanguage]?.name || `Department ${department.id}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Agency</label>
-            <Select 
-              value={selectedAgency} 
-              onValueChange={handleAgencyChange}
-              disabled={isDisabledBySelection('agency')}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select an agency (optional)" />
-              </SelectTrigger>
-              <SelectContent className="min-w-[600px]">
-                {agencies.map((agency) => (
-                  <SelectItem
-                    key={agency.id}
-                    value={agency.id.toString()}
-                    className="whitespace-normal py-2 break-words"
-                  >
-                    {agency.translations[currentLanguage]?.name || `Agency ${agency.id}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="col-span-2">
             <label className="block text-sm font-medium mb-2">Email</label>
             <input
@@ -536,6 +360,12 @@ export function MenuAdminFormPage() {
           isLoading={isLoading}
         />
       </div>
+
+      <ErrorModal
+        isOpen={!!error}
+        onClose={() => setError(null)}
+        message={error || ''}
+      />
     </div>
   )
 }

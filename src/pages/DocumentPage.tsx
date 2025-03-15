@@ -153,7 +153,7 @@ export function DocumentPage() {
         title="Documents"
         createButtonLabel="Add Document"
         onCreateClick={() => {
-          navigate('/documents/create')
+          navigate('/karsu-admin-panel/documents/create')
         }}
       />
 

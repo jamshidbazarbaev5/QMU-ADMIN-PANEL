@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import {fetchWithAuth, getAuthHeader} from "../api/api"
 import { RichTextEditor } from '../components/ckeditor/RichTextEditor'
-import { ErrorModal } from '../components/ui/errorModal'
 
 interface Translation {
   name: string
@@ -75,6 +74,7 @@ const formatDateForServer = (date: string, time: string) => {
   return new Date(combined).toISOString()
 }
 
+
 export default function CreateNews() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -90,7 +90,7 @@ export default function CreateNews() {
   const [existingImages, setExistingImages] = useState<NewsImage[]>([])
   const [isLoadingInitialData, setIsLoadingInitialData] = useState(isEditing)
   const [isGoalsDropdownOpen, setIsGoalsDropdownOpen] = useState(false)
-  const [error, setError] = useState<Record<string, string[]> | string | null>(null)
+  const [, setError] = useState<Record<string, string[]> | string | null>(null)
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -272,10 +272,6 @@ export default function CreateNews() {
 
     try {
       const formData = new FormData()
-      console.log('=== Starting form submission ===')
-      console.log('Is editing mode:', isEditing)
-      console.log('Current existing images:', existingImages)
-      console.log('Current uploaded images:', uploadedImages)
       
       // Add category if it exists
       if (values.category) {
@@ -293,13 +289,11 @@ export default function CreateNews() {
       
       // Add main image only if a new one is selected
       if (values.main_image?.[0]) {
-        console.log('Adding new main image:', values.main_image[0].name)
         formData.append('main_image', values.main_image[0])
       }
 
       // Only add uploaded_images if there are new images to add
       if (uploadedImages.length > 0) {
-        console.log('Adding new uploaded images:', uploadedImages.map(f => f.name))
         uploadedImages.forEach((file) => {
           formData.append('uploaded_images', file)
         })
@@ -308,26 +302,47 @@ export default function CreateNews() {
       // Add date_posted to formData
       formData.append('date_posted', values.date_posted)
 
-      const translations = {
-        ru: {
+      // Create translations object only for languages that have content
+      const translations: Record<string, { title: string; description: string }> = {}
+
+      // Helper function to check if a translation has content
+      const hasContent = (title: string, description: string) => {
+        return (title?.trim() || description?.trim()) ? true : false
+      }
+
+      // Only add translations that have either title or description filled
+      if (hasContent(values.title_ru, values.description_ru)) {
+        translations.ru = {
           title: values.title_ru || '',
           description: values.description_ru || '',
-        },
-        en: {
+        }
+      }
+
+      if (hasContent(values.title_en, values.description_en)) {
+        translations.en = {
           title: values.title_en || '',
           description: values.description_en || '',
-        },
-        uz: {
+        }
+      }
+
+      if (hasContent(values.title_uz, values.description_uz)) {
+        translations.uz = {
           title: values.title_uz || '',
           description: values.description_uz || '',
-        },
-        kk: {
+        }
+      }
+
+      if (hasContent(values.title_kk, values.description_kk)) {
+        translations.kk = {
           title: values.title_kk || '',
           description: values.description_kk || '',
         }
       }
 
-      formData.append('translations', JSON.stringify(translations))
+      // Only append translations if there are any
+      if (Object.keys(translations).length > 0) {
+        formData.append('translations', JSON.stringify(translations))
+      }
 
       const url = isEditing 
         ? `https://karsu.uz/api/news/posts/${newsId}/`
@@ -398,11 +413,7 @@ export default function CreateNews() {
 
   return (
     <div className="container mx-auto p-6 mt-[50px]">
-      <ErrorModal
-        isOpen={!!error}
-        onClose={() => setError(null)}
-        errors={error || {}}
-      />
+     
       
       <Card>
         <CardHeader>

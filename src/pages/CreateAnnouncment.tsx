@@ -35,26 +35,41 @@ export default function CreateAnnouncement() {
   async function onSubmit(values: any) {
     try {
       if (currentLanguage === 'kk') {
-        const payload = {
-          translations: {
-            ru: {
-              title: values.title_ru,
-              description: values.description_ru,
-            },
-            en: {
-              title: values.title_en,
-              description: values.description_en,
-            },
-            uz: {
-              title: values.title_uz,
-              description: values.description_uz,
-            },
-            kk: {
-              title: values.title_kk,
-              description: values.description_kk,
-            }
-          }
+        // Create translations object
+        const translations: { [key: string]: any } = {};
+        
+        // Only add languages that have content
+        if (values.title_ru?.trim() || values.description_ru?.trim()) {
+          translations.ru = {
+            title: values.title_ru,
+            description: values.description_ru,
+          };
         }
+        
+        if (values.title_en?.trim() || values.description_en?.trim()) {
+          translations.en = {
+            title: values.title_en,
+            description: values.description_en,
+          };
+        }
+        
+        if (values.title_uz?.trim() || values.description_uz?.trim()) {
+          translations.uz = {
+            title: values.title_uz,
+            description: values.description_uz,
+          };
+        }
+        
+        if (values.title_kk?.trim() || values.description_kk?.trim()) {
+          translations.kk = {
+            title: values.title_kk,
+            description: values.description_kk,
+          };
+        }
+
+        const payload = {
+          translations: translations
+        };
 
         const response = await fetchWithAuth('https://karsu.uz/api/announcements/', {
           method: 'POST',

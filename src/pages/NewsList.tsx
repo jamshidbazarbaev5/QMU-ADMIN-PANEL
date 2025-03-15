@@ -114,7 +114,7 @@ export default function NewsList() {
       header: 'Title',
       accessor: 'title',
       cell: (item: NewsPost) => (
-        <span>{item.translations[currentLanguage]?.title || item.translations.en?.title || 'Untitled'}</span>
+        <span>{item.translations[currentLanguage]?.title || item.translations.kk?.title || '-'}</span>
       )
     },
     {

@@ -63,21 +63,27 @@ export function MenusPage() {
 
   const fetchMenus = async () => {
     try {
-      const response = await fetchWithAuth(`https://debttracker.uz/menus/${menuType}/`, {
-        headers: getAuthHeader(),
+      const timestamp = new Date().getTime()
+      const response = await fetchWithAuth(`https://karsu.uz/api/menus/${menuType}/?_=${timestamp}`, {
+        headers: {
+          ...getAuthHeader(),
+        },
       })
 
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
-      setMenus(data)
+      // Sort menus by ID to maintain consistent order
+      const sortedMenus = data.sort((a: Menu, b: Menu) => a.id - b.id)
+      setMenus(sortedMenus)
     } catch (error) {
       console.error('Error fetching menus:', error)
     }
   }
 
+  // Add isDialogOpen as a dependency to refresh when dialog closes
   useEffect(() => {
     fetchMenus()
-  }, [currentLanguage, menuType])
+  }, [currentLanguage, menuType, isDialogOpen])
 
   const handleSubmit = async (formData: any) => {
     setIsLoading(true)
@@ -86,24 +92,35 @@ export function MenusPage() {
         ? `https://karsu.uz/api/menus/${menuType}/${editingMenu.translations[currentLanguage].slug}/`
         : `https://karsu.uz/api/menus/${menuType}/`
 
+      const payload = {
+        parent: selectedParent,
+        translations: formData.translations
+      }
+
       const response = await fetchWithAuth(url, {
         method: editingMenu ? 'PUT' : 'POST',
         headers: {
           ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
-
-        body: JSON.stringify({
-          parent: selectedParent,
-          translations: formData
-        }),
+        body: JSON.stringify(payload)
       })
 
-      if (!response.ok) throw new Error('Failed to save menu')
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(JSON.stringify(errorData));
+      }
       
+      // Force an immediate refresh after successful update
       await fetchMenus()
       setIsDialogOpen(false)
       setEditingMenu(null)
+      setSelectedParent(null)
+      
+      // Add a slight delay and fetch again to ensure we have the latest data
+      setTimeout(() => {
+        fetchMenus()
+      }, 500)
     } catch (error) {
       console.error('Error saving menu:', error)
     } finally {
@@ -225,8 +242,17 @@ export function MenusPage() {
                 fields={fields}
                 languages={['en', 'ru', 'uz', 'kk']}
                 onSubmit={handleSubmit}
-                initialData={editingMenu?.translations}
+                initialData={editingMenu?.translations || {}}
                 isLoading={isLoading}
+                submitButton={
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full"
+                  >
+                    {isLoading ? 'Saving...' : editingMenu ? 'Update Menu' : 'Create Menu'}
+                  </Button>
+                }
               />
             </DialogContent>
           </Dialog>

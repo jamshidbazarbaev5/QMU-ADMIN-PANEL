@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { DataTable } from '../helpers/DataTable'
 import { PageHeader } from '../helpers/PageHeader'
 import { useLanguage } from '../hooks/useLanguage'
+import { fetchWithAuth, getAuthHeader } from '../api/api'
 
 interface MenuTranslation {
   name: string;
@@ -27,10 +28,14 @@ export function Posts() {
     try {
       setLoading(true)
       const url = searchQuery 
-        ? `https://karsu.uz/api/publications/posts/?title=${encodeURIComponent(searchQuery)}`
-        : `https://karsu.uz/api/publications/posts/`
+        ? `https:debttracker.uz/publications/posts/?title=${encodeURIComponent(searchQuery)}`
+        : `https:debttracker.uz/publications/posts/`
       
-      const response = await fetch(url)
+      const response = await fetchWithAuth(url, {
+        headers: {
+          ...getAuthHeader(),
+        },
+      })
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -74,6 +79,42 @@ export function Posts() {
     }
    
   }
+
+  const getFirstAvailableTranslation = (translations: any) => {
+    // Priority order for languages
+    const languageOrder = ['ru', 'en', 'uz', 'kk'];
+    
+    // First try the current language
+    if (translations[currentLanguage]) {
+      return {
+        translation: translations[currentLanguage],
+        language: currentLanguage
+      };
+    }
+
+    // Then try each language in order until we find one
+    for (const lang of languageOrder) {
+      if (translations[lang]) {
+        return {
+          translation: translations[lang],
+          language: lang
+        };
+      }
+    }
+
+    return null;
+  };
+
+  const handleEdit = (item: any) => {
+    const availableTranslation = getFirstAvailableTranslation(item.translations);
+    if (!availableTranslation) {
+      console.error('No available translation found');
+      return;
+    }
+    
+    const slug = availableTranslation.translation.slug;
+    navigate(`/karsu-admin-panel/posts/${slug}/edit`);
+  };
 
   const columns = [
     {
@@ -119,27 +160,6 @@ export function Posts() {
     }
   }
 
-  const getPostSlug = (item: any) => {
-    // First try to get the slug for current language
-    if (item.translations[currentLanguage]?.slug) {
-      return item.translations[currentLanguage].slug;
-    }
-    
-    // Fallback to English if current language is not available
-    if (item.translations.en?.slug) {
-      return item.translations.en.slug;
-    }
-    
-    // If no English, take the first available translation
-    const availableLanguages = Object.keys(item.translations);
-    if (availableLanguages.length > 0) {
-      return item.translations[availableLanguages[0]].slug;
-    }
-    
-    console.error('No slug found for post:', item);
-    return '';
-  };
-
   return (
     <div className="container mx-auto p-6 mt-[50px]">
       <PageHeader
@@ -162,21 +182,13 @@ export function Posts() {
         <DataTable
           data={posts}
           columns={columns}
-          onRowClick={(item) => {
-            const slug = getPostSlug(item);
-            if (slug) {
-              navigate(`/karsu-admin-panel/posts/${slug}/edit`);
-            }
-          }}
+          onRowClick={handleEdit}
           actions={(item) => (
             <div className="flex gap-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  const slug = getPostSlug(item);
-                  if (slug) {
-                    navigate(`/karsu-admin-panel/posts/${slug}/edit`);
-                  }
+                  handleEdit(item);
                 }}
                 className="text-blue-600 hover:text-blue-800"
               >
@@ -185,9 +197,9 @@ export function Posts() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  const slug = getPostSlug(item);
-                  if (slug) {
-                    handleDelete(slug);
+                  const availableTranslation = getFirstAvailableTranslation(item.translations);
+                  if (availableTranslation) {
+                    handleDelete(availableTranslation.translation.slug);
                   }
                 }}
                 className="text-red-600 hover:text-red-800"

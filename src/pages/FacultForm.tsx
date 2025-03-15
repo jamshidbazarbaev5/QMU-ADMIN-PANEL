@@ -10,6 +10,7 @@ import { fetchWithAuth, getAuthHeader } from '../api/api'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import {  Plus } from 'lucide-react'
 
+
 const translatedFields = [
   { name: 'name', label: 'Name', type: 'text' as const, required: true },
   { 
@@ -84,8 +85,6 @@ export default function FacultyForm() {
     }
   }
 
- 
-
   const handleSubmit = async (translationData: any) => {
     setIsLoading(true)
     try {
@@ -96,7 +95,9 @@ export default function FacultyForm() {
       }
       
       formData.append('email', email)
-      formData.append('translations', JSON.stringify(translationData))
+      
+     
+      formData.append('translations', JSON.stringify(translationData.translations))
 
       const url = id 
         ? `https://karsu.uz/api/menus/faculty/${id}/`

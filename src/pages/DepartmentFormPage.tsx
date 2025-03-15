@@ -8,6 +8,7 @@ import { Card, CardHeader, CardContent, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Loader2 } from 'lucide-react'
 
+
 interface Faculty {
   id: number
   translations: {
@@ -83,6 +84,13 @@ export function DepartmentFormPage() {
 
     setIsLoading(true)
     try {
+      // Filter out empty translations
+     
+      const payload = {
+        faculty: parseInt(selectedFaculty),
+        translations: translatedData.translations,
+      };
+
       const endpoint = id
         ? `https://karsu.uz/api/menus/department/${id}/`
         : 'https://karsu.uz/api/menus/department/'
@@ -95,10 +103,7 @@ export function DepartmentFormPage() {
           ...getAuthHeader(),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          faculty: parseInt(selectedFaculty),
-          translations: translatedData,
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (response.ok) {

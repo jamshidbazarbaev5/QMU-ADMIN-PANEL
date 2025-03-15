@@ -64,24 +64,36 @@ export default function CreateNewsCategory() {
 
   async function onSubmit(values: FormValues) {
     try {
-      const translations = {
-        ru: {
+      
+      const translations = {} as any;
+    
+      if (values.name_ru?.trim()) {
+        translations.ru = {
           name: values.name_ru,
           slug: values.name_ru.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-        },
-        en: {
+        };
+      }
+      
+      if (values.name_en?.trim()) {
+        translations.en = {
           name: values.name_en,
           slug: values.name_en.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-        },
-        uz: {
+        };
+      }
+      if (values.name_uz?.trim()) {
+        translations.uz = {
           name: values.name_uz,
           slug: values.name_uz.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-        },
-        kk: {
+        };
+      }
+      
+      if (values.name_kk?.trim()) {
+        translations.kk = {
           name: values.name_kk,
           slug: values.name_kk.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-        }
+        };
       }
+  
 
       const url = isEditMode 
         ? `https://karsu.uz/api/news/category/${slug}/`

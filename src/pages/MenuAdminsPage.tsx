@@ -83,14 +83,14 @@ export function MenuAdminsPage() {
   const [newAdminEmail, setNewAdminEmail] = useState('')
   const [newAdminPhone, setNewAdminPhone] = useState('')
   const [menus, setMenus] = useState<Menu[]>([])
-  const [faculties, setFaculties] = useState<Faculty[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [agencies, setAgencies] = useState<Agency[]>([])
+  const [, setFaculties] = useState<Faculty[]>([])
+  const [, setDepartments] = useState<Department[]>([])
+  const [, setAgencies] = useState<Agency[]>([])
   
   const [selectedMenu, setSelectedMenu] = useState<string>('')
-  const [selectedFaculty, setSelectedFaculty] = useState<string>('')
-  const [selectedDepartment, setSelectedDepartment] = useState<string>('')
-  const [selectedAgency, setSelectedAgency] = useState<string>('')
+  const [selectedFaculty, ] = useState<string>('')
+  const [selectedDepartment, ] = useState<string>('')
+  const [selectedAgency, ] = useState<string>('')
   const [position, setPosition] = useState<string>('')
   const navigate = useNavigate()
 
@@ -99,7 +99,11 @@ export function MenuAdminsPage() {
       const response = await fetch(`https://karsu.uz/api/menus/admin/`)
       if (!response.ok) throw new Error('Failed to fetch admins')
       const data = await response.json()
-      setAdmins(Array.isArray(data) ? data : [data])
+      // Filter to only show general administrators
+      const generalAdmins = Array.isArray(data) ? 
+        data.filter(admin => !admin.faculty && !admin.department && !admin.agency) : 
+        []
+      setAdmins(generalAdmins)
     } catch (error) {
       console.error('Error fetching admins:', error)
     }
@@ -256,7 +260,7 @@ export function MenuAdminsPage() {
   return (
     <div className="p-6 mt-[50px]">
       <PageHeader
-        title="Menu Administrators"
+        title="General Administrators"
         createButtonLabel="Add Administrator"
         onCreateClick={() => {
           navigate('/karsu-admin-panel/menu-admins/create')
@@ -335,75 +339,6 @@ export function MenuAdminsPage() {
                       className="whitespace-normal py-2 break-words"
                     >
                       {menu.translations[currentLanguage]?.name || `Menu ${menu.id}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Faculty</label>
-              <Select 
-                value={selectedFaculty} 
-                onValueChange={setSelectedFaculty}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a faculty" />
-                </SelectTrigger>
-                <SelectContent className="min-w-[600px]">
-                  {faculties.map((faculty) => (
-                    <SelectItem 
-                      key={faculty.id} 
-                      value={faculty.id.toString()}
-                      className="whitespace-normal py-2 break-words"
-                    >
-                      {faculty.translations[currentLanguage]?.name || `Faculty ${faculty.id}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Department</label>
-              <Select 
-                value={selectedDepartment} 
-                onValueChange={setSelectedDepartment}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a department" />
-                </SelectTrigger>
-                <SelectContent className="min-w-[600px]">
-                  {departments.map((department) => (
-                    <SelectItem 
-                      key={department.id} 
-                      value={department.id.toString()}
-                      className="whitespace-normal py-2 break-words"
-                    >
-                      {department.translations[currentLanguage]?.name || `Department ${department.id}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Agency</label>
-              <Select 
-                value={selectedAgency} 
-                onValueChange={setSelectedAgency}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select an agency" />
-                </SelectTrigger>
-                <SelectContent className="min-w-[600px]">
-                  {agencies.map((agency) => (
-                    <SelectItem 
-                      key={agency.id} 
-                      value={agency.id.toString()}
-                      className="whitespace-normal py-2 break-words"
-                    >
-                      {agency.translations[currentLanguage]?.name || `Agency ${agency.id}`}
                     </SelectItem>
                   ))}
                 </SelectContent>

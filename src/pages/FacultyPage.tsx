@@ -112,9 +112,20 @@ export function FacultyPage() {
   const handleDelete = async (faculty: Faculty) => {
     if (!window.confirm('Are you sure you want to delete this faculty?')) return
 
+    // Get the available translation slug
+    const availableSlug = faculty.translations.en?.slug || 
+                         faculty.translations.ru?.slug || 
+                         faculty.translations.uz?.slug || 
+                         faculty.translations.kk?.slug
+
+    if (!availableSlug) {
+      console.error('No available translation slug found')
+      return
+    }
+
     try {
       const response = await fetchWithAuth(
-        `https://karsu.uz/api/menus/faculty/${faculty.translations.en.slug}/`,
+        `https://karsu.uz/api/menus/faculty/${availableSlug}/`,
         { 
           method: 'DELETE',
           headers: {
@@ -162,30 +173,43 @@ export function FacultyPage() {
     },
     {
       header: 'Actions',
-      cell: (item: Faculty) => (
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation()
-              navigate(`/karsu-admin-panel/faculties/${item.translations[currentLanguage].slug}/edit`)
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation()
-              handleDelete(item)
-            }}
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </Button>
-        </div>
-      )
+      cell: (item: Faculty) => {
+        // Get the available translation slug
+        const availableSlug = item.translations.en?.slug || 
+                             item.translations.ru?.slug || 
+                             item.translations.uz?.slug || 
+                             item.translations.kk?.slug
+
+        if (!availableSlug) {
+          console.error('No available translation slug found')
+          return null
+        }
+
+        return (
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation()
+                navigate(`/karsu-admin-panel/faculties/${availableSlug}/edit`)
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDelete(item)
+              }}
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </Button>
+          </div>
+        )
+      }
     }
   ]
 

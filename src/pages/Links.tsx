@@ -234,7 +234,7 @@ export function LinksPage() {
             fields={fields}
             languages={['uz', 'ru', 'en', 'kk']}
             onSubmit={handleSubmit}
-            initialData={editingLink?.translations || undefined}
+            initialData={editingLink?.translations }
             isLoading={isLoading}
             sharedFields={['url']}
           />

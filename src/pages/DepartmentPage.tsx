@@ -46,19 +46,44 @@ export function DepartmentPage() {
     fetchDepartments()
   }, [currentLanguage])
 
+  const getAvailableSlug = (translations: { [key: string]: DepartmentTranslation }) => {
+    // Try to get slug from any available translation
+    for (const lang of ['en', 'ru', 'uz', 'kk']) {
+      if (translations[lang]?.slug) {
+        return translations[lang].slug;
+      }
+    }
+    return null;
+  }
+
   const handleEdit = (department: Department) => {
-    navigate(`/karsu-admin-panel/departments/${department.translations['kk'].slug}/edit`)
+    const slug = getAvailableSlug(department.translations);
+    if (!slug) {
+      console.error('No available translation slug found');
+      return;
+    }
+    navigate(`/karsu-admin-panel/departments/${slug}/edit`);
   }
 
   const handleDelete = async (department: Department) => {
+    const slug = getAvailableSlug(department.translations);
+    if (!slug) {
+      console.error('No available translation slug found');
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to delete this department?')) {
+      return;
+    }
+
     try {
-      await fetchWithAuth(`https://karsu.uz/api/menus/department/${department.translations.en.slug}/`, {
+      await fetchWithAuth(`https://karsu.uz/api/menus/department/${slug}/`, {
         method: 'DELETE',
         headers: getAuthHeader(),
-      })
-      await fetchDepartments()
+      });
+      await fetchDepartments();
     } catch (error) {
-      console.error('Error deleting department:', error)
+      console.error('Error deleting department:', error);
     }
   }
 

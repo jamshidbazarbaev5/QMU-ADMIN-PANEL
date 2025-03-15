@@ -26,6 +26,7 @@ const translatedFields = [
   { name: 'name', label: 'Name', type: 'text' as const, required: true },
 ]
 
+
 export default function PositionForm() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -75,7 +76,7 @@ export default function PositionForm() {
     console.log('Initial data updated:', initialData)
   }, [initialData])
 
-  const handleSubmit = async (translationData: Position['translations']) => {
+  const handleSubmit = async (translationData:any) => {
     if (!position) {
       alert('Please enter a position number')
       return
@@ -83,21 +84,12 @@ export default function PositionForm() {
 
     setIsLoading(true)
     try {
-      // Ensure all languages have both name and description fields
-      const translations: Record<string, PositionTranslation> = {}
-      const languages = ['en', 'ru', 'uz', 'kk']
-      
-      languages.forEach(lang => {
-        translations[lang] = {
-          name: translationData[lang]?.name || '',
-          description: translationData[lang]?.description || ''  // Ensure description is always present
-        }
-      })
-
+      // Filter out empty translations
+     
       const payload: Position = {
         email,
         position: parseInt(position),
-        translations
+        translations: translationData.translations
       }
 
       console.log('Sending payload:', payload) // Debug log

@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Button } from "../components/ui/button"
 import { Loader2 } from "lucide-react"
 import { RichTextEditor } from '../components/ckeditor/RichTextEditor'
+import { ErrorModal } from '../components/ui/errorModal'
 
 interface TranslatedField {
     name: string
@@ -15,7 +16,7 @@ interface TranslatedField {
 interface TranslatedFormProps {
   fields: TranslatedField[]
   languages: string[]
-  onSubmit: (data: any) => void
+  onSubmit: (data: any) => Promise<void>
   initialData?: any
   isLoading?: boolean
   submitButton?: React.ReactNode
@@ -40,50 +41,18 @@ export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoa
   const [formData, setFormData] = useState<FormDataType>(() => {
     console.log('Initializing formData with:', { initialData });
     if (initialData) {
-      // Create a copy of initialData
-      const data = {...initialData};
-      console.log('Initial data copy:', data);
-      
-      // For shared fields, ensure they exist in all languages
-      languages.forEach(lang => {
-        data[lang] = data[lang] || {};
-        
-        // Copy shared fields from any language that has them to all languages
-        sharedFields.forEach(fieldName => {
-          // Find the first language that has this field value
-          const sourceLanguage = languages.find(l => data[l]?.[fieldName]);
-          console.log(`Looking for ${fieldName} in languages:`, {
-            sourceLanguage,
-            value: sourceLanguage ? data[sourceLanguage][fieldName] : undefined
-          });
-          
-          if (sourceLanguage) {
-            data[lang][fieldName] = data[sourceLanguage][fieldName];
-          }
-        });
-        
-        // Initialize any missing fields
-        fields.forEach(field => {
-          if (data[lang][field.name] === undefined) {
-            data[lang][field.name] = '';
-          }
-        });
-      });
-      
-      console.log('Initialized form data:', data);
-      return data;
+      return { ...initialData }
     }
     
-    // Initialize empty form data
-    const emptyData: FormDataType = {};
+    const emptyData: FormDataType = {}
     languages.forEach(lang => {
-      emptyData[lang] = {};
+      emptyData[lang] = {}
       fields.forEach(field => {
-        emptyData[lang][field.name] = '';
-      });
-    });
+        emptyData[lang][field.name] = ''
+      })
+    })
     console.log('Created empty form data:', emptyData);
-    return emptyData;
+    return emptyData
   });
 
   useEffect(() => {
@@ -120,11 +89,43 @@ export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoa
   console.log('TranslatedForm formData:', formData)
 
   const [currentTab, setCurrentTab] = useState(languages[0])
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Submitting form data:', formData)
-    onSubmit(formData)
+    
+    // Filter out languages with empty content
+    const filteredTranslations: { [key: string]: any } = {}
+    
+    languages.forEach(lang => {
+      // Check if any field in this language has content
+      const hasContent = Object.entries(formData[lang]).some(([_, value]) => {
+        if (typeof value === 'string') {
+          // For rich text content, remove HTML tags and check if there's text
+          const plainText = value.replace(/<[^>]*>/g, '').trim()
+          return plainText !== ''
+        }
+        return false
+      })
+
+      // Only include languages that have content
+      if (hasContent) {
+        filteredTranslations[lang] = formData[lang]
+      }
+    })
+
+    // Check if at least one language has content
+    if (Object.keys(filteredTranslations).length === 0) {
+      setError('Please fill in at least one language')
+      return
+    }
+
+    try {
+      // Send only the translations that have content
+      await onSubmit({ translations: filteredTranslations })
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred')
+    }
   }
 
   const handleFieldChange = (language: string, fieldName: string, value: string) => {
@@ -182,49 +183,57 @@ export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoa
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <Tabs value={currentTab} className="w-full" onValueChange={setCurrentTab}>
-        <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${languages.length}, 1fr)` }}>
-          {languages.map(lang => (
-            <TabsTrigger key={lang} value={lang}>
-              {lang.toUpperCase()}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Tabs value={currentTab} className="w-full" onValueChange={setCurrentTab}>
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${languages.length}, 1fr)` }}>
+            {languages.map(lang => (
+              <TabsTrigger key={lang} value={lang}>
+                {lang.toUpperCase()}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        {languages.map(lang => (
-          <TabsContent key={lang} value={lang} className="mt-4">
-            <div className="space-y-6">
-              {fields.map(field => (
-                <div key={field.name} className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {field.label}
-                    {field.required && <span className="text-red-500 ml-1">*</span>}
-                  </label>
-                  {renderField(field, lang)}
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
-      
-      <div className="flex justify-end gap-4 mt-6">
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-[#6C5DD3] text-white hover:bg-[#5b4eb8]"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Сохранение...
-            </>
-          ) : (
-            'Сохранить'
-          )}
-        </Button>
-      </div>
-    </form>
+          {languages.map(lang => (
+            <TabsContent key={lang} value={lang} className="mt-4">
+              <div className="space-y-6">
+                {fields.map(field => (
+                  <div key={field.name} className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {field.label}
+                      {field.required && <span className="text-red-500 ml-1">*</span>}
+                    </label>
+                    {renderField(field, lang)}
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+        
+        <div className="flex justify-end gap-4 mt-6">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="bg-[#6C5DD3] text-white hover:bg-[#5b4eb8]"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Сохранение...
+              </>
+            ) : (
+              'Сохранить'
+            )}
+          </Button>
+        </div>
+      </form>
+
+      <ErrorModal
+        isOpen={!!error}
+        onClose={() => setError(null)}
+        message={error || ''}
+      />
+    </>
   )
 }
