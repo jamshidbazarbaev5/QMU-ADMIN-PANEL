@@ -9,11 +9,11 @@ interface RichTextEditorProps {
 export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
   return (
     <Editor
-      tinymceScriptSrc="/karsu-admin-panel/tinymce/tinymce.min.js"
+      tinymceScriptSrc="/tinymce/tinymce.min.js"
       init={{
         height: 300,
         menubar: true,
-        base_url: '/karsu-admin-panel/tinymce',
+        base_url: '/tinymce',
         suffix: '.min',
         model: 'dom',
         plugins: [
