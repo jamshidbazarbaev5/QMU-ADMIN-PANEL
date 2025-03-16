@@ -127,10 +127,14 @@ export function AgencyPage() {
     if (!window.confirm('Are you sure you want to delete this agency?')) return
 
     try {
-      const response = await fetchWithAuth(
-        `https://karsu.uz/api/menus/agency/${agency.translations.en.slug}/`,
-        { method: 'DELETE',headers:getAuthHeader()}
+      const slug = Object.values(agency.translations)[0]?.slug
+      if (!slug) {
+        throw new Error('No valid slug found for agency')
+      }
 
+      const response = await fetchWithAuth(
+        `https://karsu.uz/api/menus/agency/${slug}/`,
+        { method: 'DELETE', headers: getAuthHeader() }
       )
       
       if (!response.ok) throw new Error('Failed to delete agency')
@@ -190,7 +194,10 @@ export function AgencyPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                navigate(`/karsu-admin-panel/agencies/${item.translations.en.slug}/edit`)
+                const slug = Object.values(item.translations)[0]?.slug
+                if (slug) {
+                  navigate(`/karsu-admin-panel/agencies/${slug}/edit`)
+                }
               }}
             >
               <Pencil className="h-4 w-4" />

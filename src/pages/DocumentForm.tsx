@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
-import { TranslatedForm } from '../helpers/TranslatedForm'
+import { TranslatedForm2} from '../helpers/TranslatedForm2'
 import { Button } from '../components/ui/button'
 import { fetchWithAuth, getAuthHeader } from "../api/api.ts"
 import { Card, CardContent } from '../components/ui/card'
@@ -234,7 +234,7 @@ export function DocumentForm() {
             />
           </div>
 
-          <TranslatedForm
+          <TranslatedForm2
             fields={translatedFields}
             languages={languages}
             onSubmit={handleSubmit}

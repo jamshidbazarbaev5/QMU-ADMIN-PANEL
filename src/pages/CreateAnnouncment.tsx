@@ -116,7 +116,7 @@ export default function CreateAnnouncement() {
                       <FormItem>
                         <FormLabel>Sarlavha (RU)</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter title in Russian" {...field} />
+                          <Input placeholder="Enter title in Russian" {...field} required={false} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -151,7 +151,7 @@ export default function CreateAnnouncement() {
                       <FormItem>
                         <FormLabel>Title (EN)</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter title in English" {...field} />
+                          <Input placeholder="Enter title in English" {...field} required={false}/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -186,7 +186,7 @@ export default function CreateAnnouncement() {
                       <FormItem>
                         <FormLabel>Sarlavha (UZ)</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter title in Uzbek" {...field} />
+                          <Input placeholder="Enter title in Uzbek" {...field} required={false}/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -221,7 +221,7 @@ export default function CreateAnnouncement() {
                       <FormItem>
                         <FormLabel>Тақырып (KK)</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter title in Kazakh" {...field} />
+                          <Input placeholder="Enter title in Kazakh" {...field} required={false}/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>

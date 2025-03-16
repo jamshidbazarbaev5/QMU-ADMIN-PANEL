@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { PageHeader } from '../helpers/PageHeader'
 import { DataTable } from '../helpers/DataTable'
-import { TranslatedForm } from '../helpers/TranslatedForm'
+import { TranslatedForm2 } from '../helpers/TranslatedForm2'
 import { useLanguage } from '../hooks/useLanguage'
 import { Dialog, DialogContent } from '../components/ui/dialog'
 import { Pencil, Trash2 } from 'lucide-react'
@@ -17,7 +17,7 @@ interface Service {
 }
 
 const fields = [
-  { name: 'name', label: 'Name', type: 'text' as const, required: true },
+  { name: 'name', label: 'Name', type: 'text' as const, required: false },
   { name: 'url', label: 'URL', type: 'text' as const, required: true },
 ]
 
@@ -57,16 +57,21 @@ export function ServicesPage() {
       
       const submitData = new FormData()
       
+      // Create translations object with all names, even if empty
       const translations = {
-        en: { name: formData.en.name },
-        uz: { name: formData.uz.name },
-        ru: { name: formData.ru.name },
-        kk: { name: formData.kk.name }
+        en: { name: formData.en?.name || '' },
+        uz: { name: formData.uz?.name || '' },
+        ru: { name: formData.ru?.name || '' },
+        kk: { name: formData.kk?.name || '' }
       }
       submitData.append('translations', JSON.stringify(translations))
       
-      // Add URL
-      submitData.append('url', formData[currentLanguage].url)
+      // Get URL from shared fields
+      const submittedUrl = formData.en?.url || formData.uz?.url || formData.ru?.url || formData.kk?.url || ''
+      if (!submittedUrl && !editingService) {
+        throw new Error('URL is required')
+      }
+      submitData.append('url', submittedUrl || editingService?.url || '')
       
       if (selectedImage) {
         submitData.append('img', selectedImage)
@@ -156,19 +161,19 @@ export function ServicesPage() {
     const serviceData = await response.json();
     console.log('Fetched service data:', serviceData);
     
-    // Initialize translatedData with the URL for all languages
+    // Initialize translatedData with the URL and names for all languages
     const translatedData = {} as Record<string, any>;
     const allLanguages = ['uz', 'ru', 'en', 'kk'];
     
     allLanguages.forEach(lang => {
       translatedData[lang] = {
-        name: serviceData.translations[lang]?.name || '',
-        url: service.url  // Use the URL from the service object
+        name: serviceData.translations[lang]?.name || serviceData.name || '',  // Fallback to service.name if translation is empty
+        url: serviceData.url  // Use the URL from the service data
       };
     });
     
     console.log('Final translated data:', translatedData);
-    setEditingService({ ...service, translations: translatedData });
+    setEditingService({ ...serviceData, translations: translatedData });
   }
 
   const handleDelete = async (service: Service) => {
@@ -256,7 +261,7 @@ export function ServicesPage() {
               className="w-full"
             />
           </div>
-          <TranslatedForm
+          <TranslatedForm2
             fields={fields}
             languages={['uz', 'ru', 'en', 'kk']}
             onSubmit={handleSubmit}

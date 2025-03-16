@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
-import { TranslatedForm } from '../helpers/TranslatedForm'
+import { TranslatedForm2 } from '../helpers/TranslatedForm2'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { fetchWithAuth, getAuthHeader } from '../api/api';
@@ -33,6 +33,7 @@ interface Faculty {
 
 interface Menu {
   id: number
+  parent: number | null
   translations: {
     [key: string]: {
       name: string
@@ -73,6 +74,9 @@ export function FacultyDeanFormPage() {
   const [faculties, setFaculties] = useState<Faculty[]>([])
   const [menus, setMenus] = useState<Menu[]>([])
   const [positions, setPositions] = useState<Position[]>([])
+  const [selectedParentMenu, setSelectedParentMenu] = useState<string>('')
+  const [parentMenus, setParentMenus] = useState<Menu[]>([])
+  const [childMenus, setChildMenus] = useState<Menu[]>([])
 
   const fetchFaculties = async () => {
     try {
@@ -90,7 +94,15 @@ export function FacultyDeanFormPage() {
       const response = await fetch(`https://karsu.uz/api/menus/main/`)
       if (!response.ok) throw new Error('Failed to fetch menus')
       const data = await response.json()
+      
+      console.log('All menus:', data)
+      
       setMenus(data)
+      
+      const parentMenusData = data.filter((menu: Menu) => menu.parent === null)
+      console.log('Parent menus:', parentMenusData)
+      
+      setParentMenus(parentMenusData)
     } catch (error) {
       console.error('Error fetching menus:', error)
     }
@@ -116,7 +128,20 @@ export function FacultyDeanFormPage() {
       setEditingDean(data)
       
       // Set form fields with fetched data
-      setSelectedMenu(data.menu.toString())
+      const selectedMenuData = menus.find(m => m.id === data.menu)
+      
+      if (selectedMenuData) {
+        if (selectedMenuData.parent) {
+          // If the menu has a parent, set both parent and child
+          setSelectedParentMenu(selectedMenuData.parent.toString())
+          // The child menu will be set automatically by the useEffect
+          setSelectedMenu(selectedMenuData.id.toString())
+        } else {
+          // If the menu is a parent menu
+          setSelectedParentMenu(selectedMenuData.id.toString())
+        }
+      }
+      
       setSelectedFaculty(data.faculty.toString())
       setSelectedPosition(data.position.toString())
       setEmail(data.email)
@@ -134,6 +159,29 @@ export function FacultyDeanFormPage() {
       fetchDeanDetails()
     }
   }, [id])
+
+  useEffect(() => {
+    if (selectedParentMenu) {
+      console.log('Selected parent menu:', selectedParentMenu)
+      
+      const filteredChildren = menus.filter(
+        (menu: Menu) => menu.parent?.toString() === selectedParentMenu
+      )
+      console.log('Filtered children:', filteredChildren)
+      
+      setChildMenus(filteredChildren)
+      
+      // Only clear the selected menu if we're not in the middle of loading edit data
+      if (!id) {
+        setSelectedMenu('')
+      }
+    } else {
+      setChildMenus([])
+      if (!id) {
+        setSelectedMenu('')
+      }
+    }
+  }, [selectedParentMenu, menus, id])
 
   const handleSubmit = async (translationData: any) => {
     if (!selectedMenu || !selectedFaculty || !selectedPosition) {
@@ -221,24 +269,58 @@ export function FacultyDeanFormPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Menu</label>
+            <label className="block text-sm font-medium mb-2">Parent Menu</label>
+            <Select 
+              value={selectedParentMenu} 
+              onValueChange={setSelectedParentMenu}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a parent menu" />
+              </SelectTrigger>
+              <SelectContent className="min-w-[600px]">
+                {parentMenus.length > 0 ? (
+                  parentMenus.map((menu) => (
+                    <SelectItem 
+                      key={menu.id} 
+                      value={menu.id.toString()}
+                      className="whitespace-normal py-2 break-words"
+                    >
+                      {menu.translations[currentLanguage]?.name || `Menu ${menu.id}`}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="p-2 text-sm text-gray-500">No parent menus available</div>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Child Menu</label>
             <Select 
               value={selectedMenu} 
               onValueChange={setSelectedMenu}
+              disabled={!selectedParentMenu}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a menu" />
+                <SelectValue placeholder={selectedParentMenu ? "Select a child menu" : "Select parent menu first"} />
               </SelectTrigger>
               <SelectContent className="min-w-[600px]">
-                {menus.map((menu) => (
-                  <SelectItem 
-                    key={menu.id} 
-                    value={menu.id.toString()}
-                    className="whitespace-normal py-2 break-words"
-                  >
-                    {menu.translations[currentLanguage]?.name || `Menu ${menu.id}`}
-                  </SelectItem>
-                ))}
+                {childMenus.length > 0 ? (
+                  childMenus.map((menu) => (
+                    <SelectItem 
+                      key={menu.id} 
+                      value={menu.id.toString()}
+                      className="whitespace-normal py-2 break-words"
+                    >
+                      {menu.translations[currentLanguage]?.name || `Menu ${menu.id}`}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="p-2 text-sm text-gray-500">
+                    {selectedParentMenu ? "No child menus available" : "Select a parent menu first"}
+                  </div>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -304,7 +386,7 @@ export function FacultyDeanFormPage() {
           </div>
         </div>
 
-        <TranslatedForm
+        <TranslatedForm2
           fields={translatedFields}
           languages={['en', 'ru', 'uz', 'kk']}
           onSubmit={handleSubmit}

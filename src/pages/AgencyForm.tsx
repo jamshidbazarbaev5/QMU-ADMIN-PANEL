@@ -20,8 +20,8 @@ interface Menu {
 }
 
 const translatedFields = [
-  { name: 'name', label: 'Name', type: 'text' as const, required: true },
-  { name: 'description', label: 'Description', type: 'richtext' as const, required: true },
+  { name: 'name', label: 'Name', type: 'text' as const, required: false },
+  { name: 'description', label: 'Description', type: 'richtext' as const, required: false },
 //   { name: 'slug', label: 'Slug', type: 'text' as const, required: true }
 ]
 
@@ -82,9 +82,18 @@ export default function AgencyForm() {
 
     setIsLoading(true)
     try {
+      // Filter out empty translations
+      const filteredTranslations = Object.entries(data.translations).reduce((acc, [lang, trans]: [string, any]) => {
+        // Check if translation has any non-empty values
+        if (trans.name || trans.description || trans.slug) {
+          acc[lang] = trans
+        }
+        return acc
+      }, {} as Record<string, any>)
+
       const formData = new FormData()
       formData.append('menu', selectedMenu.toString())
-      formData.append('translations', JSON.stringify(data.translations))
+      formData.append('translations', JSON.stringify(filteredTranslations))
       
       if (selectedImage) {
         formData.append('main_image', selectedImage)

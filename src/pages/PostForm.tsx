@@ -103,6 +103,32 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
 
         const data = await response.json();
         
+        // Set the menu data
+        if (data.menu) {
+          const menuItem = menuItems.find(m => m.id === data.menu);
+          if (menuItem?.parent) {
+            // If it's a child menu
+            setSelectedParentMenu(menuItem.parent.toString());
+            setSelectedMenu(menuItem.id.toString());
+          } else {
+            // If it's a parent menu
+            setSelectedParentMenu(data.menu.toString());
+          }
+        }
+
+        // Set the footer menu data
+        if (data.footer_menu) {
+          const footerMenuItem = footerMenuItems.find(m => m.id === data.footer_menu);
+          if (footerMenuItem?.parent) {
+            // If it's a child menu
+            setSelectedParentFooterMenu(footerMenuItem.parent.toString());
+            setSelectedFooterMenu(footerMenuItem.id.toString());
+          } else {
+            // If it's a parent menu
+            setSelectedParentFooterMenu(data.footer_menu.toString());
+          }
+        }
+
         // Initialize empty translations for all languages if they don't exist
         const fullTranslations = {
           en: { title: '', description: '', slug: '' },
@@ -130,8 +156,6 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
           ...data,
           translations: fullTranslations
         });
-        setSelectedMenu(data.menu || '');
-        setSelectedFooterMenu(data.footer_menu || '');
         setExistingImages(data.images || []);
       } catch (error) {
         console.error('Error fetching post:', error);
@@ -141,49 +165,43 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       }
     };
 
-    fetchPost();
-  }, [slug, isEditing, token, navigate]);
+    // Only fetch post data if menus are loaded
+    if (menuItems.length > 0 && footerMenuItems.length > 0) {
+      fetchPost();
+    }
+  }, [slug, isEditing, token, navigate, menuItems, footerMenuItems]);
 
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
         const [mainMenuResponse, footerMenuResponse] = await Promise.all([
-          fetchWithAuth(
-            'https://karsu.uz/api/menus/main/',
-            {
-              headers: {
-                ...getAuthHeader(),
-                'Content-Type': 'application/json',
-              },
-            }
-          ),
-          fetchWithAuth(
-              'https://karsu.uz/api/menus/footer/',
-            {
-              headers: {
-                ...getAuthHeader(),
-                'Content-Type': 'application/json',
-              },
-            }
-          )
+          fetchWithAuth('https://karsu.uz/api/menus/main/', {
+            headers: { ...getAuthHeader() }
+          }),
+          fetchWithAuth('https://karsu.uz/api/menus/footer/', {
+            headers: { ...getAuthHeader() }
+          })
         ]);
 
         if (!mainMenuResponse.ok || !footerMenuResponse.ok) {
-          throw new Error('Failed to fetch menu items')
+          throw new Error('Failed to fetch menu items');
         }
 
-        const mainMenuData = await mainMenuResponse.json()
-        const footerMenuData = await footerMenuResponse.json()
-        
-        setMenuItems(mainMenuData)
-        setFooterMenuItems(footerMenuData)
-      } catch (error) {
-        console.error('Error fetching menu items:', error)
-      }
-    }
+        const mainMenuData = await mainMenuResponse.json();
+        const footerMenuData = await footerMenuResponse.json();
 
-    fetchMenuItems()
-  }, [token])
+        console.log('All menus:', mainMenuData);
+        setMenuItems(mainMenuData);
+
+        console.log('All footer menus:', footerMenuData);
+        setFooterMenuItems(footerMenuData);
+      } catch (error) {
+        console.error('Error fetching menu items:', error);
+      }
+    };
+
+    fetchMenuItems();
+  }, []);
 
   useEffect(() => {
     if (initialData?.menu) {
@@ -234,8 +252,8 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
   }
 
   const fields: TranslatedField[] = [
-    { name: 'title', label: 'Title', type: 'text', required: true },
-    { name: 'description', label: 'Description', type: 'richtext', required: true },
+    { name: 'title', label: 'Title', type: 'text', required: false },
+    { name: 'description', label: 'Description', type: 'richtext', required: false },
   ]
 
   const handleSubmit = async (translations: any) => {
@@ -365,10 +383,10 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
               onValueChange={(value) => {
                 setSelectedParentMenu(value);
                 setSelectedMenu('');
-                if (value) {
-                  setActiveMenuType('header');
-                } else {
+                if (value === '_none') {
                   setActiveMenuType(null);
+                } else if (value) {
+                  setActiveMenuType('header');
                 }
               }}
             >
@@ -417,10 +435,10 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
               onValueChange={(value) => {
                 setSelectedParentFooterMenu(value);
                 setSelectedFooterMenu('');
-                if (value) {
-                  setActiveMenuType('footer');
-                } else {
+                if (value === '_none') {
                   setActiveMenuType(null);
+                } else if (value) {
+                  setActiveMenuType('footer');
                 }
               }}
             >

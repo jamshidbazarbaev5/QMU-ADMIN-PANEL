@@ -74,7 +74,6 @@ const formatDateForServer = (date: string, time: string) => {
   return new Date(combined).toISOString()
 }
 
-
 export default function CreateNews() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -145,7 +144,7 @@ export default function CreateNews() {
         
         form.reset({
           category: data.category?.toString() || "",
-          goals: data.goals?.map((g:any )=> g.toString()) || [],
+          goals: data.display_goals?.map((g:any) => g.id.toString()) || [],
           title_ru: data.translations?.ru?.title || "",
           title_en: data.translations?.en?.title || "",
           title_uz: data.translations?.uz?.title || "",
@@ -160,17 +159,20 @@ export default function CreateNews() {
         })
 
         // Handle existing images
-        if (data.images && Array.isArray(data.images)) {
-          setExistingImages(data.images)
+        if (data.images) {
+          // Store existing images URLs
+          setExistingImages([
+            {
+              id: -1, // Main image gets ID -1
+              image: data.main_image
+            },
+            ...data.images.map((img:any, index:any) => ({
+              id: index + 1,
+              image: img.image
+            }))
+          ]);
         }
 
-        // Show the main image if it exists
-        if (data.main_image) {
-          setExistingImages(prev => [{
-            id: -1, // Use a special ID for main image
-            image: data.main_image
-          }, ...prev])
-        }
       } catch (error) {
         console.error('Error fetching news data:', error)
         alert('Failed to load news data')
@@ -218,51 +220,20 @@ export default function CreateNews() {
 
   const handleAdditionalImages = (files: FileList | null) => {
     if (files) {
-      console.log('=== Adding new images ===')
-      console.log('Current uploaded images:', uploadedImages.map(f => f.name))
-      console.log('New files to add:', Array.from(files).map(f => f.name))
-      
       const newFiles = Array.from(files)
-      setUploadedImages(prev => {
-        const updatedFiles = [...prev, ...newFiles]
-        console.log('Updated uploaded images:', updatedFiles.map(f => f.name))
-        
-        // Create DataTransfer for form control
-        const dataTransfer = new DataTransfer()
-        
-        // Add all uploaded files to DataTransfer
-        updatedFiles.forEach(file => {
-          dataTransfer.items.add(file)
-        })
-        
-        // Update the form value with all files
-        form.setValue('uploaded_images', dataTransfer.files)
-        
-        return updatedFiles
-      })
+      setUploadedImages(prev => [...prev, ...newFiles])
+      
+      // Add new images to existingImages with new IDs
+      const lastId = Math.max(...existingImages.map(img => img.id), 0)
+      const newImages = newFiles.map((file, index) => ({
+        id: lastId + index + 1,
+        image: URL.createObjectURL(file)
+      }))
+      setExistingImages(prev => [...prev, ...newImages])
     }
   }
 
-  const handleDeleteUploadedImage = (index: number) => {
-    console.log('=== Deleting uploaded image ===')
-    console.log('Deleting image at index:', index)
-    console.log('Current uploaded images:', uploadedImages.map(f => f.name))
-    
-    setUploadedImages(prev => {
-      const updatedFiles = prev.filter((_, i) => i !== index)
-      console.log('Files after deletion:', updatedFiles.map(f => f.name))
-      
-      const dataTransfer = new DataTransfer()
-      updatedFiles.forEach(file => {
-        console.log('Re-adding file to DataTransfer:', file.name)
-        dataTransfer.items.add(file)
-      })
-      
-      form.setValue('uploaded_images', dataTransfer.files)
-      
-      return updatedFiles
-    })
-  }
+ 
 
   async function onSubmit(values: FormValues) {
     if (currentStep !== "review") {
@@ -273,12 +244,11 @@ export default function CreateNews() {
     try {
       const formData = new FormData()
       
-      // Add category if it exists
+      // Add basic fields
       if (values.category) {
         formData.append('category', values.category)
       }
 
-      // Filter out any null/undefined goals before appending
       if (values.goals && Array.isArray(values.goals)) {
         values.goals
           .filter(goalId => goalId != null)
@@ -287,30 +257,31 @@ export default function CreateNews() {
           })
       }
       
-      // Add main image only if a new one is selected
+      // Add main image if selected
       if (values.main_image?.[0]) {
         formData.append('main_image', values.main_image[0])
       }
 
-      // Only add uploaded_images if there are new images to add
-      if (uploadedImages.length > 0) {
-        uploadedImages.forEach((file) => {
-          formData.append('uploaded_images', file)
-        })
+      // Add only new uploaded images
+      uploadedImages.forEach((file) => {
+        formData.append('uploaded_images', file)
+      })
+
+      // Add existing image URLs if needed
+      if (existingImages.length > 0) {
+        formData.append('existing_images', JSON.stringify(
+          existingImages.map(img => img.image)
+        ))
       }
 
-      // Add date_posted to formData
       formData.append('date_posted', values.date_posted)
 
-      // Create translations object only for languages that have content
       const translations: Record<string, { title: string; description: string }> = {}
 
-      // Helper function to check if a translation has content
       const hasContent = (title: string, description: string) => {
         return (title?.trim() || description?.trim()) ? true : false
       }
 
-      // Only add translations that have either title or description filled
       if (hasContent(values.title_ru, values.description_ru)) {
         translations.ru = {
           title: values.title_ru || '',
@@ -370,8 +341,8 @@ export default function CreateNews() {
 
       navigate('/karsu-admin-panel/news')
     } catch (error) {
-      console.error(`Error ${isEditing ? 'updating' : 'creating'} news post:`, error)
-      setError(`Failed to ${isEditing ? 'update' : 'create'} news post. Please try again.`)
+      console.error('Error:', error)
+      setError('Failed to submit form')
     }
   }
 
@@ -381,25 +352,7 @@ export default function CreateNews() {
     }
   }
 
-  // Add a function to handle existing image deletion
-  const handleDeleteExistingImage = async (imageId: number) => {
-    try {
-      const response = await fetchWithAuth(
-        `https://karsu.uz/api/news/images/${imageId}/`,
-        {
-          method: 'DELETE',
-          headers: getAuthHeader(),
-        }
-      )
-
-      if (!response.ok) throw new Error('Failed to delete image')
-
-      setExistingImages(prev => prev.filter(img => img.id !== imageId))
-    } catch (error) {
-      console.error('Error deleting image:', error)
-      alert('Failed to delete image')
-    }
-  }
+ 
 
   if (isLoadingInitialData) {
     return (
@@ -410,6 +363,7 @@ export default function CreateNews() {
       </div>
     )
   }
+  console.log(existingImages)
 
   return (
     <div className="container mx-auto p-6 mt-[50px]">
@@ -627,38 +581,26 @@ export default function CreateNews() {
                               
                               {/* Display grid of images */}
                               <div className="grid grid-cols-4 gap-4">
-                                {/* Existing images (excluding main image) */}
+                                {/* Display all images (existing + new) */}
                                 {existingImages
                                   .filter(image => image.id !== -1) // Filter out main image
                                   .map((image) => (
                                   <div key={image.id} className="relative">
                                     <img 
                                       src={image.image} 
-                                      alt="Existing image"
+                                      alt="Image"
                                       className="w-full h-24 object-cover rounded"
                                     />
                                     <button
                                       type="button"
                                       className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
-                                      onClick={() => handleDeleteExistingImage(image.id)}
-                                    >
-                                      ×
-                                    </button>
-                                  </div>
-                                ))}
-                                
-                                {/* Newly uploaded images */}
-                                {uploadedImages.map((file, index) => (
-                                  <div key={index} className="relative">
-                                    <img 
-                                      src={URL.createObjectURL(file)} 
-                                      alt={`Preview ${index + 1}`}
-                                      className="w-full h-24 object-cover rounded"
-                                    />
-                                    <button
-                                      type="button"
-                                      className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
-                                      onClick={() => handleDeleteUploadedImage(index)}
+                                      onClick={() => {
+                                        // Remove from both states
+                                        setExistingImages(prev => prev.filter(img => img.id !== image.id))
+                                        setUploadedImages(prev => prev.filter((_, idx) => 
+                                          idx !== existingImages.findIndex(img => img.id === image.id)
+                                        ))
+                                      }}
                                     >
                                       ×
                                     </button>

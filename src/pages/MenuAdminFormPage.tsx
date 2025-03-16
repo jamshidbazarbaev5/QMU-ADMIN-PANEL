@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
-import { TranslatedForm } from '../helpers/TranslatedForm'
+import { TranslatedForm2 } from '../helpers/TranslatedForm2'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import {fetchWithAuth, getAuthHeader} from '../api/api'
@@ -50,8 +50,8 @@ interface MenuAdmin {
 }
 
 const translatedFields = [
-  { name: 'full_name', label: 'Full Name', type: 'text' as const, required: true },
-  { name: 'biography', label: 'Biography', type: 'richtext' as const, required: true },
+  { name: 'full_name', label: 'Full Name', type: 'text' as const, required: false },
+  { name: 'biography', label: 'Biography', type: 'richtext' as const, required: false },
 ]
 
 export function MenuAdminFormPage() {
@@ -197,18 +197,6 @@ export function MenuAdminFormPage() {
     }
   }
 
-  useEffect(() => {
-    const initializeData = async () => {
-      await fetchMenus()
-      if (id) {
-        fetchAdminDetails()
-      }
-    }
-    
-    fetchPositions()
-    initializeData()
-  }, [id, currentLanguage])
-
   const fetchAdminDetails = async () => {
     if (!id) return
     try {
@@ -217,19 +205,37 @@ export function MenuAdminFormPage() {
       const data = await response.json()
       setEditingAdmin(data)
       
+      // Find the child menu first
       const menuItem = childMenus.find(menu => menu.id === data.menu)
-      if (menuItem?.parent) {
-        setSelectedParentMenu(menuItem.parent.toString())
+      
+      // Set the menu selections
+      if (menuItem) {
+        setSelectedParentMenu(String(menuItem.parent))
+        setSelectedMenu(String(menuItem.id))
       }
       
-      setSelectedMenu(data.menu.toString())
-      setPosition(data.position.toString())
+      // Set other fields
+      setPosition(String(data.position))
       setNewAdminEmail(data.email)
       setNewAdminPhone(data.phone_number)
     } catch (error) {
       console.error('Error fetching admin details:', error)
     }
   }
+
+  useEffect(() => {
+    const initializeData = async () => {
+      // First fetch menus
+      await fetchMenus()
+      // Then fetch admin details if we're editing
+      if (id) {
+        await fetchAdminDetails()
+      }
+    }
+    
+    fetchPositions()
+    initializeData()
+  }, [id]) // Remove currentLanguage dependency since it's not needed for initialization
 
   return (
     <div className="p-6 mt-[50px]">
@@ -352,7 +358,7 @@ export function MenuAdminFormPage() {
           </div>
         </div>
 
-        <TranslatedForm
+        <TranslatedForm2
           fields={translatedFields}
           languages={['en', 'ru', 'uz', 'kk']}
           onSubmit={handleSubmit}

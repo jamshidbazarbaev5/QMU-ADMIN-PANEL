@@ -168,7 +168,7 @@ export function DocumentPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                navigate(`/documents/edit/${item.id}`)
+                navigate(`/karsu-admin-panel/documents/edit/${item.id}`)
               }}
             >
               <Pencil className="h-4 w-4" />

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLanguage } from '../hooks/useLanguage'
-import { TranslatedForm } from '../helpers/TranslatedForm'
+import { TranslatedForm2 } from '../helpers/TranslatedForm2'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { fetchWithAuth, getAuthHeader } from '../api/api'
@@ -304,7 +304,7 @@ export function DepartmentDeanFormPage() {
           </div>
         </div>
 
-        <TranslatedForm
+        <TranslatedForm2
           fields={translatedFields}
           languages={['en', 'ru', 'uz', 'kk']}
           onSubmit={handleSubmit}

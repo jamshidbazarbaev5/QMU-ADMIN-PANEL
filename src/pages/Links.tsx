@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { PageHeader } from '../helpers/PageHeader'
 import { DataTable } from '../helpers/DataTable'
-import { TranslatedForm } from '../helpers/TranslatedForm'
+import { TranslatedForm2 } from '../helpers/TranslatedForm2'
 import { useLanguage } from '../hooks/useLanguage'
 import { Dialog, DialogContent } from '../components/ui/dialog'
 import { Pencil, Trash2 } from 'lucide-react'
@@ -230,7 +230,7 @@ export function LinksPage() {
               className="w-full"
             />
           </div>
-          <TranslatedForm
+          <TranslatedForm2
             fields={fields}
             languages={['uz', 'ru', 'en', 'kk']}
             onSubmit={handleSubmit}
