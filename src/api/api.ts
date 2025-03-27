@@ -164,19 +164,15 @@ export const refreshAccessToken = async (): Promise<string | null> => {
   }
 };
 
-// Update the fetch wrapper to handle token refresh
 export const fetchWithAuth = async (url: string, options: RequestInit): Promise<Response> => {
   let response = await fetch(url, options);
 
   if (response.status === 401) {
-    // Try to refresh the token
     const newToken = await refreshAccessToken();
     if (newToken) {
-      // Update the Authorization header with the new token
       const newHeaders = new Headers(options.headers);
       newHeaders.set('Authorization', `Bearer ${newToken}`);
       
-      // Retry the original request with the new token
       response = await fetch(url, {
         ...options,
         headers: newHeaders,

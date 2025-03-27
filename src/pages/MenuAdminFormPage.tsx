@@ -92,11 +92,28 @@ export function MenuAdminFormPage() {
 
   const fetchPositions = async () => {
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/position/`)
-      if (!response.ok) throw new Error('Failed to fetch positions')
-      const data = await response.json()
-      const positionsArray = Array.isArray(data) ? data : [data]
-      const validPositions = positionsArray.filter(pos => pos && pos.id !== undefined)
+      let allPositions: Position[] = []
+      let nextUrl: string | null = 'https://karsu.uz/api/menus/position/'
+
+      while (nextUrl) {
+        const response :any = await fetch(nextUrl)
+        if (!response.ok) throw new Error('Failed to fetch positions')
+        const data = await response.json()
+        
+        if (data.results && Array.isArray(data.results)) {
+          // Handle paginated response
+          allPositions = [...allPositions, ...data.results]
+          nextUrl = data.next
+        } else if (Array.isArray(data)) {
+          // Handle non-paginated response (just in case)
+          allPositions = [...allPositions, ...data]
+          nextUrl = null
+        } else {
+          nextUrl = null
+        }
+      }
+
+      const validPositions = allPositions.filter(pos => pos && pos.id !== undefined)
       setPositions(validPositions)
     } catch (error) {
       console.error('Error fetching positions:', error)

@@ -1,823 +1,752 @@
-import { useState, useEffect } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
-import { useForm } from "react-hook-form"
-import { Loader2 } from "lucide-react"
-import { Button } from '../components/ui/button'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../components/ui/form'
-import { Input } from '../components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import {fetchWithAuth, getAuthHeader} from "../api/api"
-import { RichTextEditor } from '../components/ckeditor/RichTextEditor'
+import { useState, useEffect } from "react";
+import { PageHeader } from "../helpers/PageHeader";
+import { TranslatedForm } from "../helpers/TranslatedForm";
+import { useNavigate, useParams } from "react-router-dom";
+import { useLanguage } from "../hooks/useLanguage";
+import { fetchWithAuth, getAuthHeader } from "../api/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
-interface Translation {
-  name: string
-  slug: string
+interface PostFormProps {
+  initialData?: any;
+  isEditing?: boolean;
 }
 
-interface Category {
-  id: number
+interface TranslatedField {
+  name: string;
+  label: string;
+  type: "text" | "textarea" | "richtext";
+  required?: boolean;
+  editorConfig?: any;
+}
+
+interface MainMenuItem {
+  id: number;
+  parent: number | null;
   translations: {
-    [key: string]: Translation
-  }
+    [key: string]: {
+      name: string;
+      title: string;
+      slug: string;
+    };
+  };
+  menu_posts: number[];
 }
 
-interface Goal {
-  id: number
+interface FooterMenuItem {
+  id: number;
+  parent: number | null;
   translations: {
-    [key: string]: Translation
-  }
-  goals: number
-  color: string
-}
-
-interface NewsImage {
-  id: number
-  image: string
-}
-
-interface FormValues {
-  category: string
-  goals: string[]
-  main_image: FileList
-  uploaded_images: FileList
-  title_ru: string
-  title_en: string
-  title_uz: string
-  title_kk: string
-  description_ru: string
-  description_en: string
-  description_uz: string
-  description_kk: string
-  date_posted_date: string
-  date_posted_time: string
-  date_posted: string
-}
-
-const STEPS = ["images", "ru", "en", "uz", "kk", "review"] as const
-type Step = typeof STEPS[number]
-
-// Helper function to handle date conversion
-const formatDateForInput = (dateString: string) => {
-  const date = new Date(dateString)
-  // Adjust for local timezone
-  const tzOffset = date.getTimezoneOffset() * 60000 // offset in milliseconds
-  const localDate = new Date(date.getTime() - tzOffset)
-  return {
-    date: localDate.toISOString().split('T')[0], // YYYY-MM-DD
-    time: localDate.toISOString().split('T')[1].slice(0, 5) // HH:mm
-  }
-}
-
-const formatDateForServer = (date: string, time: string) => {
-  const combined = `${date}T${time}:00.000Z`
-  return new Date(combined).toISOString()
+    [key: string]: {
+      name: string;
+      slug: string;
+    };
+  };
+  footer_menu_posts: number[];
 }
 
 
-export default function CreateNews() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const newsId = searchParams.get('id')
-  const isEditing = !!newsId
-  const [currentStep, setCurrentStep] = useState<Step>("images")
-  const [currentLanguage] = useState<string>(() => {
-    return localStorage.getItem('language') || 'kk'
-  })
-  const [categories, setCategories] = useState<Category[]>([])
-  const [goals, setGoals] = useState<Goal[]>([])
-  const [uploadedImages, setUploadedImages] = useState<File[]>([])
-  const [existingImages, setExistingImages] = useState<NewsImage[]>([])
-  const [isLoadingInitialData, setIsLoadingInitialData] = useState(isEditing)
-  const [isGoalsDropdownOpen, setIsGoalsDropdownOpen] = useState(false)
-  const [, setError] = useState<Record<string, string[]> | string | null>(null)
+// interface UploadedFile extends File {
+//   url?: string;
+// }
 
+export function PostForm({ initialData, isEditing }: PostFormProps) {
+  const navigate = useNavigate();
+  const { slug } = useParams();
+  const currentLanguage = useLanguage();
+  const token = localStorage.getItem("accessToken");
+  const [selectedImage, setSelectedImage] = useState<{
+    file: File | null;
+    preview?: string;
+  }>({
+    file: null,
+    preview: initialData?.main_image || undefined
+  });
+  const [selectedMenu, setSelectedMenu] = useState(initialData?.menu || "");
+  const [selectedFooterMenu, setSelectedFooterMenu] = useState(
+    initialData?.footer_menu || ""
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [postData, setPostData] = useState(initialData);
+  const [isLoading, setIsLoading] = useState(isEditing);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [menuItems, setMenuItems] = useState<MainMenuItem[]>([]);
+  const [footerMenuItems, setFooterMenuItems] = useState<FooterMenuItem[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<any[]>([]);
+  const [selectedParentMenu, setSelectedParentMenu] = useState<string>("");
+  const [selectedParentFooterMenu, setSelectedParentFooterMenu] =
+    useState<string>("");
+  const [activeMenuType, setActiveMenuType] = useState<
+    "header" | "footer" | null
+  >(null);
+  const [hasImages, setHasImages] = useState<boolean | null>(
+    initialData
+      ? !!initialData.main_image || !!initialData.images?.length
+      : null
+  );
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
+  const [existingFiles, setExistingFiles] = useState<any[]>([]);
+  const [combinedFiles, setCombinedFiles] = useState<any[]>([]);
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetchWithAuth(`https://karsu.uz/api/news/category/`,{
-          headers:getAuthHeader()
-        })
-        if (!response.ok) throw new Error('Failed to fetch categories')
-        const data = await response.json()
-        setCategories(data)
-      } catch (error) {
-        console.error('Error fetching categories:', error)
+    const fetchPost = async () => {
+      if (!isEditing || !slug) return;
+      if (!token) {
+        console.error("No token found");
+        navigate("/karsu-admin-panel/login");
+        return;
       }
-    }
-    fetchCategories()
-  }, [currentLanguage])
-
-  useEffect(() => {
-    const fetchGoals = async () => {
-      try {
-        const response = await fetchWithAuth(`https://karsu.uz/api/news/goals/`,
-            {
-              headers:getAuthHeader(),
-            }
-            )
-        if (!response.ok) throw new Error('Failed to fetch goals')
-        const data = await response.json()
-        setGoals(data)
-      } catch (error) {
-        console.error('Error fetching goals:', error)
-      }
-    }
-    fetchGoals()
-  }, [currentLanguage])
-
-  useEffect(() => {
-    const fetchNewsData = async () => {
-      if (!newsId) return
 
       try {
-        const response = await fetchWithAuth(`https://karsu.uz/api/news/posts/${newsId}/`, {
-          headers: {
-            ...getAuthHeader()
+        setIsLoading(true);
+        const response = await fetchWithAuth(
+          `https://karsu.uz/api/publications/posts/${slug}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
-        })
-        
-        if (!response.ok) throw new Error('Failed to fetch news data')
-        
-        const data = await response.json()
-        
-        const { date, time } = formatDateForInput(data.date_posted || new Date().toISOString())
-        
-        form.reset({
-          category: data.category?.toString() || "",
-          goals: data.goals?.map((g:any )=> g.toString()) || [],
-          title_ru: data.translations?.ru?.title || "",
-          title_en: data.translations?.en?.title || "",
-          title_uz: data.translations?.uz?.title || "",
-          title_kk: data.translations?.kk?.title || "",
-          description_ru: data.translations?.ru?.description || "",
-          description_en: data.translations?.en?.description || "",
-          description_uz: data.translations?.uz?.description || "",
-          description_kk: data.translations?.kk?.description || "",
-          date_posted_date: date,
-          date_posted_time: time,
-          date_posted: data.date_posted || new Date().toISOString(),
-        })
+        );
 
-        // Handle existing images
-        if (data.images && Array.isArray(data.images)) {
-          setExistingImages(data.images)
+        const data = await response.json();
+
+        // Set hasImages to true if there are any images
+        if (data.main_image || (data.images && data.images.length > 0)) {
+          setHasImages(true);
         }
 
-        // Show the main image if it exists
+        // Set main image if it exists
         if (data.main_image) {
-          setExistingImages(prev => [{
-            id: -1, // Use a special ID for main image
-            image: data.main_image
-          }, ...prev])
+          setSelectedImage({
+            file: null,
+            preview: data.main_image
+          });
+        }
+
+        // Set existing additional images
+        setExistingImages(data.images || []);
+
+        // Set the menu data
+        if (data.menu) {
+          const menuItem = menuItems.find((m) => m.id === data.menu);
+          if (menuItem?.parent) {
+            // If it's a child menu
+            setSelectedParentMenu(menuItem.parent.toString());
+            setSelectedMenu(menuItem.id.toString());
+          } else {
+            // If it's a parent menu
+            setSelectedParentMenu(data.menu.toString());
+          }
+        }
+
+        // Set the footer menu data
+        if (data.footer_menu) {
+          const footerMenuItem = footerMenuItems.find(
+            (m) => m.id === data.footer_menu
+          );
+          if (footerMenuItem?.parent) {
+            // If it's a child menu
+            setSelectedParentFooterMenu(footerMenuItem.parent.toString());
+            setSelectedFooterMenu(footerMenuItem.id.toString());
+          } else {
+            // If it's a parent menu
+            setSelectedParentFooterMenu(data.footer_menu.toString());
+          }
+        }
+
+        // Initialize empty translations for all languages if they don't exist
+        const fullTranslations = {
+          en: { title: "", description: "", slug: "" },
+          ru: { title: "", description: "", slug: "" },
+          uz: { title: "", description: "", slug: "" },
+          kk: { title: "", description: "", slug: "" },
+          ...data.translations,
+        };
+
+        // Set the same slug for all languages
+        const availableSlug =
+          data.translations.en?.slug ||
+          data.translations.ru?.slug ||
+          data.translations.uz?.slug ||
+          data.translations.kk?.slug;
+
+        if (availableSlug) {
+          Object.keys(fullTranslations).forEach((lang) => {
+            if (fullTranslations[lang]) {
+              fullTranslations[lang].slug = availableSlug;
+            }
+          });
+        }
+
+        setPostData({
+          ...data,
+          translations: fullTranslations,
+        });
+
+        if (data.files) {
+          const files = data.files.map((fileObj: any) => ({
+            name: fileObj.file.split("/").pop(),
+            url: fileObj.file,
+          }));
+          setExistingFiles(files);
         }
       } catch (error) {
-        console.error('Error fetching news data:', error)
-        alert('Failed to load news data')
+        console.error("Error fetching post:", error);
+        navigate("/karsu-admin-panel/posts");
       } finally {
-        setIsLoadingInitialData(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    if (isEditing) {
-      fetchNewsData()
+    if (menuItems.length > 0 && footerMenuItems.length > 0) {
+      fetchPost();
     }
-  }, [newsId, currentLanguage])
+  }, [slug, isEditing, token, navigate, menuItems, footerMenuItems]);
+  console.log("files", uploadedFiles);
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        const [mainMenuResponse, footerMenuResponse] = await Promise.all([
+          fetchWithAuth("https://karsu.uz/api/menus/main/", {
+            headers: { ...getAuthHeader() },
+          }),
+          fetchWithAuth("https://karsu.uz/api/menus/footer/", {
+            headers: { ...getAuthHeader() },
+          }),
+        ]);
 
-  const form = useForm<FormValues>({
-    defaultValues: {
-      category: "",
-      goals: [],
-      title_ru: "",
-      title_en: "",
-      title_uz: "",
-      title_kk: "",
-      description_ru: "",
-      description_en: "",
-      description_uz: "",
-      description_kk: "",
-      date_posted_date: new Date().toISOString().split('T')[0],
-      date_posted_time: new Date().toISOString().split('T')[1].slice(0, 5),
-      date_posted: new Date().toISOString(),
-    },
-  })
+        if (!mainMenuResponse.ok || !footerMenuResponse.ok) {
+          throw new Error("Failed to fetch menu items");
+        }
 
-  const nextStep = () => {
-    const currentIndex = STEPS.indexOf(currentStep)
-    if (currentIndex < STEPS.length - 1) {
-      setCurrentStep(STEPS[currentIndex + 1])
+        const mainMenuData = await mainMenuResponse.json();
+        const footerMenuData = await footerMenuResponse.json();
+
+        console.log("All menus:", mainMenuData);
+        setMenuItems(mainMenuData);
+
+        console.log("All footer menus:", footerMenuData);
+        setFooterMenuItems(footerMenuData);
+      } catch (error) {
+        console.error("Error fetching menu items:", error);
+      }
+    };
+
+    fetchMenuItems();
+  }, []);
+
+  useEffect(() => {
+    if (initialData?.menu) {
+      setActiveMenuType("header");
+    } else if (initialData?.footer_menu) {
+      setActiveMenuType("footer");
     }
-  }
-
-  const previousStep = () => {
-    const currentIndex = STEPS.indexOf(currentStep)
-    if (currentIndex > 0) {
-      setCurrentStep(STEPS[currentIndex - 1])
-    }
-  }
+  }, [initialData]);
 
   const handleAdditionalImages = (files: FileList | null) => {
     if (files) {
-      const newFiles = Array.from(files)
-      setUploadedImages(prev => [...prev, ...newFiles])
+      const newFiles = Array.from(files);
+      setUploadedImages((prev) => [...prev, ...newFiles]);
     }
+  };
+       
+
+  const handleFileUpload = (file: File) => {
+    if (file.type.startsWith("image/")) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = reader.result as string;
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    } else {
+      const fileExists = uploadedFiles.some(f => 
+        f.name === file.name || 
+        (f.url && f.url.endsWith(file.name))
+      );
+      
+      if (!fileExists) {
+        setUploadedFiles(prev => [...prev, file]);
+      }
+    }
+  };
+
+  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      setSelectedImage({
+        file,
+        preview: URL.createObjectURL(file)
+      });
+    }
+  };
+
+  // Add this useEffect to update combinedFiles whenever existingFiles or uploadedFiles change
+  useEffect(() => {
+    const combined = [
+      ...existingFiles,
+      ...uploadedFiles
+    ];
+    setCombinedFiles(combined);
+  }, [existingFiles, uploadedFiles]);
+
+  if (!isEditing && hasImages === null) {
+    return (
+      <div className="container mx-auto p-6 mt-[50px]">
+        <PageHeader
+          title="Create Post"
+          createButtonLabel="Back to Posts"
+          onCreateClick={() => navigate("/karsu-admin-panel/posts")}
+        />
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-6">
+            Would you like to include images in this post?
+          </h2>
+          <div className="flex gap-4">
+            <button
+              onClick={() => setHasImages(true)}
+              className="px-6 py-3 bg-[#6C5DD3] text-white rounded-lg hover:bg-[#5b4eb8] transition-colors"
+            >
+              Yes, include images
+            </button>
+            <button
+              onClick={() => setHasImages(false)}
+              className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              No, text only
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  const handleDeleteUploadedImage = (index: number) => {
-    setUploadedImages(prev => prev.filter((_, i) => i !== index))
+  if (isLoading) {
+    return <div className="container mx-auto p-6 mt-[50px]">Loading...</div>;
   }
 
-  async function onSubmit(values: FormValues) {
-    if (currentStep !== "review") {
-      nextStep()
-      return
-    }
+  const fields: TranslatedField[] = [
+    { name: "title", label: "Title", type: "text", required: true },
+    {
+      name: "description",
+      label: "Description",
+      type: "richtext",
+      required: false,
+      editorConfig: {
+        onFileUpload: handleFileUpload,
+        images_upload_handler: handleFileUpload,
+      },
+    },
+  ];
 
+  const handleSubmit = async (translations: any) => {
     try {
-      const formData = new FormData()
+      setIsSubmitting(true);
+      const formData = new FormData();
       
-      // Add category if it exists
-      if (values.category) {
-        formData.append('category', values.category)
-      }
-
-      // Filter out any null/undefined goals before appending
-      if (values.goals && Array.isArray(values.goals)) {
-        values.goals
-          .filter(goalId => goalId != null)
-          .forEach(goalId => {
-            formData.append('goals', goalId.toString())
-          })
-      }
-      
-      // Add main image only if a new one is selected
-      if (values.main_image?.[0]) {
-        formData.append('main_image', values.main_image[0])
-      }
-
-      // Only add uploaded_images if there are new images to add
-      if (uploadedImages.length > 0) {
-        uploadedImages.forEach((file) => {
-          formData.append('uploaded_images', file)
+      // Filter translations
+      const filteredTranslations = Object.fromEntries(
+        Object.entries(translations.translations).filter(([_, translation]) => {
+          const values = Object.values(translation as object);
+          return values.some(value => value !== '' && value !== null && value !== undefined);
         })
+      );
+      
+      formData.append('translations', JSON.stringify(filteredTranslations));
+      
+      // Add main image if selected
+      if (selectedImage.file) {
+        formData.append('main_image', selectedImage.file);
       }
 
-      formData.append('date_posted', values.date_posted)
+      // Add new additional images
+      uploadedImages.forEach((image) => {
+        formData.append('uploaded_images', image);
+      });
 
-      const translations: Record<string, { title: string; description: string }> = {}
-
-      const hasContent = (title: string, description: string) => {
-        return (title?.trim() || description?.trim()) ? true : false
+      // Add menu selections if present
+      if (selectedMenu && selectedMenu !== '_none') {
+        formData.append('menu', selectedMenu);
+      }
+      
+      if (selectedFooterMenu && selectedFooterMenu !== '_none') {
+        formData.append('footer_menu', selectedFooterMenu);
       }
 
-      if (hasContent(values.title_ru, values.description_ru)) {
-        translations.ru = {
-          title: values.title_ru || '',
-          description: values.description_ru || '',
+      combinedFiles.forEach(file => {
+        if (file instanceof File) {
+          formData.append('uploaded_files', file);
         }
-      }
-
-      if (hasContent(values.title_en, values.description_en)) {
-        translations.en = {
-          title: values.title_en || '',
-          description: values.description_en || '',
-        }
-      }
-
-      if (hasContent(values.title_uz, values.description_uz)) {
-        translations.uz = {
-          title: values.title_uz || '',
-          description: values.description_uz || '',
-        }
-      }
-
-      if (hasContent(values.title_kk, values.description_kk)) {
-        translations.kk = {
-          title: values.title_kk || '',
-          description: values.description_kk || '',
-        }
-      }
-
-      // Only append translations if there are any
-      if (Object.keys(translations).length > 0) {
-        formData.append('translations', JSON.stringify(translations))
-      }
+      });
 
       const url = isEditing 
-        ? `https://karsu.uz/api/news/posts/${newsId}/`
-        : `https://karsu.uz/api/news/posts/`
-
-      console.log('=== FormData contents ===')
-      for (let [key, value] of formData.entries()) {
-        console.log(key, ':', typeof value === 'string' ? value : 'File:', value instanceof File ? value.name : '')
-      }
-
+        ? `https://karsu.uz/api/publications/posts/${slug}/`
+        : 'https://karsu.uz/api/publications/posts/';
+      
       const response = await fetchWithAuth(url, {
         method: isEditing ? 'PUT' : 'POST',
         body: formData,
         headers: {
-          ...getAuthHeader()
-        }
-      })
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
-        const errorData = await response.json()
-        console.error('Server Error Response:', errorData)
-        setError(errorData)
-        return
+        const errorData = await response.json();
+        console.error('Server error:', errorData);
+        throw new Error('Failed to save post');
       }
 
-      navigate('/karsu-admin-panel/news')
+      console.log("formData", formData);
+
+      navigate('/karsu-admin-panel/posts');
     } catch (error) {
-      console.error(`Error ${isEditing ? 'updating' : 'creating'} news post:`, error)
-      setError(`Failed to ${isEditing ? 'update' : 'create'} news post. Please try again.`)
+      console.error('Error saving post:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'An error occurred while saving the post');
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  const onTabChange = (value: string) => {
-    if (STEPS.includes(value as Step)) {
-      setCurrentStep(value as Step)
-    }
-  }
+  const getParentMenuItems = (items: MainMenuItem[]) => {
+    return items.filter((item) => item.parent === null);
+  };
 
-  // Add a function to handle existing image deletion
-  const handleDeleteExistingImage = async (imageId: number) => {
-    try {
-      const response = await fetchWithAuth(
-        `https://karsu.uz/api/news/images/${imageId}/`,
-        {
-          method: 'DELETE',
-          headers: getAuthHeader(),
-        }
-      )
+  const getSubMenuItems = (items: MainMenuItem[], parentId: number) => {
+    return items.filter((item) => item.parent === parentId);
+  };
 
-      if (!response.ok) throw new Error('Failed to delete image')
+  const getParentFooterMenuItems = (items: FooterMenuItem[]) => {
+    return items.filter((item) => item.parent === null);
+  };
 
-      setExistingImages(prev => prev.filter(img => img.id !== imageId))
-    } catch (error) {
-      console.error('Error deleting image:', error)
-      alert('Failed to delete image')
-    }
-  }
+  const getSubFooterMenuItems = (items: FooterMenuItem[], parentId: number) => {
+    return items.filter((item) => item.parent === parentId);
+  };
 
-  if (isLoadingInitialData) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6C5DD3]"></div>
-        </div>
-      </div>
-    )
-  }
-  console.log(uploadedImages)
+
+  console.log('existing files',existingFiles)
+  console.log('uploaded files',uploadedFiles)
+
+  console.log('combined files',combinedFiles) 
 
   return (
     <div className="container mx-auto p-6 mt-[50px]">
-     
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>{isEditing ? 'Edit News Post' : 'Create News Post'} - Step {STEPS.indexOf(currentStep) + 1}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <Tabs value={currentStep} className="w-full" onValueChange={onTabChange}>
-                <TabsList className="grid w-full grid-cols-6">
-                  <TabsTrigger value="images">Images</TabsTrigger>
-                  <TabsTrigger value="ru">Russian</TabsTrigger>
-                  <TabsTrigger value="en">English</TabsTrigger>
-                  <TabsTrigger value="uz">Uzbek</TabsTrigger>
-                  <TabsTrigger value="kk">Karakalpak</TabsTrigger>
-                  <TabsTrigger value="review">Review</TabsTrigger>
-                </TabsList>
+      <PageHeader
+        title={isEditing ? "Edit Post" : "Create Post"}
+        createButtonLabel="Back to Posts"
+        onCreateClick={() => navigate("/karsu-admin-panel/posts")}
+      />
 
-                {/* Images Step */}
-                <TabsContent value="images">
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="date_posted_date"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Publication Date</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="date"
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e.target.value)
-                                  const newDateTime = formatDateForServer(
-                                    e.target.value,
-                                    form.getValues('date_posted_time')
-                                  )
-                                  form.setValue('date_posted', newDateTime)
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+      <div className="bg-white rounded-lg shadow p-6">
+        {errorMessage && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {errorMessage}
+          </div>
+        )}
 
-                      <FormField
-                        control={form.control}
-                        name="date_posted_time"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Publication Time</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="time"
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e.target.value)
-                                  const newDateTime = formatDateForServer(
-                                    form.getValues('date_posted_date'),
-                                    e.target.value
-                                  )
-                                  form.setValue('date_posted', newDateTime)
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <FormControl>
-                            <select
-                              className="w-full rounded-md border border-input bg-background px-3 py-2"
-                              {...field}
-                            >
-                              <option value="">Select a category</option>
-                              {categories.map((category) => (
-                                <option key={category.id} value={category.id}>
-                                  {category.translations[currentLanguage]?.name || 
-                                   category.translations.en?.name ||
-                                   'Unnamed Category'}
-                                </option>
-                              ))}
-                            </select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Header Menu
+          </label>
+          <div className="space-y-4">
+            <Select
+              disabled={activeMenuType === "footer"}
+              value={selectedParentMenu}
+              onValueChange={(value) => {
+                setSelectedParentMenu(value);
+                setSelectedMenu("");
+                if (value === "_none") {
+                  setActiveMenuType(null);
+                } else if (value) {
+                  setActiveMenuType("header");
+                }
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Not in Header Menu" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">Not in Header Menu</SelectItem>
+                {getParentMenuItems(menuItems).map((item) => (
+                  <SelectItem key={item.id} value={item.id.toString()}>
+                    {item.translations[currentLanguage]?.name ||
+                      item.translations["en"]?.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-                    <FormField
-                      control={form.control}
-                      name="goals"
-                      render={({ field }) => (
-                        <FormItem className="relative">
-                          <FormLabel>Goals</FormLabel>
-                          <FormControl>
-                            <div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full justify-between"
-                                onClick={() => setIsGoalsDropdownOpen(!isGoalsDropdownOpen)}
-                              >
-                                {field.value.length > 0 
-                                  ? `${field.value.length} goals selected`
-                                  : "Select goals"}
-                                <span className="ml-2">▼</span>
-                              </Button>
-                              
-                              {isGoalsDropdownOpen && (
-                                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                                  {goals.map((goal) => (
-                                    <div
-                                      key={goal.id}
-                                      className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                                      onClick={() => {
-                                        const goalId = goal.id.toString()
-                                        const newValue = field.value.includes(goalId)
-                                          ? field.value.filter(id => id !== goalId)
-                                          : [...field.value, goalId]
-                                        field.onChange(newValue)
-                                      }}
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        checked={field.value.includes(goal.id.toString())}
-                                        onChange={() => {}}
-                                        className="mr-2"
-                                      />
-                                      <span>
-                                        {goal.translations[currentLanguage]?.name || 
-                                         goal.translations.en?.name ||
-                                         'Unnamed Goal'}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="main_image"
-                      render={({ field: { onChange, value, ...field } }) => (
-                        <FormItem>
-                          <FormLabel>Main Image</FormLabel>
-                          <FormControl>
-                            <div className="space-y-4">
-                              <Input 
-                                type="file" 
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const files = e.target.files
-                                  if (files?.length) {
-                                    onChange(files)
-                                  }
-                                }}
-                                {...field}
-                                value={undefined}
-                              />
-                              {/* Show existing main image if available */}
-                              {isEditing && existingImages.length > 0 && existingImages[0].id === -1 && (
-                                <div className="mt-2">
-                                  <img 
-                                    src={existingImages[0].image} 
-                                    alt="Current main image"
-                                    className="w-full max-w-md h-auto rounded"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="uploaded_images"
-                      render={({ field: { onChange, value, ...field } }) => (
-                        <FormItem>
-                          <FormLabel>Additional Images</FormLabel>
-                          <FormControl>
-                            <div className="space-y-4">
-                              <Input 
-                                type="file" 
-                                accept="image/*"
-                                multiple
-                                onChange={(e) => {
-                                  handleAdditionalImages(e.target.files)
-                                }}
-                                {...field}
-                                value={undefined}
-                              />
-                              
-                              {/* Display grid of images */}
-                              <div className="grid grid-cols-4 gap-4">
-                                {/* Existing images (excluding main image) */}
-                                {existingImages
-                                  .filter(image => image.id !== -1) // Filter out main image
-                                  .map((image) => (
-                                  <div key={image.id} className="relative">
-                                    <img 
-                                      src={image.image} 
-                                      alt="Existing image"
-                                      className="w-full h-24 object-cover rounded"
-                                    />
-                                    <button
-                                      type="button"
-                                      className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
-                                      onClick={() => handleDeleteExistingImage(image.id)}
-                                    >
-                                      ×
-                                    </button>
-                                  </div>
-                                ))}
-                                
-                                {/* Newly uploaded images */}
-                                {uploadedImages.map((file, index) => (
-                                  <div key={index} className="relative">
-                                    <img 
-                                      src={URL.createObjectURL(file)} 
-                                      alt={`Preview ${index + 1}`}
-                                      className="w-full h-24 object-cover rounded"
-                                    />
-                                    <button
-                                      type="button"
-                                      className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
-                                      onClick={() => handleDeleteUploadedImage(index)}
-                                    >
-                                      ×
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </TabsContent>
-
-                {/* Russian Content Step */}
-                <TabsContent value="ru">
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="title_ru"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Title (RU)</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="description_ru"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description (RU)</FormLabel>
-                          <FormControl>
-                            <RichTextEditor
-                              value={field.value}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </TabsContent>
-
-                {/* English Content Step */}
-                <TabsContent value="en">
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="title_en"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Title (EN)</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="description_en"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description (EN)</FormLabel>
-                          <FormControl>
-                            <RichTextEditor
-                              value={field.value}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </TabsContent>
-
-                {/* Uzbek Content Step */}
-                <TabsContent value="uz">
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="title_uz"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Title (UZ)</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="description_uz"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description (UZ)</FormLabel>
-                          <FormControl>
-                            <RichTextEditor
-                              value={field.value}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </TabsContent>
-
-                {/* Kazakh Content Step */}
-                <TabsContent value="kk">
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="title_kk"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Title (KK)</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="description_kk"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description (KK)</FormLabel>
-                          <FormControl>
-                            <RichTextEditor
-                              value={field.value}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </TabsContent>
-
-                {/* Review Step */}
-                <TabsContent value="review">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Review your submission</h3>
-                    {/* Add a summary of all entered information */}
-                  </div>
-                </TabsContent>
-              </Tabs>
-
-              <div className="flex justify-between gap-4">
-                {currentStep !== "images" && (
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    onClick={previousStep}
-                  >
-                    Previous
-                  </Button>
-                )}
-                
-                <div className="flex-1" />
-
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={() => navigate('/karsu-admin-panel/news')}
-                >
-                  Cancel
-                </Button>
-
-                <Button 
-                  type="submit" 
-                  disabled={form.formState.isSubmitting}
-                >
-                  {form.formState.isSubmitting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {selectedParentMenu && (
+              <Select
+                value={selectedMenu}
+                onValueChange={(value) =>
+                  setSelectedMenu(value === "_none" ? "" : value)
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Sub-menu (Optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">
+                    Select Sub-menu (Optional)
+                  </SelectItem>
+                  {getSubMenuItems(menuItems, Number(selectedParentMenu)).map(
+                    (item) => (
+                      <SelectItem key={item.id} value={item.id.toString()}>
+                        {item.translations[currentLanguage]?.name ||
+                          item.translations["en"]?.name}
+                      </SelectItem>
+                    )
                   )}
-                  {currentStep === "review" ? "Create News Post" : "Next"}
-                </Button>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Footer Menu
+          </label>
+          <div className="space-y-4">
+            <Select
+              disabled={activeMenuType === "header"}
+              value={selectedParentFooterMenu}
+              onValueChange={(value) => {
+                setSelectedParentFooterMenu(value);
+                setSelectedFooterMenu("");
+                if (value === "_none") {
+                  setActiveMenuType(null);
+                } else if (value) {
+                  setActiveMenuType("footer");
+                }
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Not in Footer Menu" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">Not in Footer Menu</SelectItem>
+                {getParentFooterMenuItems(footerMenuItems).map((item) => (
+                  <SelectItem key={item.id} value={item.id.toString()}>
+                    {item.translations[currentLanguage]?.name ||
+                      item.translations["en"]?.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {selectedParentFooterMenu && (
+              <Select
+                value={selectedFooterMenu}
+                onValueChange={(value) =>
+                  setSelectedFooterMenu(value === "_none" ? "" : value)
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Sub-menu (Optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">
+                    Select Sub-menu (Optional)
+                  </SelectItem>
+                  {getSubFooterMenuItems(
+                    footerMenuItems,
+                    Number(selectedParentFooterMenu)
+                  ).map((item) => (
+                    <SelectItem key={item.id} value={item.id.toString()}>
+                      {item.translations[currentLanguage]?.name ||
+                        item.translations["en"]?.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </div>
+
+        {/* Show image fields if hasImages is true or we're editing a post with images */}
+        {(hasImages || (isEditing && (initialData?.main_image || initialData?.images?.length > 0))) && (
+          <>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Main Image
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleMainImageChange}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#6C5DD3] file:text-white hover:file:bg-[#5b4eb8]"
+              />
+              {(selectedImage.preview || initialData?.main_image) && (
+                <div className="mt-2 relative">
+                  <img
+                    src={selectedImage.preview || initialData.main_image}
+                    alt="Main"
+                    className="h-32 object-cover rounded"
+                  />
+                  <button
+                    type="button"
+                    className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
+                    onClick={() => setSelectedImage({ file: null, preview: undefined })}
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Additional Images
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => handleAdditionalImages(e.target.files)}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#6C5DD3] file:text-white hover:file:bg-[#5b4eb8]"
+              />
+
+              <div className="grid grid-cols-4 gap-4 mt-4">
+                {existingImages.map((image, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={image.image}
+                      alt={`Existing ${index + 1}`}
+                      className="w-full h-24 object-cover rounded"
+                    />
+                    <button
+                      type="button"
+                      className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
+                      onClick={() => {
+                        setExistingImages((prev) =>
+                          prev.filter((_, i) => i !== index)
+                        );
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+
+                {uploadedImages.map((file, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-24 object-cover rounded"
+                    />
+                    <button
+                      type="button"
+                      className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
+                      onClick={() => {
+                        setUploadedImages((prev) =>
+                          prev.filter((_, i) => i !== index)
+                        );
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
               </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+            </div>
+          </>
+        )}
+
+        {/* Display uploaded files */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Uploaded Files
+          </label>
+          <div className="space-y-2">
+            {uploadedFiles.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-2 bg-gray-50 rounded"
+              >
+                <a
+                  href={file.url || URL.createObjectURL(file)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  {file.name}
+                </a>
+                <button
+                  type="button"
+                  className="text-red-500 hover:text-red-700"
+                  onClick={() => {
+                    setUploadedFiles((prev) =>
+                      prev.filter((_, i) => i !== index)
+                    );
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            {existingFiles.map((file, index) => (
+                <div
+                    key={index}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                >
+                  <a
+                      href={file.url || URL.createObjectURL(file)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800"
+                  >
+                    {file.name}
+                  </a>
+                  <button
+                      type="button"
+                      className="text-red-500 hover:text-red-700"
+                      onClick={() => {
+                        setExistingFiles((prev) =>
+                            prev.filter((_, i) => i !== index)
+                        );
+                      }}
+                  >
+                    Remove
+                  </button>
+                </div>
+            ))}
+          </div>
+        </div>
+
+        <TranslatedForm
+          fields={fields}
+          languages={["en", "ru", "uz", "kk"]}
+          initialData={postData?.translations}
+          onSubmit={handleSubmit}
+          submitButton={
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full px-4 py-2 bg-[#6C5DD3] text-white rounded-lg hover:bg-[#5b4eb8] transition-colors disabled:opacity-50"
+            >
+              {isSubmitting
+                ? "Saving..."
+                : isEditing
+                ? "Update Post"
+                : "Create Post"}
+            </button>
+          }
+          // sharedFields={uploadedFiles}
+        />
+      </div>
     </div>
-  )
+  );
 }

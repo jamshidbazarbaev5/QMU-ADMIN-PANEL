@@ -9,6 +9,7 @@ import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { useNavigate } from 'react-router-dom'
 import { fetchWithAuth, getAuthHeader } from '../api/api'
+import { Pagination } from '../components/ui/Pagination'
 
 interface AgencyTranslation {
   name: string
@@ -20,6 +21,7 @@ interface Agency {
   id: number
   main_image: string
   menu: number
+  position: number
   translations: {
     [key: string]: AgencyTranslation
   }
@@ -53,15 +55,25 @@ export function AgencyPage() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const currentLanguage = useLanguage()
   const navigate = useNavigate()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [pageSize] = useState(10)
 
   const fetchAgencies = async () => {
     try {
-      const response = await fetchWithAuth(`https://karsu.uz/api/menus/agency/`,{
-        headers:getAuthHeader()
-      })
+      const response = await fetchWithAuth(
+        `https://karsu.uz/api/menus/agency/?page=${currentPage}`,
+        { headers: getAuthHeader() }
+      )
       if (!response.ok) throw new Error('Failed to fetch agencies')
       const data = await response.json()
-      setAgencies(Array.isArray(data) ? data : [data])
+      
+      const sortedAgencies = Array.isArray(data.results) 
+        ? [...data.results].sort((a, b) => b.id - a.id)
+        : []
+      
+      setAgencies(sortedAgencies)
+      setTotalPages(Math.ceil(data.count / pageSize))
     } catch (error) {
       console.error('Error fetching agencies:', error)
     }
@@ -81,7 +93,7 @@ export function AgencyPage() {
   useEffect(() => {
     fetchAgencies()
     fetchMenus()
-  }, [currentLanguage])
+  }, [currentPage, pageSize])
 
   const handleSubmit = async (translationData: any) => {
     if (!selectedMenu) {
@@ -150,29 +162,24 @@ export function AgencyPage() {
       accessor: 'translations',
       cell: (item: Agency) => item.translations['kk']?.name || '-'
     },
+    // { 
+    //   header: 'Description',
+    //   accessor: 'translations',
+    //   cell: (item: Agency) => (
+    //     <div 
+    //       className="max-w-md truncate"
+    //       dangerouslySetInnerHTML={{ 
+    //         __html: item.translations['kk']?.description || '-'
+    //       }}
+    //     />
+    //   )
+    // },
     { 
-      header: 'Description',
-      accessor: 'translations',
-      cell: (item: Agency) => (
-        <div 
-          className="max-w-md truncate"
-          dangerouslySetInnerHTML={{ 
-            __html: item.translations['kk']?.description || '-'
-          }}
-        />
-      )
+      header: 'Position',
+      accessor: 'position',
+      cell: (item: Agency) => item.position || '-'
     },
-    {
-      header: 'Image',
-      accessor: 'main_image',
-      cell: (item: Agency) => (
-        <img 
-          src={item.main_image} 
-          alt="Agency"
-          className="w-10 h-10 rounded-full object-cover"
-        />
-      )
-    }
+   
   ]
 
   return (
@@ -214,6 +221,12 @@ export function AgencyPage() {
             </Button>
           </div>
         )}
+      />
+
+      <Pagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

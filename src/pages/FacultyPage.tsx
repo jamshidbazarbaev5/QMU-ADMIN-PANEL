@@ -9,6 +9,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { useNavigate } from 'react-router-dom'
 import { fetchWithAuth, getAuthHeader } from '../api/api'
+import { Pagination } from '../components/ui/Pagination'
 
 interface FacultyTranslation {
   name: string
@@ -50,21 +51,36 @@ export function FacultyPage() {
   const [email, setEmail] = useState('')
   const currentLanguage = useLanguage()
   const navigate = useNavigate()
+  
+  // Add pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [, setTotalItems] = useState(0)
 
-  const fetchFaculties = async () => {
+  const fetchFaculties = async (page = 1) => {
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/faculty/`)
+      const response = await fetch(`https://karsu.uz/api/menus/faculty/?page=${page}`)
       if (!response.ok) throw new Error('Failed to fetch faculties')
       const data = await response.json()
-      setFaculties(data)
+      
+      // Sort faculties by ID in descending order (newest first)
+      const sortedFaculties = [...data.results].sort((a, b) => b.id - a.id)
+      
+      setFaculties(sortedFaculties)
+      setTotalItems(data.count)
+      setTotalPages(Math.ceil(data.count / 10)) // Assuming 10 items per page
     } catch (error) {
       console.error('Error fetching faculties:', error)
     }
   }
 
   useEffect(() => {
-    fetchFaculties()
-  }, [currentLanguage])
+    fetchFaculties(currentPage)
+  }, [currentPage, currentLanguage])
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
 
   const handleSubmit = async (translationData: any) => {
     setIsLoading(true)
@@ -97,7 +113,9 @@ export function FacultyPage() {
 
       if (!response.ok) throw new Error('Failed to save faculty')
       
-      await fetchFaculties()
+      // After successful submission, fetch the first page to show the new item
+      setCurrentPage(1)
+      await fetchFaculties(1)
       setIsDialogOpen(false)
       setEditingFaculty(null)
       setSelectedLogo(null)
@@ -135,7 +153,8 @@ export function FacultyPage() {
       )
       
       if (!response.ok) throw new Error('Failed to delete faculty')
-      await fetchFaculties()
+      // Refresh the current page after deletion
+      await fetchFaculties(currentPage)
     } catch (error) {
       console.error('Error deleting faculty:', error)
     }
@@ -231,8 +250,15 @@ export function FacultyPage() {
         data={faculties}
         columns={columns}
         currentLanguage={currentLanguage}
-       
       />
+      
+      {totalPages > 1 && (
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>

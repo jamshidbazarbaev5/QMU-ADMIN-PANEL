@@ -11,6 +11,7 @@ import {fetchWithAuth, getAuthHeader} from '../api/api'
 interface PositionTranslation {
   name: string;
   description?: string;  // Make description optional since it's not always present
+  slug?: string;
 }
 
 interface Position {
@@ -59,7 +60,8 @@ export default function PositionForm() {
       languages.forEach(lang => {
         translations[lang] = {
           name: data.translations[lang]?.name || '',
-          description: data.translations[lang]?.description || ''
+          description: data.translations[lang]?.description || '',
+          slug: data.translations[lang]?.slug || ''
         }
       })
 
@@ -85,11 +87,22 @@ export default function PositionForm() {
     setIsLoading(true)
     try {
       // Filter out empty translations
-     
+      const filteredTranslations: Record<string, PositionTranslation> = {}
+      
+      Object.entries(translationData.translations).forEach(([lang, translation]: [string, any]) => {
+        // Only include translations where name is not empty
+        if (translation.name.trim()) {
+          filteredTranslations[lang] = {
+            name: translation.name.trim(),
+            ...(translation.slug && { slug: translation.slug.trim() })
+          }
+        }
+      })
+
       const payload: Position = {
         email,
         position: parseInt(position),
-        translations: translationData.translations
+        translations: filteredTranslations
       }
 
       console.log('Sending payload:', payload) // Debug log

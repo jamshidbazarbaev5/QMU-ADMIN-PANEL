@@ -98,10 +98,18 @@ export function DepartmentDeanFormPage() {
 
   const fetchPositions = async () => {
     try {
-      const response = await fetch('https://karsu.uz/api/menus/position/')
-      if (!response.ok) throw new Error('Failed to fetch positions')
-      const data = await response.json()
-      setPositions(data)
+      let allPositions: Position[] = []
+      let nextUrl: string | null = 'https://karsu.uz/api/menus/position/'
+
+      while (nextUrl) {
+        const response : any = await fetch(nextUrl)
+        if (!response.ok) throw new Error('Failed to fetch positions')
+        const data = await response.json()
+        allPositions = [...allPositions, ...(data.results || [])]
+        nextUrl = data.next
+      }
+
+      setPositions(allPositions)
     } catch (error) {
       console.error('Error fetching positions:', error)
     }

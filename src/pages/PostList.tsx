@@ -4,6 +4,8 @@ import { DataTable } from '../helpers/DataTable'
 import { PageHeader } from '../helpers/PageHeader'
 import { useLanguage } from '../hooks/useLanguage'
 
+import api2 from '../api/api2'
+
 interface MenuTranslation {
   name: string;
 }
@@ -22,13 +24,15 @@ export function Posts() {
   const [searchQuery, setSearchQuery] = useState('')
   const currentLanguage = useLanguage()
   const [menus, setMenus] = useState<Menu[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
 
   const fetchPosts = async () => {
     try {
       setLoading(true)
       const url = searchQuery
-          ? `https://karsu.uz/api/publications/posts/?title=${encodeURIComponent(searchQuery)}`
-          : `https://karsu.uz/api/publications/posts/`
+          ? `https://karsu.uz/api/publications/posts/?title=${encodeURIComponent(searchQuery)}&page=${currentPage}`
+          : `https://karsu.uz/api/publications/posts/?page=${currentPage}`
 
       const response = await fetch(url)
 
@@ -38,6 +42,7 @@ export function Posts() {
 
       const data = await response.json()
       setPosts(data.results || [])
+      setTotalCount(data.count || 0)
     } catch (error) {
       console.error('Error fetching posts:', error)
       setPosts([])
@@ -48,11 +53,13 @@ export function Posts() {
 
   const fetchMenus = async () => {
     try {
-      const response = await fetch('https://karsu.uz/api/menus/main/')
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      const response = await api2.get('https://karsu.uz/api/menus/main/',{
+       
+      })
+      if (!response) {
+        throw new Error(`HTTP error! status: ${response}`)
       }
-      const data = await response.json()
+      const data = await response.data
       setMenus(data)
     } catch (error) {
       console.error('Error fetching menus:', error)
@@ -64,7 +71,7 @@ export function Posts() {
     console.log('Effect running, currentLanguage:', currentLanguage)
     fetchPosts()
     fetchMenus()
-  }, [searchQuery, currentLanguage])
+  }, [searchQuery, currentLanguage, currentPage])
 
   // Helper function to get menu name
   const getMenuName = (menuId: number) => {
@@ -205,6 +212,39 @@ export function Posts() {
                   </div>
               )}
           />
+          
+          <div className="flex justify-between items-center p-4 border-t">
+            <div className="text-sm text-gray-600">
+              Total items: {totalCount}
+            </div>
+            <div className="flex gap-2">
+              <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded ${
+                      currentPage === 1 
+                          ? 'bg-gray-100 text-gray-400' 
+                          : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+              >
+                Previous
+              </button>
+              <span className="px-4 py-2">
+                Page {currentPage}
+              </span>
+              <button
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={currentPage * 10 >= totalCount}
+                  className={`px-4 py-2 rounded ${
+                      currentPage * 10 >= totalCount
+                          ? 'bg-gray-100 text-gray-400'
+                          : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       </div>
   )

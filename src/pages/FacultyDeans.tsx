@@ -5,9 +5,12 @@ import { DataTable } from '../helpers/DataTable'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/button'
 import { Pencil, Trash2 } from 'lucide-react'
+import { Pagination } from '../components/ui/Pagination'
 
 interface FacultyDean {
   id: number
+  department: number
+  agency: number
   position: number
   faculty: number
   phone_number: string
@@ -30,35 +33,86 @@ interface Faculty {
   }
 }
 
+interface PaginatedResponse {
+  count: number
+  next: string | null
+  previous: string | null
+  results: FacultyDean[]
+}
+
 export function FacultyDeansPage() {
   const [deans, setDeans] = useState<FacultyDean[]>([])
+  const [filteredDeans, setFilteredDeans] = useState<FacultyDean[]>([])
   const [faculties, setFaculties] = useState<Faculty[]>([])
   const currentLanguage = useLanguage()
   const navigate = useNavigate()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const ITEMS_PER_PAGE = 10
 
-  const fetchDeans = async () => {
+  const fetchAllDeans = async () => {
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/admin/`)
-      if (!response.ok) throw new Error('Failed to fetch deans')
-      const data = await response.json()
-      // Filter to only show faculty deans
-      const facultyDeans = Array.isArray(data) ? 
-        data.filter(admin => admin.faculty && !admin.department && !admin.agency) : 
-        []
-      setDeans(facultyDeans)
+      let allDeans: FacultyDean[] = []
+      let nextUrl: string | null = 'https://karsu.uz/api/menus/admin/'
+
+      while (nextUrl) {
+        const response = await fetch(nextUrl)
+        if (!response.ok) throw new Error('Failed to fetch deans')
+        const data: PaginatedResponse = await response.json()
+        
+        // Filter to only show faculty deans
+        const facultyDeans = data.results.filter(admin => 
+          admin.faculty && !admin.department && !admin.agency
+        )
+        
+        allDeans = [...allDeans, ...facultyDeans]
+        nextUrl = data.next
+      }
+
+      // Sort deans by ID in descending order to show latest first
+      allDeans.sort((a, b) => b.id - a.id)
+
+      setDeans(allDeans)
+      updatePaginatedData(allDeans, 1)
     } catch (error) {
       console.error('Error fetching deans:', error)
     }
   }
 
+  const updatePaginatedData = (allDeans: FacultyDean[], page: number) => {
+    const startIndex = (page - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
+    setFilteredDeans(allDeans.slice(startIndex, endIndex))
+    setTotalPages(Math.ceil(allDeans.length / ITEMS_PER_PAGE))
+  }
+
   const fetchFaculties = async () => {
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/faculty/`)
-      if (!response.ok) throw new Error('Failed to fetch faculties')
-      const data = await response.json()
-      setFaculties(data)
+      let allFaculties: Faculty[] = [];
+      let nextUrl: string | null = 'https://karsu.uz/api/menus/faculty/';
+      
+      while (nextUrl) {
+        const response:any = await fetch(nextUrl);
+        if (!response.ok) throw new Error('Failed to fetch faculties');
+        
+        const data = await response.json();
+        
+        if (data.results && Array.isArray(data.results)) {
+          allFaculties = [...allFaculties, ...data.results];
+          nextUrl = data.next;
+        } else if (Array.isArray(data)) {
+          allFaculties = [...allFaculties, ...data];
+          nextUrl = null;
+        } else {
+          nextUrl = null;
+        }
+      }
+      
+      setFaculties(allFaculties);
     } catch (error) {
-      console.error('Error fetching faculties:', error)
+      console.error('Error fetching faculties:', error);
+      // Set empty array on error to prevent mapping issues
+      setFaculties([]);
     }
   }
 
@@ -73,7 +127,7 @@ export function FacultyDeansPage() {
       if (!response.ok) throw new Error('Failed to delete dean')
       
       // Refresh the deans list after successful deletion
-      fetchDeans()
+      fetchAllDeans()
     } catch (error) {
       console.error('Error deleting dean:', error)
       alert('Failed to delete dean')
@@ -81,9 +135,13 @@ export function FacultyDeansPage() {
   }
 
   useEffect(() => {
-    fetchDeans()
+    fetchAllDeans()
     fetchFaculties()
   }, [])
+
+  useEffect(() => {
+    updatePaginatedData(deans, currentPage)
+  }, [currentPage, deans])
 
   const getFacultyName = (facultyId: number) => {
     const faculty = faculties.find(f => f.id === facultyId)
@@ -133,7 +191,7 @@ export function FacultyDeansPage() {
       />
 
       <DataTable
-        data={deans}
+        data={filteredDeans}
         columns={columns}
         currentLanguage={currentLanguage}
         actions={(item: FacultyDean) => (
@@ -160,6 +218,12 @@ export function FacultyDeansPage() {
             </Button>
           </div>
         )}
+      />
+
+      <Pagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
       />
     </div>
   )

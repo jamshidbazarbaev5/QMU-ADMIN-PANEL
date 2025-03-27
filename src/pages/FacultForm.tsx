@@ -12,12 +12,12 @@ import {  Plus } from 'lucide-react'
 
 
 const translatedFields = [
-  { name: 'name', label: 'Name', type: 'text' as const, required: true },
+  { name: 'name', label: 'Name', type: 'text' as const, required: false },
   { 
     name: 'description', 
     label: 'Description', 
     type: 'richtext' as const, 
-    required: true
+    required: false
   },
   { 
     name: 'history_of_faculty', 
@@ -96,8 +96,15 @@ export default function FacultyForm() {
       
       formData.append('email', email)
       
-     
-      formData.append('translations', JSON.stringify(translationData.translations))
+      // Filter out empty translations
+      const filteredTranslations = Object.fromEntries(
+        Object.entries(translationData.translations).filter(([_, translation]) => {
+          const values = Object.values(translation as object)
+          return values.some(value => value !== '' && value !== null && value !== undefined)
+        })
+      )
+      
+      formData.append('translations', JSON.stringify(filteredTranslations))
 
       const url = id 
         ? `https://karsu.uz/api/menus/faculty/${id}/`

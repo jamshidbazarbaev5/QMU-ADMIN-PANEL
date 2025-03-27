@@ -6,7 +6,7 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Loader2 } from 'lucide-react'
-import {fetchWithAuth, getAuthHeader} from '../api/api';
+import api2 from '../api/api2'
 
 interface Menu {
   id: number
@@ -30,11 +30,10 @@ export default function AgencyForm() {
   const navigate = useNavigate()
   const currentLanguage = useLanguage()
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [menus, setMenus] = useState<Menu[]>([])
   const [selectedMenu, setSelectedMenu] = useState<number | null>(null)
   const [initialData, setInitialData] = useState(null)
-  const [existingImage, setExistingImage] = useState<string | null>(null)
+  const [position, setPosition] = useState<number>(0)
 
   useEffect(() => {
     fetchMenus()
@@ -45,12 +44,8 @@ export default function AgencyForm() {
 
   const fetchMenus = async () => {
     try {
-      const response = await fetchWithAuth(`https://karsu.uz/api/menus/main/`,{
-        headers:getAuthHeader()
-      })
-      if (!response.ok) throw new Error('Failed to fetch menus')
-      const data = await response.json()
-      setMenus(data)
+      const response = await api2.get('/menus/main/')
+      setMenus(response.data)
     } catch (error) {
       console.error('Error fetching menus:', error)
     }
@@ -59,14 +54,10 @@ export default function AgencyForm() {
   const fetchAgency = async () => {
     try {
       setIsLoading(true)
-      const response = await fetchWithAuth(`https://karsu.uz/api/menus/agency/${slug}/`, {
-        headers: getAuthHeader()
-      })
-      if (!response.ok) throw new Error('Failed to fetch agency')
-      const data = await response.json()
-      setSelectedMenu(data.menu)
-      setInitialData(data.translations)
-      setExistingImage(data.main_image)
+      const response = await api2.get(`/menus/agency/${slug}/`)
+      setSelectedMenu(response.data.menu)
+      setInitialData(response.data.translations)
+      setPosition(response.data.position || 0)
     } catch (error) {
       console.error('Error fetching agency:', error)
     } finally {
@@ -82,9 +73,7 @@ export default function AgencyForm() {
 
     setIsLoading(true)
     try {
-      // Filter out empty translations
       const filteredTranslations = Object.entries(data.translations).reduce((acc, [lang, trans]: [string, any]) => {
-        // Check if translation has any non-empty values
         if (trans.name || trans.description || trans.slug) {
           acc[lang] = trans
         }
@@ -94,29 +83,20 @@ export default function AgencyForm() {
       const formData = new FormData()
       formData.append('menu', selectedMenu.toString())
       formData.append('translations', JSON.stringify(filteredTranslations))
-      
-      if (selectedImage) {
-        formData.append('main_image', selectedImage)
-      }
+      formData.append('position', position.toString())
 
-      const url = slug 
-        ? `https://karsu.uz/api/menus/agency/${slug}/`
-        : `https://karsu.uz/api/menus/agency/`
+      const url = slug ? `/menus/agency/${slug}/` : '/menus/agency/'
 
-      const response = await fetchWithAuth(url, {
-        method: slug ? 'PUT' : 'POST',
+      const response = await api2({
+        method: slug ? 'put' : 'post',
+        url,
+        data: formData,
         headers: {
-          'Accept': 'application/json',
-          ...getAuthHeader()
-        },
-        body: formData,
+          'Content-Type': 'multipart/form-data',
+        }
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to save agency')
-      }
-      
+      console.log(response)
       navigate('/karsu-admin-panel/agency')
     } catch (error) {
       console.error('Error saving agency:', error)
@@ -161,22 +141,13 @@ export default function AgencyForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Image</label>
-              {existingImage && (
-                <div className="mb-2">
-                  <img 
-                    src={existingImage}
-                    alt="Current"
-                    className="w-20 h-20 object-cover rounded"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Current image</p>
-                </div>
-              )}
+              <label className="block text-sm font-medium mb-2">Position</label>
               <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setSelectedImage(e.target.files?.[0] || null)}
-                className="w-full"
+                type="number"
+                value={position}
+                onChange={(e) => setPosition(Number(e.target.value))}
+                className="w-full p-2 border rounded-md"
+                min="1"
               />
             </div>
           </div>

@@ -6,11 +6,20 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/button'
 import { Pencil, Trash2 } from 'lucide-react'
 import { fetchWithAuth } from '../api/api'
+import { Pagination } from '../components/ui/Pagination'
+
+interface ApiResponse<T> {
+  results: T[]
+  next: string | null
+  previous: string | null
+}
 
 interface AgencyDean {
   id: number
   position: number
   agency: number
+  faculty?: number
+  department?: number
   phone_number: string
   email: string
   main_image: string
@@ -33,44 +42,82 @@ interface Agency {
 
 export function AgencyDeansPage() {
   const [deans, setDeans] = useState<AgencyDean[]>([])
+  const [filteredDeans, setFilteredDeans] = useState<AgencyDean[]>([])
   const [agencies, setAgencies] = useState<Agency[]>([])
   const currentLanguage = useLanguage()
   const navigate = useNavigate()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const ITEMS_PER_PAGE = 10
 
-  const fetchDeans = async () => {
+  const fetchAllDeans = async () => {
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/admin/`)
-      if (!response.ok) throw new Error('Failed to fetch deans')
-      const data = await response.json()
-      // Filter to only show agency deans
-      const agencyDeans = Array.isArray(data) ? 
-        data.filter(admin => admin.agency && !admin.faculty && !admin.department) : 
-        []
-      setDeans(agencyDeans)
+      let allDeans: AgencyDean[] = []
+      let nextUrl: string | null = 'https://karsu.uz/api/menus/admin/'
+
+      while (nextUrl) {
+        const response: Response = await fetch(nextUrl)
+        if (!response.ok) throw new Error('Failed to fetch deans')
+        const data: ApiResponse<AgencyDean> = await response.json()
+        
+        const agencyDeans = data.results.filter((admin: AgencyDean) => 
+          admin.agency && !admin.faculty && !admin.department
+        )
+        
+        allDeans = [...allDeans, ...agencyDeans]
+        nextUrl = data.next
+      }
+
+      // Sort deans by ID in descending order (newest first)
+      const sortedDeans = allDeans.sort((a, b) => b.id - a.id)
+      
+      setDeans(sortedDeans)
+      updatePaginatedData(sortedDeans, 1)
     } catch (error) {
       console.error('Error fetching deans:', error)
     }
   }
 
+  const updatePaginatedData = (allDeans: AgencyDean[], page: number) => {
+    const startIndex = (page - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
+    setFilteredDeans(allDeans.slice(startIndex, endIndex))
+    setTotalPages(Math.ceil(allDeans.length / ITEMS_PER_PAGE))
+  }
+
   const fetchAgencies = async () => {
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/agency/`)
-      if (!response.ok) throw new Error('Failed to fetch agencies')
-      const data = await response.json()
-      setAgencies(data)
+      let allAgencies: Agency[] = []
+      let nextUrl: string | null = 'https://karsu.uz/api/menus/agency/'
+
+      while (nextUrl) {
+        const response: Response = await fetch(nextUrl)
+        if (!response.ok) throw new Error('Failed to fetch agencies')
+        const data: ApiResponse<Agency> = await response.json()
+        allAgencies = [...allAgencies, ...data.results]
+        nextUrl = data.next
+      }
+
+      setAgencies(allAgencies)
     } catch (error) {
       console.error('Error fetching agencies:', error)
+      setAgencies([])
     }
   }
 
   useEffect(() => {
-    fetchDeans()
+    fetchAllDeans()
     fetchAgencies()
   }, [])
 
+  useEffect(() => {
+    updatePaginatedData(deans, currentPage)
+  }, [currentPage, deans])
+
   const getAgencyName = (agencyId: number) => {
     const agency = agencies.find(a => a.id === agencyId)
-    return agency?.translations[currentLanguage]?.name || `Agency ${agencyId}`
+    if (!agency) return 'Loading...'
+    return agency.translations[currentLanguage]?.name || 'Unnamed Agency'
   }
 
   const handleDelete = async (dean: AgencyDean) => {
@@ -83,7 +130,7 @@ export function AgencyDeansPage() {
       )
       
       if (!response.ok) throw new Error('Failed to delete dean')
-      await fetchDeans()
+      await fetchAllDeans()
     } catch (error) {
       console.error('Error deleting dean:', error)
     }
@@ -132,7 +179,7 @@ export function AgencyDeansPage() {
       />
 
       <DataTable
-        data={deans}
+        data={filteredDeans}
         columns={columns}
         currentLanguage={currentLanguage}
         actions={(item: AgencyDean) => (
@@ -159,6 +206,12 @@ export function AgencyDeansPage() {
             </Button>
           </div>
         )}
+      />
+
+      <Pagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
       />
     </div>
   )

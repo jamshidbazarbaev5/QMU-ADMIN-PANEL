@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '../helpers/PageHeader'
 import { createQuantity, fetchWithAuth, getAuthHeader, updateQuantity } from '../api/api'
-import { TranslatedForm } from '../helpers/TranslatedForm'
+import { TranslatedForm2 } from '../helpers/TranslatedForm2'
 
 interface QuantityFormProps {
   initialData?: any
@@ -44,13 +44,18 @@ export function QuantityForm({ isEditing }: QuantityFormProps) {
       if (!response.ok) throw new Error('Failed to fetch')
       const data = await response.json()
       
-      // Update to use translations from the API response
-      setFormData({
-        en: { title: data.translations.en.title, quantity: data.quantity.toString() },
-        ru: { title: data.translations.ru.title, quantity: data.quantity.toString() },
-        uz: { title: data.translations.uz.title, quantity: data.quantity.toString() },
-        kk: { title: data.translations.kk.title, quantity: data.quantity.toString() }
-      })
+      // Convert quantity to string, handling null case
+      const quantityString = data.quantity !== null ? data.quantity.toString() : ''
+      
+      // Merge API data with default translations
+      const formattedData = {
+        en: { title: data.translations?.en?.title || '', quantity: quantityString },
+        ru: { title: data.translations?.ru?.title || '', quantity: quantityString },
+        uz: { title: data.translations?.uz?.title || '', quantity: quantityString },
+        kk: { title: data.translations?.kk?.title || '', quantity: quantityString }
+      }
+
+      setFormData(formattedData)
     } catch (error) {
       console.error('Error:', error)
       navigate('/karsu-admin-panel/quantities')
@@ -67,15 +72,15 @@ export function QuantityForm({ isEditing }: QuantityFormProps) {
 
     try {
       const translations = {
-        en: { title: data.en.title },
-        ru: { title: data.ru.title },
-        uz: { title: data.uz.title },
-        kk: { title: data.kk.title }
+        en: { title: data.en?.title },
+        ru: { title: data.ru?.title },
+        uz: { title: data.uz?.title },
+        kk: { title: data.kk?.title }
       }
 
       const submitData = {
         translations,
-        quantity: parseInt(data.en.quantity), // quantity is shared across languages
+        quantity: parseInt(data.en?.quantity), 
       }
 
       if (isEditing && id) {
@@ -126,7 +131,7 @@ export function QuantityForm({ isEditing }: QuantityFormProps) {
       />
 
       <div className="bg-white rounded-lg shadow p-6">
-        <TranslatedForm
+        <TranslatedForm2
           fields={fields}
           languages={['en', 'ru', 'uz', 'kk']}
           onSubmit={handleSubmit}

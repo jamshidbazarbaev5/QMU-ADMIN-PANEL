@@ -7,6 +7,7 @@ import { TranslatedForm } from '../helpers/TranslatedForm'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { useNavigate } from 'react-router-dom'
+import { Pagination } from '../components/ui/Pagination'
 
 interface PositionTranslation {
   name: string
@@ -22,12 +23,20 @@ interface Position {
   }
 }
 
+interface PaginatedResponse {
+  count: number
+  next: string | null
+  previous: string | null
+  results: Position[]
+}
+
 const translatedFields = [
   { name: 'name', label: 'Name', type: 'text' as const, required: true },
 ]
 
 export function PositionPage() {
   const [positions, setPositions] = useState<Position[]>([])
+  const [filteredPositions, setFilteredPositions] = useState<Position[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingPosition, setEditingPosition] = useState<Position | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -35,21 +44,47 @@ export function PositionPage() {
   const [email, setEmail] = useState('')
   const [position, setPosition] = useState('')
   const navigate = useNavigate()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const ITEMS_PER_PAGE = 10
 
-  const fetchPositions = async () => {
+  const fetchAllPositions = async () => {
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/position/`, )
-      if (!response.ok) throw new Error('Failed to fetch positions')
-      const data = await response.json()
-      setPositions(Array.isArray(data) ? data : [data])
+      let allPositions: Position[] = []
+      let nextUrl: string | null = 'https://karsu.uz/api/menus/position/'
+
+      while (nextUrl) {
+        const response = await fetch(nextUrl)
+        if (!response.ok) throw new Error('Failed to fetch positions')
+        const data: PaginatedResponse = await response.json()
+        allPositions = [...allPositions, ...data.results]
+        nextUrl = data.next
+      }
+
+      // Sort positions by ID in descending order (newest first)
+      const sortedPositions = allPositions.sort((a, b) => b.id - a.id)
+      
+      setPositions(sortedPositions)
+      updatePaginatedData(sortedPositions, 1)
     } catch (error) {
       console.error('Error fetching positions:', error)
     }
   }
 
+  const updatePaginatedData = (allPositions: Position[], page: number) => {
+    const startIndex = (page - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
+    setFilteredPositions(allPositions.slice(startIndex, endIndex))
+    setTotalPages(Math.ceil(allPositions.length / ITEMS_PER_PAGE))
+  }
+
   useEffect(() => {
-    fetchPositions()
-  }, [currentLanguage])
+    fetchAllPositions()
+  }, [])
+
+  useEffect(() => {
+    updatePaginatedData(positions, currentPage)
+  }, [currentPage, positions])
 
   const handleSubmit = async (translationData: any) => {
     if (!position) {
@@ -79,7 +114,7 @@ export function PositionPage() {
 
       if (!response.ok) throw new Error('Failed to save position')
       
-      await fetchPositions()
+      await fetchAllPositions()
       setIsDialogOpen(false)
       setEditingPosition(null)
       setEmail('')
@@ -101,7 +136,7 @@ export function PositionPage() {
       )
       
       if (!response.ok) throw new Error('Failed to delete position')
-      await fetchPositions()
+      await fetchAllPositions()
     } catch (error) {
       console.error('Error deleting position:', error)
     }
@@ -116,7 +151,7 @@ export function PositionPage() {
       />
 
       <DataTable
-        data={positions}
+        data={filteredPositions}
         columns={[
           { 
             header: 'Name',
@@ -155,6 +190,12 @@ export function PositionPage() {
             </Button>
           </div>
         )}
+      />
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

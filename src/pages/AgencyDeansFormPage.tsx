@@ -4,7 +4,7 @@ import { useLanguage } from '../hooks/useLanguage'
 import { TranslatedForm2 } from '../helpers/TranslatedForm2'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
-import { fetchWithAuth, getAuthHeader } from '../api/api'
+import api2 from '../api/api2'
 
 interface AgencyDean {
   id: number
@@ -31,25 +31,9 @@ interface Agency {
   }
 }
 
-interface Menu {
-  id: number
-  translations: {
-    [key: string]: {
-      name: string
-      title: string
-    }
-  }
-}
 
-interface Position {
-  id: number
-  email: string
-  translations: {
-    [key: string]: {
-      name: string
-    }
-  }
-}
+
+
 
 const translatedFields = [
   { name: 'full_name', label: 'Full Name', type: 'text' as const, required: true },
@@ -63,64 +47,67 @@ export function AgencyDeanFormPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [editingDean, setEditingDean] = useState<AgencyDean | null>(null)
   
-  const [selectedMenu, setSelectedMenu] = useState<string>('')
   const [selectedAgency, setSelectedAgency] = useState<string>('')
-  const [selectedPosition, setSelectedPosition] = useState<string>('')
   const [email, setEmail] = useState<string>('')
   const [phoneNumber, setPhoneNumber] = useState<string>('')
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   
   const [agencies, setAgencies] = useState<Agency[]>([])
-  const [menus, setMenus] = useState<Menu[]>([])
-  const [positions, setPositions] = useState<Position[]>([])
+  const [, setIsLoadingAgencies] = useState(false)
 
-  // Fetch functions
   const fetchAgencies = async () => {
+    setIsLoadingAgencies(true)
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/agency/`)
-      if (!response.ok) throw new Error('Failed to fetch agencies')
-      const data = await response.json()
-      setAgencies(data)
+      let allAgencies :any = []
+      let nextUrl = 'https://karsu.uz/api/menus/agency/'
+
+      while (nextUrl) {
+        const response = await api2.get(nextUrl)
+        const data = response.data
+        allAgencies = [...allAgencies, ...data.results]
+        nextUrl = data.next
+      }
+
+      setAgencies(allAgencies)
     } catch (error) {
       console.error('Error fetching agencies:', error)
+      setAgencies([])
+    } finally {
+      setIsLoadingAgencies(false)
     }
   }
 
-  const fetchMenus = async () => {
-    try {
-      const response = await fetch(`https://karsu.uz/api/menus/main/`)
-      if (!response.ok) throw new Error('Failed to fetch menus')
-      const data = await response.json()
-      setMenus(data)
-    } catch (error) {
-      console.error('Error fetching menus:', error)
-    }
-  }
+  // const fetchMenus = async () => {
+  //   try {
+  //     const response = await fetch(`https://karsu.uz/api/menus/main/`)
+  //     if (!response.ok) throw new Error('Failed to fetch menus')
+  //     const data = await response.json()
+  //     setMenus(data)
+  //   } catch (error) {
+  //     console.error('Error fetching menus:', error)
+  //   }
+  // }
 
-  const fetchPositions = async () => {
-    try {
-      const response = await fetch('https://karsu.uz/api/menus/position/')
-      if (!response.ok) throw new Error('Failed to fetch positions')
-      const data = await response.json()
-      setPositions(data)
-    } catch (error) {
-      console.error('Error fetching positions:', error)
-    }
-  }
+  // const fetchPositions = async () => {
+  //   try {
+  //     const response = await fetch('https://karsu.uz/api/menus/position/')
+  //     if (!response.ok) throw new Error('Failed to fetch positions')
+  //     const data = await response.json()
+  //     setPositions(data)
+  //   } catch (error) {
+  //     console.error('Error fetching positions:', error)
+  //   }
+  // }
 
   const fetchDeanDetails = async () => {
     if (!id) return
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/admin/${id}/`)
-      if (!response.ok) throw new Error('Failed to fetch dean details')
-      const data = await response.json()
-      setEditingDean(data)
+      const response = await api2.get(`/menus/admin/${id}/`)
+      setEditingDean(response.data)
       
-      setSelectedMenu(data.menu.toString())
-      setSelectedAgency(data.agency.toString())
-      setSelectedPosition(data.position.toString())
-      setEmail(data.email)
-      setPhoneNumber(data.phone_number)
+      setSelectedAgency(response.data.agency?.toString() || '')
+      setEmail(response.data.email || '')
+      setPhoneNumber(response.data.phone_number || '')
     } catch (error) {
       console.error('Error fetching dean details:', error)
     }
@@ -128,15 +115,15 @@ export function AgencyDeanFormPage() {
 
   useEffect(() => {
     fetchAgencies()
-    fetchMenus()
-    fetchPositions()
+    // fetchMenus()
+    // fetchPositions()
     if (id) {
       fetchDeanDetails()
     }
   }, [id])
 
   const handleSubmit = async (translationData: any) => {
-    if (!selectedMenu || !selectedAgency || !selectedPosition) {
+    if (!selectedAgency) {
       alert('Please fill in all required fields')
       return
     }
@@ -145,8 +132,6 @@ export function AgencyDeanFormPage() {
     try {
       const formData = new FormData()
       
-      formData.append('position', selectedPosition)
-      formData.append('menu', selectedMenu)
       formData.append('agency', selectedAgency)
       formData.append('phone_number', phoneNumber)
       formData.append('email', email)
@@ -156,19 +141,17 @@ export function AgencyDeanFormPage() {
         formData.append('main_image', selectedImage)
       }
 
-      const url = id 
-        ? `https://karsu.uz/api/menus/admin/${id}/`
-        : `https://karsu.uz/api/menus/admin/`
+      const url = `/menus/admin/${id ? `${id}/` : ''}`
+      const method = id ? 'put' : 'post'
 
-      const response = await fetchWithAuth(url, {
-        method: id ? 'PUT' : 'POST',
-        body: formData,
+      await api2({
+        url,
+        method,
+        data: formData,
         headers: {
-          ...getAuthHeader()
-        }
+          'Content-Type': 'multipart/form-data',
+        },
       })
-
-      if (!response.ok) throw new Error('Failed to save dean')
       
       navigate('/karsu-admin-panel/agency-deans')
     } catch (error) {
@@ -191,7 +174,7 @@ export function AgencyDeanFormPage() {
 
       <div className="bg-white rounded-lg shadow p-6">
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium mb-2">Position</label>
             <Select 
               value={selectedPosition} 
@@ -218,9 +201,9 @@ export function AgencyDeanFormPage() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium mb-2">Menu</label>
             <Select 
               value={selectedMenu} 
@@ -241,7 +224,7 @@ export function AgencyDeanFormPage() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           <div>
             <label className="block text-sm font-medium mb-2">Agency</label>
@@ -253,7 +236,7 @@ export function AgencyDeanFormPage() {
                 <SelectValue placeholder="Select an agency" />
               </SelectTrigger>
               <SelectContent className="min-w-[600px]">
-                {agencies.map((agency) => (
+                {Array.isArray(agencies) && agencies.map((agency) => (
                   <SelectItem 
                     key={agency.id} 
                     value={agency.id.toString()}

@@ -9,6 +9,8 @@ import { fetchWithAuth } from '../api/api'
 
 interface DepartmentDean {
   id: number
+  faculty: number
+  agency: number
   position: number
   department: number
   phone_number: string
@@ -31,24 +33,77 @@ interface Department {
   }
 }
 
+interface Position {
+  id: number;
+  translations: {
+    [key: string]: {
+      name: string;
+    }
+  }
+}
+
 export function DepartmentDeansPage() {
   const [deans, setDeans] = useState<DepartmentDean[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
+  const [positions, setPositions] = useState<Position[]>([])
+  const [loading, setLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const itemsPerPage = 10
   const currentLanguage = useLanguage()
   const navigate = useNavigate()
 
-  const fetchDeans = async () => {
+  const fetchAllPositions = async () => {
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/admin/`)
-      if (!response.ok) throw new Error('Failed to fetch deans')
-      const data = await response.json()
+      let allPositions: Position[] = []
+      let nextUrl = 'https://karsu.uz/api/menus/position/'
+
+      while (nextUrl) {
+        const response = await fetch(nextUrl)
+        if (!response.ok) throw new Error('Failed to fetch positions')
+        const data = await response.json()
+        
+        allPositions = [...allPositions, ...data.results]
+        nextUrl = data.next
+      }
+
+      setPositions(allPositions)
+    } catch (error) {
+      console.error('Error fetching positions:', error)
+    }
+  }
+
+  const fetchAllDeans = async () => {
+    setLoading(true)
+    try {
+      let allDeans: DepartmentDean[] = []
+      let nextUrl = 'https://karsu.uz/api/menus/admin/'
+
+      while (nextUrl) {
+        const response = await fetch(nextUrl)
+        if (!response.ok) throw new Error('Failed to fetch deans')
+        const data = await response.json()
+        
+        allDeans = [...allDeans, ...data.results]
+        nextUrl = data.next
+      }
+
       // Filter to only show department deans
-      const departmentDeans = Array.isArray(data) ? 
-        data.filter(admin => admin.department && !admin.faculty && !admin.agency) : 
-        []
-      setDeans(departmentDeans)
+      const departmentDeans = allDeans.filter(admin => 
+        admin.department && !admin.faculty && !admin.agency
+      )
+      
+      setTotalItems(departmentDeans.length)
+      
+      // Apply pagination
+      const start = (currentPage - 1) * itemsPerPage
+      const paginatedDeans = departmentDeans.slice(start, start + itemsPerPage)
+      
+      setDeans(paginatedDeans)
     } catch (error) {
       console.error('Error fetching deans:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -64,13 +119,26 @@ export function DepartmentDeansPage() {
   }
 
   useEffect(() => {
-    fetchDeans()
+    fetchAllDeans()
     fetchDepartments()
-  }, [])
+    fetchAllPositions()
+  }, []) // Remove currentPage dependency since we're handling pagination client-side
+
+  useEffect(() => {
+    // Handle pagination changes
+    const start = (currentPage - 1) * itemsPerPage
+    const paginatedDeans = deans.slice(start, start + itemsPerPage)
+    setDeans(paginatedDeans)
+  }, [currentPage])
 
   const getDepartmentName = (departmentId: number) => {
     const department = departments.find(d => d.id === departmentId)
     return department?.translations[currentLanguage]?.name || `Department ${departmentId}`
+  }
+
+  const getPositionName = (positionId: number) => {
+    const position = positions.find(p => p.id === positionId)
+    return position?.translations[currentLanguage]?.name || `Position ${positionId}`
   }
 
   const handleDelete = async (dean: DepartmentDean) => {
@@ -83,7 +151,7 @@ export function DepartmentDeansPage() {
       )
       
       if (!response.ok) throw new Error('Failed to delete dean')
-      await fetchDeans()
+      await fetchAllDeans()
     } catch (error) {
       console.error('Error deleting dean:', error)
     }
@@ -93,7 +161,12 @@ export function DepartmentDeansPage() {
     { 
       header: 'Full Name',
       accessor: 'translations',
-      cell: (item: DepartmentDean) => item.translations['kk']?.full_name || '-'
+      cell: (item: DepartmentDean) => item.translations[currentLanguage]?.full_name || '-'
+    },
+    {
+      header: 'Position',
+      accessor: 'position',
+      cell: (item: DepartmentDean) => getPositionName(item.position)
     },
     {
       header: 'Department',
@@ -121,6 +194,33 @@ export function DepartmentDeansPage() {
     }
   ]
 
+  // Add pagination controls component
+  const PaginationControls = () => {
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    
+    return (
+      <div className="flex justify-end mt-4 gap-2">
+        <Button
+          variant="outline"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(prev => prev - 1)}
+        >
+          Previous
+        </Button>
+        <span className="py-2 px-4">
+          Page {currentPage} of {totalPages}
+        </span>
+        <Button
+          variant="outline"
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(prev => prev + 1)}
+        >
+          Next
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 mt-[50px]">
       <PageHeader
@@ -131,35 +231,42 @@ export function DepartmentDeansPage() {
         }}
       />
 
-      <DataTable
-        data={deans}
-        columns={columns}
-        currentLanguage={currentLanguage}
-        actions={(item: DepartmentDean) => (
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation()
-                navigate(`/karsu-admin-panel/department-deans/${item.id}/edit`)
-              }}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation()
-                handleDelete(item)
-              }}
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </Button>
-          </div>
-        )}
-      />
+      {loading ? (
+        <div className="flex justify-center py-8">Loading...</div>
+      ) : (
+        <>
+          <DataTable
+            data={deans}
+            columns={columns}
+            currentLanguage={currentLanguage}
+            actions={(item: DepartmentDean) => (
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    navigate(`/karsu-admin-panel/department-deans/${item.id}/edit`)
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDelete(item)
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              </div>
+            )}
+          />
+          <PaginationControls />
+        </>
+      )}
     </div>
   )
 }

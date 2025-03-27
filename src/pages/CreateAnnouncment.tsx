@@ -31,53 +31,62 @@ export default function CreateAnnouncement() {
   const navigate = useNavigate()
 
   const [currentLanguage, setCurrentLanguage] = useState<'ru' | 'en' | 'uz' | 'kk'>('ru')
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
+
+  const handleFileUpload = (file: File) => {
+    setUploadedFiles(prev => [...prev, file])
+  }
 
   async function onSubmit(values: any) {
     try {
       if (currentLanguage === 'kk') {
         // Create translations object
-        const translations: { [key: string]: any } = {};
+        const translations: { [key: string]: any } = {}
         
         // Only add languages that have content
         if (values.title_ru?.trim() || values.description_ru?.trim()) {
           translations.ru = {
             title: values.title_ru,
             description: values.description_ru,
-          };
+          }
         }
         
         if (values.title_en?.trim() || values.description_en?.trim()) {
           translations.en = {
             title: values.title_en,
             description: values.description_en,
-          };
+          }
         }
         
         if (values.title_uz?.trim() || values.description_uz?.trim()) {
           translations.uz = {
             title: values.title_uz,
             description: values.description_uz,
-          };
+          }
         }
         
         if (values.title_kk?.trim() || values.description_kk?.trim()) {
           translations.kk = {
             title: values.title_kk,
             description: values.description_kk,
-          };
+          }
         }
 
-        const payload = {
-          translations: translations
-        };
+        // Create FormData instead of plain object
+        const formData = new FormData()
+        formData.append('translations', JSON.stringify(translations))
+
+        // Add uploaded files
+        uploadedFiles.forEach(file => {
+          formData.append('upload_files', file)
+        })
 
         const response = await fetchWithAuth('https://karsu.uz/api/announcements/', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
             ...getAuthHeader()
           },
-          body: JSON.stringify(payload),
+          body: formData,
         })
 
         if (response.ok) {
@@ -132,6 +141,7 @@ export default function CreateAnnouncement() {
                           <RichTextEditor
                             value={field.value}
                             onChange={field.onChange}
+                            onFileUpload={handleFileUpload}
                             placeholder="Enter description in Russian"
                           />
                         </FormControl>
@@ -167,6 +177,7 @@ export default function CreateAnnouncement() {
                           <RichTextEditor
                             value={field.value}
                             onChange={field.onChange}
+                            onFileUpload={handleFileUpload}
                             placeholder="Enter description in English"
                           />
                         </FormControl>
@@ -202,6 +213,7 @@ export default function CreateAnnouncement() {
                           <RichTextEditor
                             value={field.value}
                             onChange={field.onChange}
+                            onFileUpload={handleFileUpload}
                             placeholder="Enter description in Uzbek"
                           />
                         </FormControl>
@@ -219,9 +231,9 @@ export default function CreateAnnouncement() {
                     name="title_kk"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Тақырып (KK)</FormLabel>
+                        <FormLabel>Title (KK)</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter title in Kazakh" {...field} required={false}/>
+                          <Input placeholder="Enter title in Karakalpak" {...field} required={false}/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -232,12 +244,13 @@ export default function CreateAnnouncement() {
                     name="description_kk"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Сипаттама (KK)</FormLabel>
+                        <FormLabel>Description (KK)</FormLabel>
                         <FormControl>
                           <RichTextEditor
                             value={field.value}
                             onChange={field.onChange}
-                            placeholder="Enter description in Kazakh"
+                            onFileUpload={handleFileUpload}
+                            placeholder="Enter description in Karakalpak"
                           />
                         </FormControl>
                         <FormMessage />

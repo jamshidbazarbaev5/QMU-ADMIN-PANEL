@@ -19,10 +19,13 @@ interface Faculty {
 }
 
 interface Department {
+  id: number
+  faculty: number
   translations: {
     [key: string]: {
-      name: string;
-      description: string;
+      name: string
+      description: string
+      slug?: string
     }
   }
 }
@@ -57,7 +60,7 @@ export function DepartmentFormPage() {
         headers: getAuthHeader(),
       })
       const data = await response.json()
-      setFaculties(data)
+      setFaculties(data.results || [])
     } catch (error) {
       console.error('Error fetching faculties:', error)
     }
@@ -67,12 +70,12 @@ export function DepartmentFormPage() {
     try {
       const response = await fetchWithAuth(`https://karsu.uz/api/menus/department/${departmentId}/`, {
         headers: getAuthHeader(),
-      });
-      const data = await response.json();
-      setEditingDepartment(data);
-      setSelectedFaculty(String(data.faculty));
+      })
+      const data = await response.json()
+      setEditingDepartment(data)
+      setSelectedFaculty(String(data.faculty))
     } catch (error) {
-      console.error('Error fetching department:', error);
+      console.error('Error fetching department:', error)
     }
   }
 
@@ -150,7 +153,7 @@ export function DepartmentFormPage() {
                   <SelectValue placeholder="Select a faculty" />
                 </SelectTrigger>
                 <SelectContent>
-                  {faculties?.map((faculty) => (
+                  {Array.isArray(faculties) && faculties.map((faculty) => (
                     <SelectItem key={faculty.id} value={String(faculty.id)}>
                       {faculty.translations['kk']?.name ||
                        faculty.translations.en?.name ||

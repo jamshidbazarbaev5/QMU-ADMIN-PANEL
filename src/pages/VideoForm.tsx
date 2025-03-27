@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { PageHeader } from '../helpers/PageHeader'
-import { TranslatedForm } from '../helpers/TranslatedForm'
+import { TranslatedForm2 } from '../helpers/TranslatedForm2'
 import { useNavigate, useParams } from 'react-router-dom'
 import { fetchWithAuth } from '../api/api'
 
@@ -183,7 +183,7 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
           />
         </div>
 
-        <TranslatedForm
+        <TranslatedForm2
           fields={fields}
           languages={['en', 'ru', 'uz', 'kk']}
           initialData={videoData?.translations}

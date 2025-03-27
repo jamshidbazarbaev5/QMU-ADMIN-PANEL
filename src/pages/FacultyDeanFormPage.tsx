@@ -4,7 +4,8 @@ import { useLanguage } from '../hooks/useLanguage'
 import { TranslatedForm2 } from '../helpers/TranslatedForm2'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
-import { fetchWithAuth, getAuthHeader } from '../api/api';
+import api2 from '../api/api2'
+import axios from 'axios'
 
 interface FacultyDean {
   id: number
@@ -80,28 +81,47 @@ export function FacultyDeanFormPage() {
 
   const fetchFaculties = async () => {
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/faculty/`)
-      if (!response.ok) throw new Error('Failed to fetch faculties')
-      const data = await response.json()
-      setFaculties(data)
+      let allFaculties: Faculty[] = [];
+      let nextUrl: string | null = 'https://karsu.uz/api/menus/faculty/';
+      
+      while (nextUrl) {
+        const response :any = await fetch(nextUrl);
+        if (!response.ok) throw new Error('Failed to fetch faculties');
+        
+        const data = await response.json();
+        
+        if (data.results && Array.isArray(data.results)) {
+          allFaculties = [...allFaculties, ...data.results];
+          nextUrl = data.next;
+        } else if (Array.isArray(data)) {
+          allFaculties = [...allFaculties, ...data];
+          nextUrl = null;
+        } else {
+          nextUrl = null;
+        }
+      }
+      
+      setFaculties(allFaculties);
     } catch (error) {
-      console.error('Error fetching faculties:', error)
+      console.error('Error fetching faculties:', error);
+      // Set empty array on error to prevent mapping issues
+      setFaculties([]);
     }
   }
 
   const fetchMenus = async () => {
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/main/`)
-      if (!response.ok) throw new Error('Failed to fetch menus')
-      const data = await response.json()
-      
+      const { data } = await api2.get('/menus/main/')
       console.log('All menus:', data)
-      
       setMenus(data)
+      
+      // Log each menu with its parent relationship for debugging
+      data.forEach((menu: Menu) => {
+        console.log(`Menu ${menu.id}: ${menu.translations.en?.name || 'No name'} - Parent: ${menu.parent || 'None'}`)
+      })
       
       const parentMenusData = data.filter((menu: Menu) => menu.parent === null)
       console.log('Parent menus:', parentMenusData)
-      
       setParentMenus(parentMenusData)
     } catch (error) {
       console.error('Error fetching menus:', error)
@@ -110,42 +130,102 @@ export function FacultyDeanFormPage() {
 
   const fetchPositions = async () => {
     try {
-      const response = await fetch('https://karsu.uz/api/menus/position/')
-      if (!response.ok) throw new Error('Failed to fetch positions')
-      const data = await response.json()
-      setPositions(data)
+      let allPositions: Position[] = [];
+      let nextUrl: string | null = 'https://karsu.uz/api/menus/position/';
+      
+      while (nextUrl) {
+        const response :any = await fetch(nextUrl);
+        if (!response.ok) throw new Error('Failed to fetch positions');
+        
+        const data = await response.json();
+        
+        if (data.results && Array.isArray(data.results)) {
+          allPositions = [...allPositions, ...data.results];
+          nextUrl = data.next;
+        } else if (Array.isArray(data)) {
+          allPositions = [...allPositions, ...data];
+          nextUrl = null;
+        } else {
+          nextUrl = null;
+        }
+      }
+      
+      setPositions(allPositions);
     } catch (error) {
-      console.error('Error fetching positions:', error)
+      console.error('Error fetching positions:', error);
+      // Set empty array on error to prevent mapping issues
+      setPositions([]);
     }
   }
 
   const fetchDeanDetails = async () => {
     if (!id) return
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/admin/${id}/`)
-      if (!response.ok) throw new Error('Failed to fetch dean details')
-      const data = await response.json()
+      const { data } = await api2.get(`/menus/admin/${id}/`)
+      console.log('Dean details:', data)
       setEditingDean(data)
       
-      // Set form fields with fetched data
-      const selectedMenuData = menus.find(m => m.id === data.menu)
-      
-      if (selectedMenuData) {
-        if (selectedMenuData.parent) {
-          // If the menu has a parent, set both parent and child
-          setSelectedParentMenu(selectedMenuData.parent.toString())
-          // The child menu will be set automatically by the useEffect
-          setSelectedMenu(selectedMenuData.id.toString())
-        } else {
-          // If the menu is a parent menu
-          setSelectedParentMenu(selectedMenuData.id.toString())
-        }
-      }
-      
+      // Set faculty, position, email and phone
       setSelectedFaculty(data.faculty.toString())
       setSelectedPosition(data.position.toString())
       setEmail(data.email)
       setPhoneNumber(data.phone_number)
+      
+      // Wait for menus to be loaded before setting menu selections
+      if (menus.length === 0) {
+        // If menus aren't loaded yet, fetch them first
+        const menusResponse = await api2.get('/menus/main/')
+        const menusData = menusResponse.data
+        setMenus(menusData)
+        
+        // Set parent menus
+        const parentMenusData = menusData.filter((menu: Menu) => menu.parent === null)
+        setParentMenus(parentMenusData)
+        
+        // Find the selected menu
+        if (data.menu) {
+          const selectedMenuData = menusData.find((m: Menu) => m.id === data.menu)
+          
+          if (selectedMenuData) {
+            // If it has a parent, it's a child menu
+            if (selectedMenuData.parent !== null) {
+              setSelectedParentMenu(selectedMenuData.parent.toString())
+              setSelectedMenu(data.menu.toString())
+              
+              // Set child menus for this parent
+              const childMenusData = menusData.filter(
+                (m: Menu) => m.parent?.toString() === selectedMenuData.parent?.toString()
+              )
+              setChildMenus(childMenusData)
+            } else {
+              // It's a parent menu
+              setSelectedParentMenu(data.menu.toString())
+              
+              // Set child menus for this parent
+              const childMenusData = menusData.filter(
+                (m: Menu) => m.parent?.toString() === data.menu.toString()
+              )
+              setChildMenus(childMenusData)
+            }
+          }
+        }
+      } else {
+        // Menus are already loaded
+        if (data.menu) {
+          const selectedMenuData = menus.find(m => m.id === data.menu)
+          
+          if (selectedMenuData) {
+            if (selectedMenuData.parent !== null) {
+              // It's a child menu
+              setSelectedParentMenu(selectedMenuData.parent.toString())
+              setSelectedMenu(data.menu.toString())
+            } else {
+              // It's a parent menu
+              setSelectedParentMenu(data.menu.toString())
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error('Error fetching dean details:', error)
     }
@@ -162,26 +242,22 @@ export function FacultyDeanFormPage() {
 
   useEffect(() => {
     if (selectedParentMenu) {
-      console.log('Selected parent menu:', selectedParentMenu)
-      
       const filteredChildren = menus.filter(
         (menu: Menu) => menu.parent?.toString() === selectedParentMenu
       )
-      console.log('Filtered children:', filteredChildren)
-      
       setChildMenus(filteredChildren)
       
-      // Only clear the selected menu if we're not in the middle of loading edit data
-      if (!id) {
+      // Only reset selectedMenu if we're not in edit mode
+      if (!id && !editingDean) {
         setSelectedMenu('')
       }
     } else {
       setChildMenus([])
-      if (!id) {
+      if (!id && !editingDean) {
         setSelectedMenu('')
       }
     }
-  }, [selectedParentMenu, menus, id])
+  }, [selectedParentMenu, menus, id, editingDean])
 
   const handleSubmit = async (translationData: any) => {
     if (!selectedMenu || !selectedFaculty || !selectedPosition) {
@@ -198,29 +274,41 @@ export function FacultyDeanFormPage() {
       formData.append('faculty', selectedFaculty)
       formData.append('phone_number', phoneNumber)
       formData.append('email', email)
-      formData.append('translations', JSON.stringify(translationData))
+
+      // Filter out empty translations
+      const filteredTranslations = Object.fromEntries(
+        Object.entries(translationData).filter(([_, translation]) => {
+          const translationObj = translation as { title?: string, full_name?: string, biography?: string }
+          return Object.values(translationObj).some(value => value && value.trim() !== '')
+        })
+      )
+
+      formData.append('translations', JSON.stringify(filteredTranslations))
       
       if (selectedImage) {
         formData.append('main_image', selectedImage)
       }
 
-      const url = id 
-        ? `https://karsu.uz/api/menus/admin/${id}/`
-        : `https://karsu.uz/api/menus/admin/`
+      const url = id ? `/menus/admin/${id}/` : '/menus/admin/'
+      const method = id ? 'put' : 'post'
 
-      const response = await fetchWithAuth(url, {
-        method: id ? 'PUT' : 'POST',
-        body: formData,
+      await api2({
+        method,
+        url,
+        data: formData,
         headers: {
-            ...getAuthHeader()
-        }
+          'Content-Type': 'multipart/form-data',
+        },  
       })
 
-      if (!response.ok) throw new Error('Failed to save dean')
-      
       navigate('/karsu-admin-panel/faculty-deans')
     } catch (error) {
       console.error('Error saving dean:', error)
+      if (axios.isAxiosError(error)) {
+        alert(error.response?.data?.detail || 'Failed to save dean')
+      } else {
+        alert('An unexpected error occurred')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -255,15 +343,19 @@ export function FacultyDeanFormPage() {
                 <SelectValue placeholder="Select a position" />
               </SelectTrigger>
               <SelectContent className="min-w-[600px]">
-                {positions.map((position) => (
-                  <SelectItem 
-                    key={position.id} 
-                    value={position.id.toString()}
-                    className="whitespace-normal py-2 break-words"
-                  >
-                    {position.translations[currentLanguage]?.name || `Position ${position.id}`}
-                  </SelectItem>
-                ))}
+                {positions && positions.length > 0 ? (
+                  positions.map((position) => (
+                    <SelectItem 
+                      key={position.id} 
+                      value={position.id.toString()}
+                      className="whitespace-normal py-2 break-words"
+                    >
+                      {position.translations[currentLanguage]?.name || `Position ${position.id}`}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="p-2 text-sm text-gray-500">No positions available</div>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -335,15 +427,19 @@ export function FacultyDeanFormPage() {
                 <SelectValue placeholder="Select a faculty" />
               </SelectTrigger>
               <SelectContent className="min-w-[600px]">
-                {faculties.map((faculty) => (
-                  <SelectItem 
-                    key={faculty.id} 
-                    value={faculty.id.toString()}
-                    className="whitespace-normal py-2 break-words"
-                  >
-                    {faculty.translations[currentLanguage]?.name || `Faculty ${faculty.id}`}
-                  </SelectItem>
-                ))}
+                {faculties && faculties.length > 0 ? (
+                  faculties.map((faculty) => (
+                    <SelectItem 
+                      key={faculty.id} 
+                      value={faculty.id.toString()}
+                      className="whitespace-normal py-2 break-words"
+                    >
+                      {faculty.translations[currentLanguage]?.name || `Faculty ${faculty.id}`}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="p-2 text-sm text-gray-500">No faculties available</div>
+                )}
               </SelectContent>
             </Select>
           </div>

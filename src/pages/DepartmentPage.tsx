@@ -91,18 +91,18 @@ export function DepartmentPage() {
     { 
       header: 'Name',
       accessor: 'translations',
-      cell: (item: Department) => item.translations['kk']?.name
+      cell: (item: Department) => item.translations[currentLanguage]?.name || '-'
     },
-    { 
-      header: 'Description',
-      accessor: 'translations',
-      cell: (item: Department) =>  <div 
-      className="max-w-md truncate"
-      dangerouslySetInnerHTML={{ 
-        __html: item.translations['kk']?.description || '-'
-      }}
-    />
-    },
+    // { 
+    //   header: 'Description',
+    //   accessor: 'translations',
+    //   cell: (item: Department) =>  <div 
+    //     className="max-w-md truncate"
+    //     dangerouslySetInnerHTML={{ 
+    //       __html: item.translations[currentLanguage]?.description || '-'
+    //     }}
+    //   />
+    // },
   ]
 
   return (

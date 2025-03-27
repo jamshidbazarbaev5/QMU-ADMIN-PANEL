@@ -13,7 +13,7 @@ interface TranslatedField {
     editorConfig?: any
 }
 
-interface TranslatedFormProps {
+export interface TranslatedFormProps {
   fields: TranslatedField[]
   languages: string[]
   onSubmit: (data: any) => Promise<void>
@@ -21,6 +21,7 @@ interface TranslatedFormProps {
   isLoading?: boolean
   submitButton?: React.ReactNode
   sharedFields?: string[]
+  onLanguageChange?: (language: string) => void
 }
 
 // Add this interface to define the structure of form data
@@ -30,7 +31,7 @@ interface FormDataType {
   };
 }
 
-export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoading, sharedFields = [] }: TranslatedFormProps) {
+export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoading, sharedFields = [], }: TranslatedFormProps) {
   console.log('TranslatedForm props:', {
     fields,
     languages,
@@ -92,48 +93,26 @@ export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoa
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     
-    // Filter out languages with empty content
-    const filteredTranslations: { [key: string]: any } = {}
+    // Create translations object with all languages, regardless of content
+    const translations: { [key: string]: any } = {};
     
     languages.forEach(lang => {
-      // Check if all required fields in this language have content
-      const hasRequiredContent = fields
-        .filter(field => field.required)
-        .every(field => {
-          const value = formData[lang]?.[field.name]
-          if (typeof value === 'string') {
-            // For rich text content, remove HTML tags and check if there's text
-            const plainText = value.replace(/<[^>]*>/g, '').trim()
-            return plainText !== ''
-          }
-          return false
-        })
-
-      // Only include languages that have all required content
-      if (hasRequiredContent) {
-        filteredTranslations[lang] = {
-          ...formData[lang],
-          // Generate slug from title if not provided
-          slug: formData[lang].slug || formData[lang].title?.toLowerCase().replace(/\s+/g, '-') || ''
-        }
-      }
-    })
-
-    // Check if at least one language has content
-    if (Object.keys(filteredTranslations).length === 0) {
-      setError('Please fill in at least one complete translation')
-      return
-    }
+      translations[lang] = {
+        ...formData[lang],
+        // Generate slug from title if not provided
+        slug: formData[lang].slug || formData[lang].title?.toLowerCase().replace(/\s+/g, '-') || ''
+      };
+    });
 
     try {
-      // Send the translations wrapped in a translations object
-      await onSubmit({ translations: filteredTranslations })
+      // Send all translations
+      await onSubmit({ translations });
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred')
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
     }
-  }
+  };
 
   const handleFieldChange = (language: string, fieldName: string, value: string) => {
     if (sharedFields.includes(fieldName)) {
@@ -162,6 +141,7 @@ export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoa
         <RichTextEditor
           value={formData[language]?.[field.name] || ''}
           onChange={(content) => handleFieldChange(language, field.name, content)}
+          onFileUpload={field.editorConfig?.onFileUpload}
         />
       )
     }

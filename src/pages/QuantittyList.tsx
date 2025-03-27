@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { DataTable } from '../helpers/DataTable'
 import { PageHeader } from '../helpers/PageHeader'
 import { Edit, Trash2 } from 'lucide-react'
+import { fetchWithAuth, getAuthHeader } from '../api/api'
 
 export function QuantityList() {
   const navigate = useNavigate()
   const [quantities, setQuantities] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-  const token = localStorage.getItem('accessToken')
 
   useEffect(() => {
     fetchQuantities()
@@ -16,9 +16,9 @@ export function QuantityList() {
 
   const fetchQuantities = async () => {
     try {
-      const response = await fetch('https://karsu.uz/api/publications/quantities', {
+      const response = await fetchWithAuth('https://karsu.uz/api/publications/quantities', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          ...getAuthHeader()
         }
       })
       if (!response.ok) throw new Error('Failed to fetch')
@@ -35,10 +35,10 @@ export function QuantityList() {
     if (!window.confirm('Are you sure you want to delete this item?')) return
 
     try {
-      const response = await fetch(`https://karsu.uz/api/publications/quantities/${id}`, {
+      const response = await fetchWithAuth(`https://karsu.uz/api/publications/quantities/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          ...getAuthHeader()
         }
       })
       if (!response.ok) throw new Error('Failed to delete')

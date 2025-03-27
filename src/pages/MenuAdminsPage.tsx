@@ -8,6 +8,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { useNavigate } from 'react-router-dom'
+import { Pagination } from '../components/ui/Pagination'
 
 interface MenuAdminTranslation {
   full_name: string
@@ -73,8 +74,16 @@ const translatedFields = [
   { name: 'biography', label: 'Biography', type: 'textarea' as const, required: true },
 ]
 
+interface PaginatedResponse {
+  count: number
+  next: string | null
+  previous: string | null
+  results: MenuAdmin[]
+}
+
 export function MenuAdminsPage() {
   const [admins, setAdmins] = useState<MenuAdmin[]>([])
+  const [filteredAdmins, setFilteredAdmins] = useState<MenuAdmin[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingAdmin, setEditingAdmin] = useState<MenuAdmin | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -93,20 +102,44 @@ export function MenuAdminsPage() {
   const [selectedAgency, ] = useState<string>('')
   const [position, setPosition] = useState<string>('')
   const navigate = useNavigate()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const ITEMS_PER_PAGE = 10
 
-  const fetchAdmins = async () => {
+  const fetchAllAdmins = async () => {
     try {
-      const response = await fetch(`https://karsu.uz/api/menus/admin/`)
-      if (!response.ok) throw new Error('Failed to fetch admins')
-      const data = await response.json()
-      // Filter to only show general administrators
-      const generalAdmins = Array.isArray(data) ? 
-        data.filter(admin => !admin.faculty && !admin.department && !admin.agency) : 
-        []
-      setAdmins(generalAdmins)
+      let allAdmins: MenuAdmin[] = []
+      let nextUrl: string | null = 'https://karsu.uz/api/menus/admin/'
+
+      while (nextUrl) {
+        const response = await fetch(nextUrl)
+        if (!response.ok) throw new Error('Failed to fetch admins')
+        const data: PaginatedResponse = await response.json()
+        
+        // Filter to only show general administrators
+        const generalAdmins = data.results.filter(admin => 
+          !admin.faculty && !admin.department && !admin.agency
+        )
+        
+        allAdmins = [...allAdmins, ...generalAdmins]
+        nextUrl = data.next
+      }
+
+      // Sort admins by ID in descending order to show latest first
+      allAdmins.sort((a, b) => b.id - a.id)
+
+      setAdmins(allAdmins)
+      updatePaginatedData(allAdmins, 1)
     } catch (error) {
       console.error('Error fetching admins:', error)
     }
+  }
+
+  const updatePaginatedData = (allAdmins: MenuAdmin[], page: number) => {
+    const startIndex = (page - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
+    setFilteredAdmins(allAdmins.slice(startIndex, endIndex))
+    setTotalPages(Math.ceil(allAdmins.length / ITEMS_PER_PAGE))
   }
 
   const fetchMenus = async () => {
@@ -154,12 +187,16 @@ export function MenuAdminsPage() {
   }
 
   useEffect(() => {
-    fetchAdmins()
+    fetchAllAdmins()
     fetchMenus()
     fetchFaculties()
     fetchDepartments()
     fetchAgencies()
-  }, [currentLanguage])
+  }, [])
+
+  useEffect(() => {
+    updatePaginatedData(admins, currentPage)
+  }, [currentPage, admins])
 
   const handleSubmit = async (translationData: any) => {
     if (!selectedMenu || !selectedFaculty || !selectedDepartment || !selectedAgency || !position) {
@@ -200,7 +237,7 @@ export function MenuAdminsPage() {
 
       if (!response.ok) throw new Error('Failed to save admin')
       
-      await fetchAdmins()
+      await fetchAllAdmins()
       setIsDialogOpen(false)
       setEditingAdmin(null)
       setSelectedImage(null)
@@ -224,7 +261,7 @@ export function MenuAdminsPage() {
       )
       
       if (!response.ok) throw new Error('Failed to delete admin')
-      await fetchAdmins()
+      await fetchAllAdmins()
     } catch (error) {
       console.error('Error deleting admin:', error)
     }
@@ -268,7 +305,7 @@ export function MenuAdminsPage() {
       />
 
       <DataTable
-        data={admins}
+        data={filteredAdmins}
         columns={columns}
         currentLanguage={currentLanguage}
         actions={(item: MenuAdmin) => (
@@ -295,6 +332,12 @@ export function MenuAdminsPage() {
             </Button>
           </div>
         )}
+      />
+
+      <Pagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

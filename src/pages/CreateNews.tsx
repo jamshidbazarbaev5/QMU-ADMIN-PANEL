@@ -31,10 +31,6 @@ interface Goal {
   color: string
 }
 
-interface NewsImage {
-  id: number
-  image: string
-}
 
 interface FormValues {
   category: string
@@ -86,10 +82,22 @@ export default function CreateNews() {
   const [categories, setCategories] = useState<Category[]>([])
   const [goals, setGoals] = useState<Goal[]>([])
   const [uploadedImages, setUploadedImages] = useState<File[]>([])
-  const [existingImages, setExistingImages] = useState<NewsImage[]>([])
+  const [existingImages, setExistingImages] = useState<{
+    id: number;
+    image: string;
+  }[]>([])
+  const [imagesToDelete, setImagesToDelete] = useState<number[]>([])
   const [isLoadingInitialData, setIsLoadingInitialData] = useState(isEditing)
   const [isGoalsDropdownOpen, setIsGoalsDropdownOpen] = useState(false)
   const [, setError] = useState<Record<string, string[]> | string | null>(null)
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
+  const [selectedImage, setSelectedImage] = useState<{
+    file: File | null;
+    preview?: string;
+  }>({
+    file: null,
+    preview: undefined
+  });
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -160,17 +168,18 @@ export default function CreateNews() {
 
         // Handle existing images
         if (data.images) {
-          // Store existing images URLs
-          setExistingImages([
-            {
-              id: -1, // Main image gets ID -1
-              image: data.main_image
-            },
-            ...data.images.map((img:any, index:any) => ({
-              id: index + 1,
-              image: img.image
-            }))
-          ]);
+          const images = data.images.map((imageObj: any) => ({
+            id: imageObj.id,
+            image: imageObj.image,
+          }));
+          setExistingImages(images);
+        }
+
+        if (data.main_image) {
+          setSelectedImage({
+            file: null,
+            preview: data.main_image
+          });
         }
 
       } catch (error) {
@@ -222,18 +231,29 @@ export default function CreateNews() {
     if (files) {
       const newFiles = Array.from(files)
       setUploadedImages(prev => [...prev, ...newFiles])
-      
-      // Add new images to existingImages with new IDs
-      const lastId = Math.max(...existingImages.map(img => img.id), 0)
-      const newImages = newFiles.map((file, index) => ({
-        id: lastId + index + 1,
-        image: URL.createObjectURL(file)
-      }))
-      setExistingImages(prev => [...prev, ...newImages])
     }
   }
 
- 
+  const handleFileUpload = (file: File) => {
+    setUploadedFiles(prev => [...prev, file])
+  }
+
+  const handleImageDelete = (image: { id: number; image: string }) => {
+    if (image.id !== undefined) {
+      setImagesToDelete(prev => [...prev, Number(image.id)]);
+      setExistingImages(prev => prev.filter(img => img.id !== image.id));
+    }
+  };
+
+  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      setSelectedImage({
+        file,
+        preview: URL.createObjectURL(file)
+      });
+    }
+  };
 
   async function onSubmit(values: FormValues) {
     if (currentStep !== "review") {
@@ -258,21 +278,26 @@ export default function CreateNews() {
       }
       
       // Add main image if selected
-      if (values.main_image?.[0]) {
-        formData.append('main_image', values.main_image[0])
+      if (selectedImage.file) {
+        formData.append('main_image', selectedImage.file)
       }
 
-      // Add only new uploaded images
-      uploadedImages.forEach((file) => {
-        formData.append('uploaded_images', file)
+      // Add additional images with numeric indices
+      uploadedImages.forEach((image, index) => {
+        formData.append(`images[${index}]image`, image)
       })
 
-      // Add existing image URLs if needed
-      if (existingImages.length > 0) {
-        formData.append('existing_images', JSON.stringify(
-          existingImages.map(img => img.image)
-        ))
+      // Add all images to delete
+      if (imagesToDelete.length > 0) {
+        imagesToDelete.forEach(imageId => {
+          formData.append('images_to_delete', imageId.toString())
+        })
       }
+
+      // Add uploaded files
+      uploadedFiles.forEach(file => {
+        formData.append('upload_files', file)
+      })
 
       formData.append('date_posted', values.date_posted)
 
@@ -351,8 +376,6 @@ export default function CreateNews() {
       setCurrentStep(value as Step)
     }
   }
-
- 
 
   if (isLoadingInitialData) {
     return (
@@ -534,23 +557,23 @@ export default function CreateNews() {
                               <Input 
                                 type="file" 
                                 accept="image/*"
-                                onChange={(e) => {
-                                  const files = e.target.files
-                                  if (files?.length) {
-                                    onChange(files)
-                                  }
-                                }}
+                                onChange={handleMainImageChange}
                                 {...field}
                                 value={undefined}
                               />
-                              {/* Show existing main image if available */}
-                              {isEditing && existingImages.length > 0 && existingImages[0].id === -1 && (
-                                <div className="mt-2">
-                                  <img 
-                                    src={existingImages[0].image} 
-                                    alt="Current main image"
-                                    className="w-full max-w-md h-auto rounded"
+                              {(selectedImage.preview || existingImages.length > 0 && existingImages[0].id === -1) && (
+                                <div className="mt-2 relative">
+                                  <img
+                                     src={selectedImage.preview || (existingImages.length > 0 ? existingImages[0].image : '')}
+                                    className="h-32 object-cover rounded"
                                   />
+                                  <button
+                                    type="button"
+                                    className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
+                                    onClick={() => setSelectedImage({ file: null, preview: undefined })}
+                                  >
+                                    ×
+                                  </button>
                                 </div>
                               )}
                             </div>
@@ -579,27 +602,38 @@ export default function CreateNews() {
                                 value={undefined}
                               />
                               
-                              {/* Display grid of images */}
                               <div className="grid grid-cols-4 gap-4">
-                                {/* Display all images (existing + new) */}
-                                {existingImages
-                                  .filter(image => image.id !== -1) // Filter out main image
-                                  .map((image) => (
+                                {existingImages.map((image) => (
                                   <div key={image.id} className="relative">
                                     <img 
                                       src={image.image} 
-                                      alt="Image"
+                                      alt={`Existing ${image.id}`}
+                                      className="w-full h-24 object-cover rounded"
+                                    />
+                                    <button
+                                      type="button"
+                                      className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
+                                      onClick={() => handleImageDelete(image)}
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                ))}
+
+                                {uploadedImages.map((file, index) => (
+                                  <div key={index} className="relative">
+                                    <img 
+                                      src={URL.createObjectURL(file)} 
+                                      alt={`Preview ${index + 1}`}
                                       className="w-full h-24 object-cover rounded"
                                     />
                                     <button
                                       type="button"
                                       className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
                                       onClick={() => {
-                                        // Remove from both states
-                                        setExistingImages(prev => prev.filter(img => img.id !== image.id))
-                                        setUploadedImages(prev => prev.filter((_, idx) => 
-                                          idx !== existingImages.findIndex(img => img.id === image.id)
-                                        ))
+                                        setUploadedImages(prev => 
+                                          prev.filter((_, i) => i !== index)
+                                        );
                                       }}
                                     >
                                       ×
@@ -642,6 +676,7 @@ export default function CreateNews() {
                             <RichTextEditor
                               value={field.value}
                               onChange={field.onChange}
+                              onFileUpload={handleFileUpload}
                             />
                           </FormControl>
                           <FormMessage />
@@ -677,6 +712,7 @@ export default function CreateNews() {
                             <RichTextEditor
                               value={field.value}
                               onChange={field.onChange}
+                              onFileUpload={handleFileUpload}
                             />
                           </FormControl>
                           <FormMessage />
@@ -712,6 +748,7 @@ export default function CreateNews() {
                             <RichTextEditor
                               value={field.value}
                               onChange={field.onChange}
+                              onFileUpload={handleFileUpload}
                             />
                           </FormControl>
                           <FormMessage />
@@ -747,6 +784,7 @@ export default function CreateNews() {
                             <RichTextEditor
                               value={field.value}
                               onChange={field.onChange}
+                              onFileUpload={handleFileUpload}
                             />
                           </FormControl>
                           <FormMessage />
