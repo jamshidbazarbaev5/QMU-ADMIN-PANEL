@@ -100,6 +100,7 @@ export default function CreateNewsCategory() {
         ? `https://karsu.uz/api/news/category/${slug}/`
         : `https://karsu.uz/api/news/category/`
 
+
       const response = await fetchWithAuth(url, {
         method: isEditMode ? 'PUT' : 'POST',
         headers: {
@@ -113,7 +114,7 @@ export default function CreateNewsCategory() {
         throw new Error(`Failed to ${isEditMode ? 'update' : 'create'} category`)
       }
 
-      navigate('/karsu-admin-panel/news-categories')
+      navigate('/karsu-new-admin-panel/news-categories')
     } catch (error) {
       console.error(`Error ${isEditMode ? 'updating' : 'creating'} category:`, error)
       alert(`Failed to ${isEditMode ? 'update' : 'create'} category`)

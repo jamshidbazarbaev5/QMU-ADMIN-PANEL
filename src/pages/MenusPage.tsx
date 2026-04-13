@@ -88,13 +88,42 @@ export function MenusPage() {
   const handleSubmit = async (formData: any) => {
     setIsLoading(true)
     try {
+      // Get a valid slug for editing - try current language first, then fallback to any available slug
+      let editSlug = '';
+      if (editingMenu) {
+        if (editingMenu.translations[currentLanguage]?.slug) {
+          editSlug = editingMenu.translations[currentLanguage].slug;
+        } else {
+          // Fallback to first available translation with a slug
+          const availableTranslation = Object.values(editingMenu.translations).find(t => t.slug);
+          if (!availableTranslation?.slug) {
+            throw new Error('No valid slug found for editing');
+          }
+          editSlug = availableTranslation.slug;
+        }
+      }
+
       const url = editingMenu 
-        ? `https://karsu.uz/api/menus/${menuType}/${editingMenu.translations[currentLanguage].slug}/`
+        ? `https://karsu.uz/api/menus/${menuType}/${editSlug}/`
         : `https://karsu.uz/api/menus/${menuType}/`
+
+      // Format translations for each language
+      const translations: { [key: string]: any } = {};
+      const languages = ['en', 'ru', 'uz', 'kk'];
+      
+      languages.forEach(lang => {
+        if (formData[`name_${lang}`] || formData[`title_${lang}`]) {
+          translations[lang] = {
+            name: formData[`name_${lang}`] || '',
+            title: formData[`title_${lang}`] || '',
+            slug: formData[`slug_${lang}`] || ''
+          };
+        }
+      });
 
       const payload = {
         parent: selectedParent,
-        translations: formData.translations
+        translations
       }
 
       const response = await fetchWithAuth(url, {

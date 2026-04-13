@@ -178,7 +178,7 @@ export function DepartmentDeanFormPage() {
 
       if (!response.ok) throw new Error('Failed to save dean')
       
-      navigate('/karsu-admin-panel/department-deans')
+      navigate('/karsu-new-admin-panel/department-deans')
     } catch (error) {
       console.error('Error saving dean:', error)
     } finally {
@@ -192,7 +192,7 @@ export function DepartmentDeanFormPage() {
         <h1 className="text-2xl font-bold">
           {id ? 'Edit Department Dean' : 'Create Department Dean'}
         </h1>
-        <Button variant="outline" onClick={() => navigate('/karsu-admin-panel/department-deans')}>
+        <Button variant="outline" onClick={() => navigate('/karsu-new-admin-panel/department-deans')}>
           Back to List
         </Button>
       </div>

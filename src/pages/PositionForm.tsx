@@ -78,58 +78,50 @@ export default function PositionForm() {
     console.log('Initial data updated:', initialData)
   }, [initialData])
 
-  const handleSubmit = async (translationData:any) => {
-    if (!position) {
-      alert('Please enter a position number')
-      return
-    }
-
+  const handleSubmit = async (translationData: any) => {
     setIsLoading(true)
     try {
-      // Filter out empty translations
-      const filteredTranslations: Record<string, PositionTranslation> = {}
+      // Create translations object from flat data
+      const translations: { [key: string]: any } = {};
+      const languages = ['en', 'ru', 'uz', 'kk'];
       
-      Object.entries(translationData.translations).forEach(([lang, translation]: [string, any]) => {
-        // Only include translations where name is not empty
-        if (translation.name.trim()) {
-          filteredTranslations[lang] = {
-            name: translation.name.trim(),
-            ...(translation.slug && { slug: translation.slug.trim() })
+      languages.forEach(lang => {
+        const langData: { [key: string]: string } = {};
+        translatedFields.forEach(field => {
+          const value = translationData[`${field.name}_${lang}`];
+          if (value) {
+            langData[field.name] = value;
           }
+        });
+        if (Object.keys(langData).length > 0) {
+          translations[lang] = langData;
         }
-      })
+      });
 
-      const payload: Position = {
+      const formData = {
         email,
         position: parseInt(position),
-        translations: filteredTranslations
+        translations
       }
-
-      console.log('Sending payload:', payload) // Debug log
 
       const url = id 
         ? `https://karsu.uz/api/menus/position/${id}/`
-        : `https://karsu.uz/api/menus/position/`
+        : 'https://karsu.uz/api/menus/position/'
 
       const response = await fetchWithAuth(url, {
         method: id ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...getAuthHeader()  
+          ...getAuthHeader()
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(formData)
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to save position')
-      }
+      if (!response.ok) throw new Error('Failed to save position')
       
-      navigate('/karsu-admin-panel/position')
+      navigate('/karsu-new-admin-panel/position')
     } catch (error) {
       console.error('Error saving position:', error)
-      alert('Failed to save position. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -183,7 +175,7 @@ export default function PositionForm() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate('/karsu-admin-panel/positions')}
+                  onClick={() => navigate('/karsu-new-admin-panel/positions')}
                 >
                   Cancel
                 </Button>

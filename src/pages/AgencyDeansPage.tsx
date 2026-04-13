@@ -174,7 +174,7 @@ export function AgencyDeansPage() {
         title="Agency Deans"
         createButtonLabel="Add Agency Dean"
         onCreateClick={() => {
-          navigate('/karsu-admin-panel/agency-deans/create')
+          navigate('/karsu-new-admin-panel/agency-deans/create')
         }}
       />
 
@@ -189,7 +189,7 @@ export function AgencyDeansPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                navigate(`/karsu-admin-panel/agency-deans/${item.id}/edit`)
+                navigate(`/karsu-new-admin-panel/agency-deans/${item.id}/edit`)
               }}
             >
               <Pencil className="h-4 w-4" />

@@ -45,7 +45,7 @@ export default function Layout() {
     localStorage.removeItem("accessToken")
     localStorage.removeItem("refreshToken")
     window.dispatchEvent(new Event('auth-change'))
-    navigate("/karsu-admin-panel/login")
+    navigate("/karsu-new-admin-panel/login")
   }
 
   const toggleSection = (section: string) => {
@@ -59,33 +59,35 @@ export default function Layout() {
   // Organize menu items into sections
   const menuSections = {
     главная: [
-      {icon: Plus, text: "Объявления", href: "/karsu-admin-panel/annoucment-list"},
-      {icon: MessageSquare, text: "Обратная связь", href: "/karsu-admin-panel/feedback"},
-      {icon: Newspaper, text: "Новости", href: "/karsu-admin-panel/news"},
-      {icon: Grid, text: "Категории новостей", href: "/karsu-admin-panel/news-categories"},
-      {icon: Image, text: "Главные изображения", href: "/karsu-admin-panel/main-image-list"},
+      {icon: Plus, text: "Объявления", href: "/karsu-new-admin-panel/annoucment-list"},
+      {icon: MessageSquare, text: "Обратная связь", href: "/karsu-new-admin-panel/feedback"},
+      {icon: Newspaper, text: "Новости", href: "/karsu-new-admin-panel/news"},
+      {icon: Grid, text: "Категории новостей", href: "/karsu-new-admin-panel/news-categories"},
+      {icon: Image, text: "Главные изображения", href: "/karsu-new-admin-panel/main-image-list"},
     ],
     структура: [
-      {icon: School, text: "Факультеты", href: "/karsu-admin-panel/faculty"},
-      {icon: Building2, text: "Кафедры", href: "/karsu-admin-panel/department"},
+      {icon: School, text: "Факультеты", href: "/karsu-new-admin-panel/faculty"},
+      {icon: Building2, text: "Кафедры", href: "/karsu-new-admin-panel/department"},
     ],
     контент: [
-      {icon: LinkIcon, text: "Полезные ссылки", href: "/karsu-admin-panel/links"},
-      {icon: List, text: "Меню", href: "/karsu-admin-panel/menus"},
-      {icon: FileSpreadsheet, text: "Документы", href: "/karsu-admin-panel/document"},
-      {icon: Newspaper, text: "Публикации", href: "/karsu-admin-panel/posts"},
-      {icon: Video, text: "Видео", href: "/karsu-admin-panel/videos"},
-      {icon: FileSpreadsheet, text: "Количества", href: "/karsu-admin-panel/quantities"},
-      {icon:List,text:"Интерактивные услуги",href:"/karsu-admin-panel/services"}
+      {icon: LinkIcon, text: "Полезные ссылки", href: "/karsu-new-admin-panel/links"},
+      {icon: List, text: "Меню", href: "/karsu-new-admin-panel/menus"},
+      {icon: FileSpreadsheet, text: "Документы", href: "/karsu-new-admin-panel/document"},
+      {icon: Newspaper, text: "Публикации", href: "/karsu-new-admin-panel/posts"},
+      {icon: Video, text: "Видео", href: "/karsu-new-admin-panel/videos"},
+      {icon: FileSpreadsheet, text: "Количества", href: "/karsu-new-admin-panel/quantities"},
+      {icon:List,text:"Интерактивные услуги",href:"/karsu-new-admin-panel/services"},
+      {icon:List,text:"Drafs",href:"/karsu-new-admin-panel/drafts"},
     ],
     управление: [
-      {icon: UserCog, text: "Администрация", href: "/karsu-admin-panel/menu-admins"},
-      {icon: UserSquare2, text: "Должности", href: "/karsu-admin-panel/position"},
-      {icon: BuildingIcon, text: "Отделы", href: "/karsu-admin-panel/agency"},
-      {icon: UserRound, text: "Деканы факультетов", href: "/karsu-admin-panel/faculty-deans"},
-      {icon: UserRound, text: "Заведующие кафедр", href: "/karsu-admin-panel/department-deans"},
-      {icon: UserRound, text: "Начальники отделов", href: "/karsu-admin-panel/agency-deans"},
-      {icon: UserRound, text: "Преподаватели", href: "/karsu-admin-panel/teachers"},
+      {icon: UserCog, text: "Администрация", href: "/karsu-new-admin-panel/menu-admins"},
+      {icon: UserSquare2, text: "Должности", href: "/karsu-new-admin-panel/position"},
+      {icon: BuildingIcon, text: "Отделы", href: "/karsu-new-admin-panel/agency"},
+      {icon: UserRound, text: "Деканы факультетов", href: "/karsu-new-admin-panel/faculty-deans"},
+      {icon: UserRound, text: "Заведующие кафедр", href: "/karsu-new-admin-panel/department-deans"},
+      {icon: UserRound, text: "Начальники отделов", href: "/karsu-new-admin-panel/agency-deans"},
+      {icon: UserRound, text: "Преподаватели", href: "/karsu-new-admin-panel/teachers"},
+      {icon: UserRound, text: "Другие люди", href: "/karsu-new-admin-panel/other-people"},
     ],
   }
 

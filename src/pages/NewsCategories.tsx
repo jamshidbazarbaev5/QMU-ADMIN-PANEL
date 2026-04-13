@@ -142,7 +142,7 @@ export default function NewsCategories() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-[#6C5DD3]">News Categories</h1>
         <Button
-          onClick={() => navigate('/karsu-admin-panel/create-news-category')}
+          onClick={() => navigate('/karsu-new-admin-panel/create-news-category')}
           className="flex items-center gap-2 px-4 py-2 bg-[#6C5DD3] text-white rounded-lg hover:bg-[#5b4eb8] transition-colors"
         >
           <Plus className="h-5 w-5" />

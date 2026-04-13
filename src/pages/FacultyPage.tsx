@@ -211,7 +211,7 @@ export function FacultyPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                navigate(`/karsu-admin-panel/faculties/${availableSlug}/edit`)
+                navigate(`/karsu-new-admin-panel/faculties/${availableSlug}/edit`)
               }}
             >
               <Pencil className="h-4 w-4" />
@@ -243,7 +243,7 @@ export function FacultyPage() {
       <PageHeader
         title="Faculties"
         createButtonLabel="Add Faculty"
-        onCreateClick={() => navigate('/karsu-admin-panel/faculties/new')}
+        onCreateClick={() => navigate('/karsu-new-admin-panel/faculties/new')}
       />
 
       <DataTable

@@ -190,7 +190,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
         }
       } catch (error) {
         console.error("Error fetching post:", error);
-        navigate("/karsu-admin-panel/posts");
+        navigate('/karsu-new-admin-panel/posts');
       } finally {
         setIsLoading(false);
       }
@@ -284,7 +284,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
         <PageHeader
           title="Create Post"
           createButtonLabel="Back to Posts"
-          onCreateClick={() => navigate("/karsu-admin-panel/posts")}
+           onCreateClick={() => navigate("/karsu-admin-panel/posts")}
         />
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-6">
@@ -331,14 +331,27 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
     try {
       setIsSubmitting(true);
 
-      // Debug log to see what translations look like
       console.log('Incoming translations:', translationsData);
 
-      const translations = translationsData.translations;
+      // Restructure the translations data
+      const translations: { [key: string]: { title: string, description: string } } = {};
+      
+      // Extract language codes and their values
+      Object.keys(translationsData).forEach(key => {
+        if (key.includes('_')) {
+          const [field, lang] = key.split('_');
+          if (!translations[lang]) {
+            translations[lang] = { title: '', description: '' };
+          }
+          translations[lang][field as 'title' | 'description'] = translationsData[key];
+        }
+      });
 
-      // Check if there's at least one valid translation
+      console.log('Restructured translations:', translations);
+
+      // Validate restructured translations
       const hasValidTranslation = Object.values(translations).some(
-        (translation: any) => translation.title && translation.title.trim() !== ''
+        (translation) => translation.title && translation.title.trim() !== ''
       );
 
       console.log('Has valid translation:', hasValidTranslation);
@@ -348,41 +361,42 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       }
 
       const formData = new FormData();
+      formData.append('translations', JSON.stringify(translations));
 
-      // Filter out translations with empty title
-      const filteredTranslations = Object.fromEntries(
-        Object.entries(translations).filter(([_, translation]: [string, any]) => {
-          return translation.title && translation.title.trim() !== '';
-        })
-      );
-
-      console.log('Filtered translations:', filteredTranslations);
-
-      formData.append('translations', JSON.stringify(filteredTranslations));
-
-      // Add main image if selected
       if (selectedImage?.file) {
         formData.append('main_image', selectedImage.file);
       }
 
-      // Add additional images with numeric indices
       uploadedImages.forEach((image, index) => {
         formData.append(`images[${index}]image`, image);
       });
 
-      // Add all images to delete
       if (imagesToDelete.length > 0) {
         imagesToDelete.forEach(imageId => {
           formData.append('images_to_delete', imageId.toString());
         });
       }
 
-      // Add menu selections if present
-      if (selectedMenu && selectedMenu !== '_none') {
-        formData.append('menu', selectedMenu);
+      // Update menu selections logic
+      if (selectedParentMenu && selectedParentMenu !== '_none') {
+        // If there's a submenu selected, send that
+        if (selectedMenu && selectedMenu !== '_none') {
+          formData.append('menu', selectedMenu);
+        } else {
+          // If no submenu, send the parent menu
+          formData.append('menu', selectedParentMenu);
+        }
       }
-      if (selectedFooterMenu && selectedFooterMenu !== '_none') {
-        formData.append('footer_menu', selectedFooterMenu);
+
+      // Update footer menu selections logic
+      if (selectedParentFooterMenu && selectedParentFooterMenu !== '_none') {
+        // If there's a sub footer menu selected, send that
+        if (selectedFooterMenu && selectedFooterMenu !== '_none') {
+          formData.append('footer_menu', selectedFooterMenu);
+        } else {
+          // If no sub footer menu, send the parent footer menu
+          formData.append('footer_menu', selectedParentFooterMenu);
+        }
       }
 
       // Add uploaded files with numeric indices
@@ -420,7 +434,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
 
       
   
-      navigate('/karsu-admin-panel/posts');
+      navigate('/karsu-new-admin-panel/posts');
     } catch (error: any) {
       console.error('Error saving post:', error);
       setErrorMessage(
@@ -475,7 +489,7 @@ export function PostForm({ initialData, isEditing }: PostFormProps) {
       <PageHeader
         title={isEditing ? "Edit Post" : "Create Post"}
         createButtonLabel="Back to Posts"
-        onCreateClick={() => navigate("/karsu-admin-panel/posts")}
+       onCreateClick={() => navigate("/karsu-new-admin-panel/posts")}
       />
 
       <div className="bg-white rounded-lg shadow p-6">

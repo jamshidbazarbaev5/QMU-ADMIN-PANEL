@@ -18,7 +18,6 @@ interface Menu {
     }
   }
 }
-
 const translatedFields = [
   { name: 'name', label: 'Name', type: 'text' as const, required: false },
   { name: 'description', label: 'Description', type: 'richtext' as const, required: false },
@@ -65,7 +64,7 @@ export default function AgencyForm() {
     }
   }
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (translationsData: any) => {
     if (!selectedMenu) {
       alert('Please select a menu')
       return
@@ -73,17 +72,44 @@ export default function AgencyForm() {
 
     setIsLoading(true)
     try {
-      const filteredTranslations = Object.entries(data.translations).reduce((acc, [lang, trans]: [string, any]) => {
-        if (trans.name || trans.description || trans.slug) {
-          acc[lang] = trans
+      console.log('Incoming translations:', translationsData);
+
+      // Restructure the translations data
+      const translations: { [key: string]: { name: string, description: string } } = {};
+      
+      // Extract language codes and their values
+      Object.keys(translationsData).forEach(key => {
+        if (key.includes('_')) {
+          const [field, lang] = key.split('_');
+          if (!translations[lang]) {
+            translations[lang] = { name: '', description: '' };
+          }
+          translations[lang][field as 'name' | 'description'] = translationsData[key];
         }
-        return acc
-      }, {} as Record<string, any>)
+      });
+
+      console.log('Restructured translations:', translations);
+
+      // Validate restructured translations
+      const hasValidTranslation = Object.values(translations).some(
+        (translation) => translation.name && translation.name.trim() !== ''
+      );
+
+      if (!hasValidTranslation) {
+        throw new Error("At least one translation must be provided");
+      }
 
       const formData = new FormData()
       formData.append('menu', selectedMenu.toString())
-      formData.append('translations', JSON.stringify(filteredTranslations))
+      formData.append('translations', JSON.stringify(translations))
       formData.append('position', position.toString())
+
+      
+
+      // Debug log to verify the format
+      for (const pair of formData.entries()) {
+        console.log('FormData entry:', pair[0], pair[1]);
+      }
 
       const url = slug ? `/menus/agency/${slug}/` : '/menus/agency/'
 
@@ -96,10 +122,12 @@ export default function AgencyForm() {
         }
       })
 
-      console.log(response)
-      navigate('/karsu-admin-panel/agency')
-    } catch (error) {
+      console.log('Response:', response)
+      navigate('/karsu-new-admin-panel/agency')
+    } catch (error: any) {
       console.error('Error saving agency:', error)
+      // Show error message if available
+      alert(error.response?.data?.message || error.message || 'An error occurred while saving')
     } finally {
       setIsLoading(false)
     }
@@ -133,7 +161,7 @@ export default function AgencyForm() {
                 <SelectContent>
                   {menus.map((menu) => (
                     <SelectItem key={menu.id} value={menu.id.toString()}>
-                      {menu.translations[currentLanguage]?.name || menu.translations.en?.name || `Menu ${menu.id}`}
+                      {menu.translations[currentLanguage]?.name || menu.translations.en?.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -164,7 +192,7 @@ export default function AgencyForm() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/karsu-admin-panel/agencies')}
+               onClick={() => navigate('/karsu--new-admin-panel/agencies')}
             >
               Cancel
             </Button>

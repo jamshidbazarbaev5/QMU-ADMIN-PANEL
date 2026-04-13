@@ -79,42 +79,85 @@ export function TeacherForm() {
     }
   }
 
+  const clearForm = (data: any) => {
+    // Clear all fields except department
+    setEmail('');
+    setPhoneNumber('');
+    setMainImage(null);
+    setImagePreview(null);
+    setTeacher(null);
+  
+    // Reset the form fields
+    if (data.resetForm) {
+      data.resetForm();
+    }
+  
+    // Clear translations
+    if (data.translations) {
+      Object.keys(data.translations).forEach(lang => {
+        if (data.translations[lang]) {
+          data.translations[lang].full_name = '';
+          data.translations[lang].position = '';
+          data.translations[lang].description = '';
+          data.translations[lang].slug = '';
+        }
+      });
+    }
+  };
+  
   const handleSubmit = async (data: any) => {
     if (!departmentId) {
-      alert('Please select a department')
-      return
+      alert('Please select a department');
+      return;
     }
-
+  
     try {
-      setLoading(true)
-      
-      const filteredTranslations = Object.entries(data.translations).reduce((acc, [lang, trans]: [string, any]) => {
-        if (trans.full_name || trans.position || trans.description) {
-          acc[lang] = {
-            full_name: trans.full_name || '',
-            position: trans.position || '',
-            description: trans.description || '',
-            slug: trans.slug || ''
-          }
-        }
-        return acc
-      }, {} as Record<string, any>)
+      setLoading(true);
 
-      const formData = new FormData()
-      formData.append('email', email)
-      formData.append('phone_number', phoneNumber)
-      formData.append('faculty_department', departmentId)
-      formData.append('translations', JSON.stringify(filteredTranslations))
-      
-      if (mainImage) {
-        formData.append('main_image', mainImage)
+      console.log('Incoming translations:', data);
+
+      // Create a translations object from the flat data
+      const translations: { [key: string]: any } = {};
+      Object.keys(data).forEach(key => {
+        const match = key.match(/^(full_name|position|description)_(\w+)$/);
+        if (match) {
+          const [_, field, lang] = match;
+          if (!translations[lang]) {
+            translations[lang] = {
+              full_name: '',
+              position: '',
+              description: '',
+              slug: ''
+            };
+          }
+          translations[lang][field] = data[key] || '';
+        }
+      });
+
+      console.log('Restructured translations:', translations);
+
+      // Check if any language has valid full_name
+      const hasValidTranslation = Object.values(translations).some(
+        (translation) => translation.full_name && translation.full_name.trim() !== ''
+      );
+
+      console.log('Has valid translation:', hasValidTranslation);
+
+      if (!hasValidTranslation) {
+        throw new Error("At least one translation with full name must be provided");
       }
 
-      const url = id 
-        ? `/publications/teachers/${id}/` 
-        : '/publications/teachers/'
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('phone_number', phoneNumber);
+      formData.append('faculty_department', departmentId);
+      formData.append('translations', JSON.stringify(translations));
 
+      if (mainImage) {
+        formData.append('main_image', mainImage);
+      }
 
+      const url = id ? `/publications/teachers/${id}/` : '/publications/teachers/';
 
       await api2({
         method: id ? 'put' : 'post',
@@ -122,29 +165,24 @@ export function TeacherForm() {
         data: formData,
         headers: {
           'Content-Type': 'multipart/form-data',
-        }
-      })
-      
+        },
+      });
+
       if (id) {
-        navigate('/karsu-admin-panel/teachers')
+        navigate('/karsu-new-admin-panel/teachers');
       } else {
-        setEmail('')
-        setPhoneNumber('')
-        setMainImage(null)
-        setImagePreview(null)
-        setTeacher(null)
-        
-        if (data.resetForm) {
-          data.resetForm()
-        }
+        // Clear form but keep department
+        clearForm(data);
+        // Show success message
+        alert('Teacher created successfully!');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save teacher')
+      setError(err instanceof Error ? err.message : 'Failed to save teacher');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
+  };
+  
   const translatedFields = [
     {
       name: 'full_name',

@@ -27,7 +27,7 @@ export function ChangePassword() {
     try {
       await changePassword(password);
       setSuccess(true);
-      setTimeout(() => navigate('/posts'), 2000);
+      setTimeout(() => navigate('/karsu-admin-new-panel/posts'), 2000);
     } catch (error: any) {
       setError(error.detail || 'Failed to change password');
     } finally {

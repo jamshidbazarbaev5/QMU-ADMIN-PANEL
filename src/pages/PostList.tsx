@@ -160,7 +160,7 @@ export function Posts() {
         <PageHeader
             title="Posts"
             createButtonLabel="Create Post"
-            onCreateClick={() => navigate('/karsu-admin-panel/posts/new')}
+            onCreateClick={() => navigate('/karsu-new-admin-panel/posts/new')}
         />
 
         <div className="mb-4">
@@ -180,7 +180,7 @@ export function Posts() {
               onRowClick={(item) => {
                 const slug = getPostSlug(item);
                 if (slug) {
-                  navigate(`/karsu-admin-panel/posts/${slug}/edit`);
+                  navigate(`/karsu-new-admin-panel/posts/${slug}/edit`);
                 }
               }}
               actions={(item) => (
@@ -190,7 +190,7 @@ export function Posts() {
                           e.stopPropagation();
                           const slug = getPostSlug(item);
                           if (slug) {
-                            navigate(`/karsu-admin-panel/posts/${slug}/edit`);
+                            navigate(`/karsu-new-admin-panel/posts/${slug}/edit`);
                           }
                         }}
                         className="text-blue-600 hover:text-blue-800"

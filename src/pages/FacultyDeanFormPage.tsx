@@ -301,7 +301,7 @@ export function FacultyDeanFormPage() {
         },  
       })
 
-      navigate('/karsu-admin-panel/faculty-deans')
+      navigate('/karsu-new-admin-panel/faculty-deans')
     } catch (error) {
       console.error('Error saving dean:', error)
       if (axios.isAxiosError(error)) {

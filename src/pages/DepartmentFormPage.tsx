@@ -79,45 +79,57 @@ export function DepartmentFormPage() {
     }
   }
 
-  const handleSubmit = async (translatedData: any) => {
+  const handleSubmit = async (translationData: any) => {
     if (!selectedFaculty) {
-      alert('Please select a faculty')
-      return
+      alert('Please select a faculty');
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      // Filter out empty translations
-     
-      const payload = {
-        faculty: parseInt(selectedFaculty),
-        translations: translatedData.translations,
-      };
+      // Create translations object from flat data
+      const translations: { [key: string]: any } = {};
+      const languages = ['en', 'ru', 'uz', 'kk'];
+      
+      languages.forEach(lang => {
+        const langData: { [key: string]: string } = {};
+        translatedFields.forEach(field => {
+          const value = translationData[`${field.name}_${lang}`];
+          if (value) {
+            langData[field.name] = value;
+          }
+        });
+        if (Object.keys(langData).length > 0) {
+          translations[lang] = langData;
+        }
+      });
 
-      const endpoint = id
-        ? `https://karsu.uz/api/menus/department/${id}/`
-        : 'https://karsu.uz/api/menus/department/'
+      const response = await fetchWithAuth(
+        id 
+          ? `https://karsu.uz/api/menus/department/${id}/`
+          : 'https://karsu.uz/api/menus/department/',
+        {
+          method: id ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader(),
+          },
+          body: JSON.stringify({
+            faculty: selectedFaculty,
+            translations,
+          }),
+        }
+      );
 
-      const method = id ? 'PUT' : 'POST'
-
-      const response = await fetchWithAuth(endpoint, {
-        method,
-        headers: {
-          ...getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
-
-      if (response.ok) {
-        navigate('/karsu-admin-panel/department')
-      }
+      if (!response.ok) throw new Error('Failed to save department');
+      
+      navigate('/karsu-new-admin-panel/department');
     } catch (error) {
-      console.error('Error saving department:', error)
+      console.error('Error saving department:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   if (isLoading && id) {
     return (
@@ -177,7 +189,7 @@ export function DepartmentFormPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/karsu-admin-panel/departments')}
+                 onClick={() => navigate('/karsu-new-admin-panel/departments')}
             >
               Cancel
             </Button>

@@ -153,7 +153,7 @@ export function DocumentPage() {
         title="Documents"
         createButtonLabel="Add Document"
         onCreateClick={() => {
-          navigate('/karsu-admin-panel/documents/create')
+          navigate('/karsu--new-admin-panel/documents/create')
         }}
       />
 
@@ -168,7 +168,7 @@ export function DocumentPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                navigate(`/karsu-admin-panel/documents/edit/${item.id}`)
+                navigate(`/karsu-new-admin-panel/documents/edit/${item.id}`)
               }}
             >
               <Pencil className="h-4 w-4" />

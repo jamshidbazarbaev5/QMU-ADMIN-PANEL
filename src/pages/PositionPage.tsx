@@ -147,7 +147,7 @@ export function PositionPage() {
       <PageHeader
         title="Positions"
         createButtonLabel="Add Position"
-        onCreateClick={() => navigate('/karsu-admin-panel/positions/new')}
+        onCreateClick={() => navigate('/karsu-new-admin-panel/positions/new')}
       />
 
       <DataTable
@@ -173,7 +173,7 @@ export function PositionPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                navigate(`/karsu-admin-panel/positions/${item.id}/edit`)
+                navigate(`/karsu-new-admin-panel/positions/${item.id}/edit`)
               }}
             >
               <Pencil className="h-4 w-4" />

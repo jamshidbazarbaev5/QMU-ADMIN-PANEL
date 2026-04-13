@@ -171,7 +171,7 @@ export function DocumentForm() {
         throw new Error('Failed to save document')
       }
 
-      navigate('/karsu-admin-panel/document')
+      navigate('/karsu-new-admin-panel/document')
     } catch (error) {
       console.error('Error saving document:', error)
       alert('Failed to save document')
@@ -183,7 +183,7 @@ export function DocumentForm() {
   return (
     <div className="p-6 mt-[50px]">
       <div className="mb-6">
-        <Button variant="outline" onClick={() => navigate('/karsu-admin-panel//documents')}>
+        <Button variant="outline" onClick={() => navigate('/karsu-new-admin-panel//documents')}>
           Back to Documents
         </Button>
       </div>

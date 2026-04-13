@@ -227,7 +227,7 @@ export function DepartmentDeansPage() {
         title="Department Deans"
         createButtonLabel="Add Department Dean"
         onCreateClick={() => {
-          navigate('/karsu-admin-panel/department-deans/create')
+          navigate('/karsu-new-admin-panel/department-deans/create')
         }}
       />
 
@@ -246,7 +246,7 @@ export function DepartmentDeansPage() {
                   size="icon"
                   onClick={(e) => {
                     e.stopPropagation()
-                    navigate(`/karsu-admin-panel/department-deans/${item.id}/edit`)
+                    navigate(`/karsu-new-admin-panel/department-deans/${item.id}/edit`)
                   }}
                 >
                   <Pencil className="h-4 w-4" />

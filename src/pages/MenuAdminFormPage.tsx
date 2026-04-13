@@ -198,7 +198,7 @@ export function MenuAdminFormPage() {
         }
       }
       
-      navigate('/karsu-admin-panel/menu-admins')
+      navigate('/karsu-new-admin-panel/menu-admins')
     } catch (error) {
       let errorMessage = 'An unexpected error occurred'
       
@@ -260,7 +260,7 @@ export function MenuAdminFormPage() {
         <h1 className="text-2xl font-bold">
           {id ? 'Edit Administrator' : 'Create Administrator'}
         </h1>
-        <Button variant="outline" onClick={() => navigate('/karsu-admin-panel/menu-admins')}>
+        <Button variant="outline" onClick={() => navigate('/karsu-new-admin-panel/menu-admins')}>
           Back to List
         </Button>
       </div>

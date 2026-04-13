@@ -76,7 +76,7 @@ export default function FeedbackForm() {
 
       if (!response.ok) throw new Error('Failed to save feedback')
       
-      navigate('/karsu-admin-panel/feedback')
+      navigate('/karsu-new-admin-panel/feedback')
     } catch (error) {
       console.error('Error saving feedback:', error)
       alert('Failed to save feedback')

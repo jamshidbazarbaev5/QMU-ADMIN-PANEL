@@ -140,7 +140,7 @@ export function PostForm() {
         throw new Error('Failed to save post')
       }
 
-      navigate('/karsu-admin-panel/posts')
+      navigate('/karsu-new-admin-panel/posts')
     } catch (error) {
       console.error('Error saving post:', error)
       throw error

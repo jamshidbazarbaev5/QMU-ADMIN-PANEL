@@ -96,15 +96,24 @@ export default function FacultyForm() {
       
       formData.append('email', email)
       
-      // Filter out empty translations
-      const filteredTranslations = Object.fromEntries(
-        Object.entries(translationData.translations).filter(([_, translation]) => {
-          const values = Object.values(translation as object)
-          return values.some(value => value !== '' && value !== null && value !== undefined)
-        })
-      )
+      // Create translations object from flat data
+      const translations: { [key: string]: any } = {}
+      const languages = ['en', 'ru', 'uz', 'kk']
       
-      formData.append('translations', JSON.stringify(filteredTranslations))
+      languages.forEach(lang => {
+        const langData: { [key: string]: string } = {}
+        translatedFields.forEach(field => {
+          const value = translationData[`${field.name}_${lang}`]
+          if (value) {
+            langData[field.name] = value
+          }
+        })
+        if (Object.keys(langData).length > 0) {
+          translations[lang] = langData
+        }
+      })
+      
+      formData.append('translations', JSON.stringify(translations))
 
       const url = id 
         ? `https://karsu.uz/api/menus/faculty/${id}/`
@@ -121,7 +130,7 @@ export default function FacultyForm() {
 
       if (!response.ok) throw new Error('Failed to save faculty')
       
-      navigate('/karsu-admin-panel/faculty')
+      navigate('/karsu-new-admin-panel/faculty')
     } catch (error) {
       console.error('Error saving faculty:', error)
     } finally {
@@ -204,7 +213,7 @@ export default function FacultyForm() {
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-medium">Departments</h3>
                   <Button
-                    onClick={() => navigate(`/karsu-admin-panel/departments/create?faculty=${id}`)}
+                  onClick={() => navigate(`/karsu-admin-panel/departments/create?faculty=${id}`)}
                     className="flex items-center gap-2"
                   >
                     <Plus className="h-4 w-4" />
@@ -219,7 +228,7 @@ export default function FacultyForm() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/karsu-admin-panel/faculties')}
+               onClick={() => navigate('/karsu-admin-panel/faculties')}
             >
               Cancel
             </Button>

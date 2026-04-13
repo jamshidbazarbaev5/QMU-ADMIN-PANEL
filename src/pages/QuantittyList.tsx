@@ -56,7 +56,7 @@ export function QuantityList() {
   const renderActions = (item: any) => (
     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
       <button
-        onClick={() => navigate(`/karsu-admin-panel/quantities/${item.id}/edit`)}
+        onClick={() => navigate(`/karsu-new-admin-panel/quantities/${item.id}/edit`)}
         className="p-2 text-blue-600 hover:text-blue-800"
       >
         <Edit size={16} />
@@ -79,13 +79,13 @@ export function QuantityList() {
       <PageHeader
         title="Quantities"
         createButtonLabel="Create Quantity"
-        onCreateClick={() => navigate('/karsu-admin-panel/quantities/new')}
+        onCreateClick={() => navigate('/karsu-new-admin-panel/quantities/new')}
       />
       <DataTable
         data={quantities}
         columns={columns}
         actions={renderActions}
-        onRowClick={(item) => navigate(`/karsu-admin-panel/quantities/edit/${item.id}`)}
+        onRowClick={(item) => navigate(`/karsu-new-admin-panel/quantities/edit/${item.id}`)}
       />
     </div>
   )

@@ -147,7 +147,7 @@ export default function NewsList() {
               onClick={(e) => {
                 e.stopPropagation()
                 if (slug) {
-                  navigate(`/karsu-admin-panel/create-news?id=${slug}`)
+                  navigate(`/karsu-new-admin-panel/create-news?id=${slug}`)
                 } else {
                   console.error('No slug found for news item:', item)
                   alert('Error: Could not edit this news item')
@@ -187,7 +187,7 @@ export default function NewsList() {
       <PageHeader
         title="News"
         createButtonLabel="Create News"
-        onCreateClick={() => navigate('/karsu-admin-panel/create-news')}
+        onCreateClick={() => navigate('/karsu-new-admin-panel/create-news')}
       />
       
       <div className="mb-4">
@@ -205,7 +205,7 @@ export default function NewsList() {
         <DataTable
           data={news}
           columns={columns}
-          onRowClick={(item) => navigate(`/karsu-admin-panel/news/${item.id}`)}
+          onRowClick={(item) => navigate(`/karsu-new-admin-panel/news/${item.id}`)}
         />
         <Pagination
           currentPage={currentPage}

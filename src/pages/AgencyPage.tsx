@@ -62,7 +62,7 @@ export function AgencyPage() {
   const fetchAgencies = async () => {
     try {
       const response = await fetchWithAuth(
-        `https://karsu.uz/api/menus/agency/?page=${currentPage}`,
+        `https://karsu.uz/api/menus/agency/?page=${currentPage}&page_size=${pageSize}`,
         { headers: getAuthHeader() }
       )
       if (!response.ok) throw new Error('Failed to fetch agencies')
@@ -187,7 +187,7 @@ export function AgencyPage() {
       <PageHeader
         title="Agencies"
         createButtonLabel="Add Agency"
-        onCreateClick={() => navigate('/karsu-admin-panel/agencies/new')}
+        onCreateClick={() => navigate('/karsu-new-admin-panel/agencies/new')}
       />
 
       <DataTable
@@ -203,7 +203,7 @@ export function AgencyPage() {
                 e.stopPropagation()
                 const slug = Object.values(item.translations)[0]?.slug
                 if (slug) {
-                  navigate(`/karsu-admin-panel/agencies/${slug}/edit`)
+                  navigate(`/karsu-new-admin-panel/agencies/${slug}/edit`)
                 }
               }}
             >

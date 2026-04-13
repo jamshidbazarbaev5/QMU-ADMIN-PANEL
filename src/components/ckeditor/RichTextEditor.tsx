@@ -23,7 +23,7 @@ export function RichTextEditor({ value, onChange, onFileUpload }: RichTextEditor
                     'fullscreen', 'insertdatetime', 'media', 'table', 'code', 'codesample',
                     'help', 'wordcount', 'pagebreak', 'nonbreaking',
                     'save', 'directionality', 'emoticons', 'visualchars', 'quickbars',
-                    'link', 'image', 'media', 
+                    'link', 'image', 'media', 'paste', 'powerpaste'
                 ],
                 toolbar_mode: 'wrap',
                 toolbar_sticky: true,
@@ -46,7 +46,7 @@ export function RichTextEditor({ value, onChange, onFileUpload }: RichTextEditor
                 ],
                 verify_html: false,
                 content_style: `
-                    body { font-family:Helvetica,Arial,sans-serif; font-size:14px }
+                    body { font-family:Helvetica,Arial,sans-serif; font-size:16px }
                     .mce-content-body [style] { 
                         all: revert;
                     }
@@ -111,46 +111,59 @@ export function RichTextEditor({ value, onChange, onFileUpload }: RichTextEditor
                         }
                     });
 
-                    // Update paste handler to handle document content
+                    // Update paste handler with better format handling
                     editor.on('paste', function(e) {
                         const files = e.clipboardData?.files;
                         const html = e.clipboardData?.getData('text/html');
                         const text = e.clipboardData?.getData('text/plain');
-
-                        // If there's HTML content from a document, prefer that over file data
-                        if (html && !files?.length) {
+                        if (html) {
                             e.preventDefault();
-                            editor.insertContent(html);
+                            
+                            // Clean up the HTML to preserve table structure and formatting
+                            let cleanHtml = html
+                                .replace(/<\/?meta[^>]*>/g, '') // Remove meta tags
+                                .replace(/<\/?style[^>]*>[^<]*<\/style>/g, '') // Remove style tags
+                                .replace(/<!--[\s\S]*?-->/g, '') // Remove comments
+                                .replace(/xmlns:[^"]+"/g, ''); // Remove XML namespaces
+
+                            // Preserve table structure if present
+                            if (html.includes('<table')) {
+                                cleanHtml = cleanHtml
+                                    .replace(/class="[^"]*"/g, '') // Remove classes
+                                    .replace(/style="[^"]*"/g, ''); // Remove inline styles
+                            }
+
+                            editor.insertContent(cleanHtml);
                             return;
                         }
 
-                        // If there's only text content, use that
+                        // If there's only text content
                         if (text && !html && !files?.length) {
                             e.preventDefault();
-                            editor.insertContent(text);
+                            const formattedText = text
+                                .split('\n')
+                                .map(line => `<p>${line}</p>`)
+                                .join('');
+                            editor.insertContent(formattedText);
                             return;
                         }
 
-                        // Handle files if present
+                        // Handle files
                         if (files && files.length > 0) {
                             e.preventDefault();
                             Array.from(files).forEach(file => {
                                 if (file.type.startsWith('image/')) {
-                                    // Handle image files same way as image picker
                                     if (onFileUpload) {
                                         onFileUpload(file);
                                     }
-                                    
                                     const blobUrl = URL.createObjectURL(file);
                                     editor.insertContent(`<img src="${blobUrl}" alt="${file.name}" />`);
                                 } else {
-                                    // Handle other file types
                                     editor.insertContent(`
                                         <div class="file-attachment" data-filename="${file.name}">
                                             📎 ${file.name}
                                         </div>
                                     `);
-                                    
                                     if (onFileUpload) {
                                         onFileUpload(file);
                                     }
@@ -260,7 +273,16 @@ export function RichTextEditor({ value, onChange, onFileUpload }: RichTextEditor
                         };
                         reader.readAsDataURL(blobInfo.blob());
                     });
-                }
+                },
+                paste_retain_style_properties: "all",
+                paste_word_valid_elements: "b,strong,i,em,h1,h2,h3,h4,h5,h6,p,ol,ul,li,table,tr,td,th,tbody,thead,span,div,br",
+                paste_webkit_styles: "all",
+                paste_merge_formats: true,
+                paste_convert_word_fake_lists: false,
+                paste_remove_styles_if_webkit: false,
+                powerpaste_allow_local_images: true,
+                powerpaste_word_import: 'prompt',
+                powerpaste_html_import: 'prompt'
             }}
             value={value}
             onEditorChange={(content: any) => onChange(content)}

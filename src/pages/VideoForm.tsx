@@ -29,7 +29,7 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
     const fetchVideo = async () => {
       if (!isEditing || !id) return
       if (!token) {
-        navigate('/karsu-admin-panel/login')
+        navigate('/karsu-new-admin-panel/login')
         return
       }
 
@@ -56,9 +56,9 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
         console.error('Error fetching video:', error)
         if ((error as any)?.response?.status === 403) {
           localStorage.removeItem('accessToken')
-          navigate('/karsu-admin-panel/login')
+          navigate('/karsu-new-admin-panel/login')
         } else {
-          navigate('/karsu-admin-panel/videos')
+          navigate('/karsu-new-admin-panel/videos')
         }
       } finally {
         setIsLoading(false)
@@ -109,7 +109,7 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
     
     if (!token) {
       console.log('No token found, redirecting to login')
-      navigate('/karsu-admin-panel/login')
+      navigate('/karsu-new-admin-panel/login')
       return
     }
 
@@ -147,13 +147,13 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
         throw new Error(`Failed to save video: ${response.status}`)
       }
 
-      navigate('/karsu-admin-panel/videos')
+      navigate('/karsu-new-admin-panel/videos')
     } catch (error) {
       console.error('Detailed error:', error)
       if ((error as any)?.response?.status === 403) {
         console.log('403 error detected, clearing token')
         localStorage.removeItem('accessToken')
-        navigate('/karsu-admin-panel/login')
+        navigate('/karsu-new-admin-panel/login')
       }
     } finally {
       setIsSubmitting(false)
@@ -165,7 +165,7 @@ export function VideoForm({ initialData, isEditing }: VideoFormProps) {
       <PageHeader
         title={isEditing ? 'Edit Video' : 'Create Video'}
         createButtonLabel="Back to Videos"
-        onCreateClick={() => navigate('/videos')}
+        onCreateClick={() => navigate('/karsu-new-admin-panel/videos')}
       />
 
       <div className="bg-white rounded-lg shadow p-6">

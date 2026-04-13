@@ -4,7 +4,7 @@ import axios from 'axios';
 const api2 = axios.create({
   baseURL: 'https://karsu.uz/api',
   headers: {
-    'Content-Type': 'application/json',
+    // 'Content-Type': 'application/json',
   },
 });
 

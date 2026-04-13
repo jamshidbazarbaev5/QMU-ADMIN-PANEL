@@ -126,7 +126,7 @@
 //       <PageHeader
 //         title="Edit Post"
 //         createButtonLabel="Back to Posts"
-//         onCreateClick={() => navigate("/karsu-admin-panel/posts")}
+//         onCreateClick={() => navigate('${BASE_ROUTE}/posts")}
 //       />
 
 //       <div className="bg-white rounded-lg shadow p-6">

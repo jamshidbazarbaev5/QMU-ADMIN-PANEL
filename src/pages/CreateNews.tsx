@@ -55,13 +55,9 @@ type Step = typeof STEPS[number]
 
 // Helper function to handle date conversion
 const formatDateForInput = (dateString: string) => {
-  const date = new Date(dateString)
-  // Adjust for local timezone
-  const tzOffset = date.getTimezoneOffset() * 60000 // offset in milliseconds
-  const localDate = new Date(date.getTime() - tzOffset)
   return {
-    date: localDate.toISOString().split('T')[0], // YYYY-MM-DD
-    time: localDate.toISOString().split('T')[1].slice(0, 5) // HH:mm
+    date: dateString.split('T')[0], // YYYY-MM-DD
+    time: dateString.split('T')[1].slice(0, 5) // HH:mm
   }
 }
 
@@ -163,7 +159,7 @@ export default function CreateNews() {
           description_kk: data.translations?.kk?.description || "",
           date_posted_date: date,
           date_posted_time: time,
-          date_posted: data.date_posted || new Date().toISOString(),
+          date_posted: data.date_posted,
         })
 
         // Handle existing images
@@ -208,7 +204,11 @@ export default function CreateNews() {
       description_uz: "",
       description_kk: "",
       date_posted_date: new Date().toISOString().split('T')[0],
-      date_posted_time: new Date().toISOString().split('T')[1].slice(0, 5),
+      date_posted_time: new Date().toLocaleTimeString('en-US', { 
+        hour12: false, 
+        hour: '2-digit', 
+        minute: '2-digit'
+      }),
       date_posted: new Date().toISOString(),
     },
   })
@@ -287,7 +287,8 @@ export default function CreateNews() {
         formData.append(`images[${index}]image`, image)
       })
 
-      // Add all images to delete
+     
+      
       if (imagesToDelete.length > 0) {
         imagesToDelete.forEach(imageId => {
           formData.append('images_to_delete', imageId.toString())
@@ -364,7 +365,7 @@ export default function CreateNews() {
         return
       }
 
-      navigate('/karsu-admin-panel/news')
+      navigate('/karsu-new-admin-panel/news')
     } catch (error) {
       console.error('Error:', error)
       setError('Failed to submit form')
@@ -819,7 +820,7 @@ export default function CreateNews() {
                 <Button 
                   type="button" 
                   variant="outline"
-                  onClick={() => navigate('/karsu-admin-panel/news')}
+                     onClick={() => navigate('/karsu-admin-panel/news')}
                 >
                   Cancel
                 </Button>

@@ -1,9 +1,16 @@
 import api2 from './api2'
 
-export const fetchTeachers = async (page: number = 1) => {
-  const response = await api2.get('/publications/teachers', {
-    params: { page }
+interface TeachersFilters {
+  page?: number;
+  full_name?: string;
+  faculty_department?: string;
+}
+
+export const fetchTeachers = async (filters: TeachersFilters) => {
+  const response = await api2.get('/publications/teachers/', {
+    params: filters
   })
+  // Return the full response data including count, next, previous, and results
   return response.data
 }
 

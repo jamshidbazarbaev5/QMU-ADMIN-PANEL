@@ -104,7 +104,7 @@ export default function Announcements() {
     if (!availableTranslation) return;
 
     const slug = availableTranslation.translation.slug;
-    navigate(`/karsu-admin-panel/edit-announcement/${slug}?id=${announcement.id}`);
+    navigate(`/karsu-new-admin-panel/edit-announcement/${slug}?id=${announcement.id}`);
   };
 
   const handleDelete = async (announcement: Announcement) => {
@@ -161,49 +161,8 @@ export default function Announcements() {
         );
       }
     },
-    {
-      header: 'Description',
-      accessor: 'description',
-      cell: (item: Announcement) => {
-        const availableTranslation = getFirstAvailableTranslation(item.translations);
-        if (!availableTranslation) return '-';
-        
-        return (
-          <div className="flex items-center gap-2">
-            <div 
-              dangerouslySetInnerHTML={{ 
-                __html: availableTranslation.translation.description 
-              }}
-              className="max-w-md truncate"
-            />
-            {availableTranslation.language !== currentLanguage && (
-              <span className="text-xs px-2 py-1 bg-gray-100 rounded-md">
-                {availableTranslation.language.toUpperCase()}
-              </span>
-            )}
-          </div>
-        );
-      }
-    },
-    {
-      header: 'Slug',
-      accessor: 'slug',
-      cell: (item: Announcement) => {
-        const availableTranslation = getFirstAvailableTranslation(item.translations);
-        if (!availableTranslation) return '-';
-        
-        return (
-          <div className="flex items-center gap-2">
-            <span>{availableTranslation.translation.slug}</span>
-            {availableTranslation.language !== currentLanguage && (
-              <span className="text-xs px-2 py-1 bg-gray-100 rounded-md">
-                {availableTranslation.language.toUpperCase()}
-              </span>
-            )}
-          </div>
-        );
-      }
-    }
+    
+   
   ]
 
   const renderActions = (item: Announcement) => (
@@ -268,7 +227,7 @@ export default function Announcements() {
       <PageHeader
         title="Announcements"
         createButtonLabel="Create Announcement"
-        onCreateClick={() => navigate('/karsu-admin-panel/create-announcement')}
+       onCreateClick={() => navigate("/karsu-new-admin-panel/posts")}
       />
 
       <div className="mb-6">

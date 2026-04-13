@@ -62,7 +62,7 @@ export function DepartmentPage() {
       console.error('No available translation slug found');
       return;
     }
-    navigate(`/karsu-admin-panel/departments/${slug}/edit`);
+   navigate(`/karsu-new-admin-panel/departments/${slug}/edit`);
   }
 
   const handleDelete = async (department: Department) => {
@@ -110,7 +110,7 @@ export function DepartmentPage() {
       <PageHeader
         title="Departments"
         createButtonLabel="Add Department"
-        onCreateClick={() => navigate('/karsu-admin-panel/departments/create')}
+          onCreateClick={() => navigate('/karsu-new-admin-panel/departments/create')}
       />
 
       <DataTable

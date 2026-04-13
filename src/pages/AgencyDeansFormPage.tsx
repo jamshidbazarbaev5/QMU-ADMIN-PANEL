@@ -153,7 +153,7 @@ export function AgencyDeanFormPage() {
         },
       })
       
-      navigate('/karsu-admin-panel/agency-deans')
+      navigate('/karsu-new-admin-panel/agency-deans')
     } catch (error) {
       console.error('Error saving dean:', error)
     } finally {

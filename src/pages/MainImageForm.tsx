@@ -71,7 +71,7 @@ export function MainImageForm() {
       })
 
       if (response.ok) {
-        navigate('/karsu-admin-panel/main-image-list')
+        navigate('/karsu-new-admin-panel/main-image-list')
       }
     } catch (error) {
       console.error('Error saving image:', error)
@@ -121,7 +121,7 @@ export function MainImageForm() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate('/karsu-admin-panel/main-images')}
+                onClick={() => navigate('/karsu-new-admin-panel/main-images')}
               >
                 Cancel
               </Button>

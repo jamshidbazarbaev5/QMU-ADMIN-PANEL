@@ -91,7 +91,7 @@ export function MainImageList() {
       <button
         onClick={(e) => {
           e.stopPropagation()
-          navigate(`/karsu-admin-panel/main-images/${item.id}/edit`)
+          navigate(`/karsu-new-admin-panel/main-images/${item.id}/edit`)
         }}
         className="flex items-center gap-2 px-3 py-1 text-[#6C5DD3] hover:bg-[#6C5DD3]/10 rounded-md transition-colors"
       >
@@ -116,7 +116,7 @@ export function MainImageList() {
       <PageHeader
         title="Main Images"
         createButtonLabel="Add New Image"
-        onCreateClick={() => navigate('/karsu-admin-panel/main-images/new')}
+        onCreateClick={() => navigate('/karsu-new-admin-panel/main-images/new')}
       />
 
       <DataTable

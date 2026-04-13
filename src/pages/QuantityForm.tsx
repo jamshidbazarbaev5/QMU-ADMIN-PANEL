@@ -89,14 +89,14 @@ export function QuantityForm({ isEditing }: QuantityFormProps) {
         await createQuantity(submitData)
       }
 
-      navigate('/karsu-admin-panel/quantities')
+      navigate('/karsu-new-admin-panel/quantities')
     } catch (error: any) {
       console.error('Error:', error)
       if (error.response?.status === 401) {
         console.log('Token expired, redirecting to login')
         localStorage.removeItem('accessToken')
         localStorage.removeItem('refreshToken')
-        navigate('/karsu-admin-panel/login')
+        navigate('/karsu-new-admin-panel/login')
         return
       }
       alert(error.message || 'Failed to save quantity. Please check console for details.')
@@ -127,7 +127,7 @@ export function QuantityForm({ isEditing }: QuantityFormProps) {
       <PageHeader
         title={isEditing ? 'Edit Quantity' : 'Create Quantity'}
         createButtonLabel="Back to Quantities"
-        onCreateClick={() => navigate('/karsu-admin-panel/quantities')}
+        onCreateClick={() => navigate('/karsu-new-admin-panel/quantities')}
       />
 
       <div className="bg-white rounded-lg shadow p-6">

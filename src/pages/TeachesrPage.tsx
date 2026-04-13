@@ -7,6 +7,8 @@ import { Button } from '../components/ui/button'
 import { ErrorModal } from '../components/ui/errorModal'
 import { fetchTeachers, deleteTeacher } from '../api/teachers'
 import { Pagination } from '../components/ui/Pagination'
+import { Input } from '../components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import api2 from '../api/api2'
 import {
   AlertDialog,
@@ -28,15 +30,21 @@ export function TeachersPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedDepartment, setSelectedDepartment] = useState('')
   const navigate = useNavigate()
 
   const loadTeachers = async () => {
     try {
       setLoading(true)
-      const data = await fetchTeachers(currentPage)
+      const filters = {
+        page: currentPage,
+        ...(searchTerm && { full_name: searchTerm }),
+        ...(selectedDepartment && selectedDepartment !== 'all' && { faculty_department: selectedDepartment })
+      }
+      const data = await fetchTeachers(filters)
       setTeachers(data.results || [])
-      // Calculate total pages based on count from API response
-      const total = Math.ceil((data.count || 0) / 10) // Assuming 10 items per page
+      const total = Math.ceil((data.count || 0) / 10)
       setTotalPages(total > 0 ? total : 1)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load teachers')
@@ -58,16 +66,12 @@ export function TeachersPage() {
   useEffect(() => {
     loadTeachers()
     fetchDepartments()
-  }, [currentPage]) // Reload when page changes
+  }, [currentPage, searchTerm, selectedDepartment])
 
   const handleCreateClick = () => {
-    navigate('/karsu-admin-panel/teachers/create')
+    navigate('/karsu-new-admin-panel/teachers/create')
   }
 
-  const handleEditClick = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    navigate(`/karsu-admin-panel/teachers/${id}/edit`)
-  }
 
   const handleDeleteClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
@@ -92,16 +96,14 @@ export function TeachersPage() {
     const department = departments.find(dept => dept.id === departmentId)
     if (!department) return '-'
 
-    // Try English translation first
     if (department.translations?.kk?.name) {
       return department.translations.kk.name
     }
-    // Fallback to Russian translation
     if (department.translations?.ru?.name) {
       return department.translations.ru.name
     }
     return '-'
-  } 
+  }
 
   const columns = [
     {
@@ -134,7 +136,7 @@ export function TeachersPage() {
       <Button
         variant="outline"
         size="sm"
-        onClick={(e) => handleEditClick(e, item.id)}
+        onClick={(_e:any) => handleEditClick( item.id)}
         className="text-blue-600 border-blue-600 hover:bg-blue-50"
       >
         <Edit className="h-4 w-4" />
@@ -150,14 +152,16 @@ export function TeachersPage() {
     </div>
   )
 
-  const handleRowClick = (item: any) => {
-    navigate(`/karsu-admin-panel/teachers/${item.id}/edit`)
-  }
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+  const handleEditClick = (item: any) => {
+    navigate(`/karsu-new-admin-panel/teachers/${item.id}/edit`)
   }
 
-  if (loading) {
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    loadTeachers()
+  }
+
+  if (loading && !teachers.length) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>
   }
 
@@ -169,10 +173,37 @@ export function TeachersPage() {
         onCreateClick={handleCreateClick} 
       />
       
+      <div className="mb-6 flex gap-4">
+        <div className="flex-1">
+          <Input
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+        </div>
+        <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+          <SelectTrigger className="max-w-sm">
+            <SelectValue placeholder="Filter by department" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Departments</SelectItem>
+            {departments.map((dept) => (
+              <SelectItem 
+                key={dept.id} 
+                value={dept.translations?.kk?.name || dept.translations?.ru?.name || `dept-${dept.id}`}
+              >
+                {dept.translations?.kk?.name || dept.translations?.ru?.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      
       <DataTable
         data={teachers}
         columns={columns}
-        onRowClick={handleRowClick}
+        onRowClick={handleEditClick}
         actions={renderActions}
       />
 

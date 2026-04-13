@@ -84,7 +84,7 @@ export default function FeedbackList() {
       <button
         onClick={(e) => {
           e.stopPropagation()
-          navigate(`/karsu-admin-panel/feedback/edit/${item.id}`)
+          navigate(`/karsu-new-admin-panel/feedback/edit/${item.id}`)
         }}
         className="p-2 hover:bg-gray-100 rounded-full"
       >
@@ -115,14 +115,14 @@ export default function FeedbackList() {
       <PageHeader
         title="Feedback Management"
         createButtonLabel="Create Feedback"
-        onCreateClick={() => navigate('/karsu-admin-panel/feedback/create')}
+        onCreateClick={() => navigate('/karsu-new-admin-panel/feedback/create')}
       />
       <Card>
         <DataTable
           data={feedbacks}
           columns={columns}
           actions={renderActions}
-          onRowClick={(item) => navigate(`/karsu-admin-panel/feedback/edit/${item.id}`)}
+          onRowClick={(item) => navigate(`/karsu-new-admin-panel/feedback/edit/${item.id}`)}
           currentLanguage={currentLanguage}
         />
       </Card>

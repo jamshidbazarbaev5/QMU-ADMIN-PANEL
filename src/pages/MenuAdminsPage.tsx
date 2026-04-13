@@ -315,7 +315,7 @@ export function MenuAdminsPage() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                navigate(`/karsu-admin-panel/menu-admins/${item.id}/edit`)
+                navigate(`/karsu-new-admin-panel/menu-admins/${item.id}/edit`)
               }}
             >
               <Pencil className="h-4 w-4" />

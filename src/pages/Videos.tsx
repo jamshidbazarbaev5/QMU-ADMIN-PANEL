@@ -99,20 +99,20 @@ export function Videos() {
       <PageHeader
         title="Videos"
         createButtonLabel="Create Video"
-        onCreateClick={() => navigate('/karsu-admin-panel/videos/new')}
+        onCreateClick={() => navigate('/karsu-new-admin-panel/videos/new')}
       />
 
       <div className="bg-white rounded-lg shadow">
         <DataTable
           data={videos}
           columns={columns}
-          onRowClick={(item) => navigate(`/karsu-admin-panel/videos/${item.id}/edit`)}
+          onRowClick={(item) => navigate(`/karsu-new-admin-panel/videos/${item.id}/edit`)}
           actions={(item) => (
             <div className="flex gap-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  navigate(`/karsu-admin-panel/videos/${item.id}/edit`)
+                  navigate(`/karsu-new-admin-panel/videos/${item.id}/edit`)
                 }}
                 className="text-blue-600 hover:text-blue-800"
               >

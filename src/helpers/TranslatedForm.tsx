@@ -22,6 +22,7 @@ export interface TranslatedFormProps {
   submitButton?: React.ReactNode
   sharedFields?: string[]
   onLanguageChange?: (language: string) => void
+  translation_links?: Record<string, string>
 }
 
 // Add this interface to define the structure of form data
@@ -31,12 +32,13 @@ interface FormDataType {
   };
 }
 
-export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoading, sharedFields = [], }: TranslatedFormProps) {
+export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoading, sharedFields = [], translation_links }: TranslatedFormProps) {
   console.log('TranslatedForm props:', {
     fields,
     languages,
     initialData,
-    sharedFields
+    sharedFields,
+    translation_links
   });
 
   const [formData, setFormData] = useState<FormDataType>(() => {
@@ -91,27 +93,34 @@ export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoa
 
   const [currentTab, setCurrentTab] = useState(languages[0])
   const [error, setError] = useState<string | null>(null)
+  const [, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    // Create translations object with all languages, regardless of content
-    const translations: { [key: string]: any } = {};
-    
-    languages.forEach(lang => {
-      translations[lang] = {
-        ...formData[lang],
-        // Generate slug from title if not provided
-        slug: formData[lang].slug || formData[lang].title?.toLowerCase().replace(/\s+/g, '-') || ''
-      };
+    setIsSubmitting(true);
+
+    const formDataToSubmit: { [key: string]: any } = {};
+
+    // Get date and time values from the parent form if they exist
+    const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement;
+    const timeInput = document.querySelector('input[type="time"]') as HTMLInputElement;
+    if (dateInput && timeInput) {
+      formDataToSubmit.date = dateInput.value;
+      formDataToSubmit.time = timeInput.value;
+    }
+
+    // Add form fields for each language
+    languages.forEach((lang) => {
+      fields.forEach((field) => {
+        const value = formData[lang]?.[field.name];
+        if (value) {
+          formDataToSubmit[`${field.name}_${lang}`] = value;
+        }
+      });
     });
 
-    try {
-      // Send all translations
-      await onSubmit({ translations });
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
-    }
+    onSubmit(formDataToSubmit);
+    setIsSubmitting(false);
   };
 
   const handleFieldChange = (language: string, fieldName: string, value: string) => {
@@ -136,6 +145,18 @@ export function TranslatedForm({ fields, languages, onSubmit, initialData, isLoa
   }
 
   const renderField = (field: TranslatedField, language: string) => {
+    if (field.name === 'url' && translation_links?.[language]) {
+      return (
+        <input
+          type="text"
+          className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-100 shadow-sm sm:text-sm p-2"
+          value={translation_links[language]}
+          disabled
+          readOnly
+        />
+      )
+    }
+
     if (field.type === 'richtext') {
       return (
         <RichTextEditor
