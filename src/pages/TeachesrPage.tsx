@@ -136,7 +136,7 @@ export function TeachersPage() {
       <Button
         variant="outline"
         size="sm"
-        onClick={(_e:any) => handleEditClick( item.id)}
+        onClick={(_e:any) => handleEditClick(item)}
         className="text-blue-600 border-blue-600 hover:bg-blue-50"
       >
         <Edit className="h-4 w-4" />

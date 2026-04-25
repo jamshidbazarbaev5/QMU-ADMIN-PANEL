@@ -8,13 +8,15 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ value, onChange, onFileUpload }: RichTextEditorProps) {
+    const baseUrl = import.meta.env.DEV ? '/karsu-new-admin-panel' : '/karsu-new-admin-panel'
+    
     return (
         <Editor
-            tinymceScriptSrc="/tinymce/tinymce.min.js"
+            tinymceScriptSrc={`${baseUrl}/tinymce/tinymce.min.js`}
             init={{
                 height: 300,
                 menubar: true,
-                base_url: '/tinymce',
+                base_url: `${baseUrl}/tinymce`,
                 suffix: '.min',
                 model: 'dom',
                 plugins: [

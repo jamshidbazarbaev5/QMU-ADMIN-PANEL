@@ -121,7 +121,7 @@ export function DraftList() {
       <PageHeader
         title="Drafts"
         createButtonLabel="Create Draft"
-        onCreateClick={() => navigate('/karsu-admin-panel/drafts/new')}
+        onCreateClick={() => navigate('/karsu-new-admin-panel/drafts/new')}
       />
 
       <div className="mb-4">
@@ -139,7 +139,7 @@ export function DraftList() {
         <DataTable
           data={drafts}
           columns={columns}
-          onRowClick={(item) => navigate(`/karsu-admin-new-panel/drafts/${getPostSlug(item)}/edit`)}
+          onRowClick={(item) => navigate(`/karsu-new-admin-panel/drafts/${getPostSlug(item)}/edit`)}
           actions={(item) => (
             <div className="flex gap-2">
               <button

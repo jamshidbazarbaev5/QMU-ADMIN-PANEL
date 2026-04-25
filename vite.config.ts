@@ -5,7 +5,7 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/karsu-new-admin-panel',
+  base: '/karsu-new-admin-panel/',
   resolve: {
     alias: [
       { find: '@', replacement: path.resolve(__dirname, 'src') }

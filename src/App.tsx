@@ -49,6 +49,10 @@ import { AgencyDeansPage } from './pages/AgencyDeansPage.tsx';
 import { DocumentPage } from './pages/DocumentPage.tsx';
 import { TeachersPage } from './pages/TeachesrPage.tsx';
 import { TeacherForm } from './pages/TeacherForm.tsx';
+import { DraftList } from './pages/DraftList.tsx';
+import { DraftForm } from './pages/DraftForm.tsx';
+import { OtherPeoplePage } from './pages/OtherPeoplePage.tsx';
+import { OtherPersonForm } from './pages/OtherPersonForm.tsx';
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('accessToken'));
 
@@ -145,6 +149,12 @@ function App() {
             <Route path="/karsu-new-admin-panel/teachers" element={<PrivateRoute><TeachersPage /></PrivateRoute>} />
             <Route path="/karsu-new-admin-panel/teachers/create" element={<PrivateRoute><TeacherForm /></PrivateRoute>} />
             <Route path="/karsu-new-admin-panel/teachers/:id/edit" element={<PrivateRoute><TeacherForm /></PrivateRoute>} />
+            <Route path="/karsu-new-admin-panel/drafts" element={<PrivateRoute><DraftList /></PrivateRoute>} />
+            <Route path="/karsu-new-admin-panel/drafts/new" element={<PrivateRoute><DraftForm /></PrivateRoute>} />
+            <Route path="/karsu-new-admin-panel/drafts/:slug/edit" element={<PrivateRoute><DraftForm /></PrivateRoute>} />
+            <Route path="/karsu-new-admin-panel/other-people" element={<PrivateRoute><OtherPeoplePage /></PrivateRoute>} />
+            <Route path="/karsu-new-admin-panel/other-people/create" element={<PrivateRoute><OtherPersonForm /></PrivateRoute>} />
+            <Route path="/karsu-new-admin-panel/other-people/:id/edit" element={<PrivateRoute><OtherPersonForm /></PrivateRoute>} />
           </Routes>
 
         </div>

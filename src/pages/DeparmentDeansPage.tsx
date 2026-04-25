@@ -44,6 +44,7 @@ interface Position {
 
 export function DepartmentDeansPage() {
   const [deans, setDeans] = useState<DepartmentDean[]>([])
+  const [allDeans, setAllDeans] = useState<DepartmentDean[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
   const [positions, setPositions] = useState<Position[]>([])
   const [loading, setLoading] = useState(false)
@@ -76,7 +77,7 @@ export function DepartmentDeansPage() {
   const fetchAllDeans = async () => {
     setLoading(true)
     try {
-      let allDeans: DepartmentDean[] = []
+      let fetchedDeans: DepartmentDean[] = []
       let nextUrl = 'https://karsu.uz/api/menus/admin/'
 
       while (nextUrl) {
@@ -84,22 +85,17 @@ export function DepartmentDeansPage() {
         if (!response.ok) throw new Error('Failed to fetch deans')
         const data = await response.json()
         
-        allDeans = [...allDeans, ...data.results]
+        fetchedDeans = [...fetchedDeans, ...data.results]
         nextUrl = data.next
       }
 
       // Filter to only show department deans
-      const departmentDeans = allDeans.filter(admin => 
+      const departmentDeans = fetchedDeans.filter(admin => 
         admin.department && !admin.faculty && !admin.agency
       )
       
+      setAllDeans(departmentDeans)
       setTotalItems(departmentDeans.length)
-      
-      // Apply pagination
-      const start = (currentPage - 1) * itemsPerPage
-      const paginatedDeans = departmentDeans.slice(start, start + itemsPerPage)
-      
-      setDeans(paginatedDeans)
     } catch (error) {
       console.error('Error fetching deans:', error)
     } finally {
@@ -122,14 +118,14 @@ export function DepartmentDeansPage() {
     fetchAllDeans()
     fetchDepartments()
     fetchAllPositions()
-  }, []) // Remove currentPage dependency since we're handling pagination client-side
+  }, [])
 
   useEffect(() => {
     // Handle pagination changes
     const start = (currentPage - 1) * itemsPerPage
-    const paginatedDeans = deans.slice(start, start + itemsPerPage)
+    const paginatedDeans = allDeans.slice(start, start + itemsPerPage)
     setDeans(paginatedDeans)
-  }, [currentPage])
+  }, [currentPage, allDeans])
 
   const getDepartmentName = (departmentId: number) => {
     const department = departments.find(d => d.id === departmentId)

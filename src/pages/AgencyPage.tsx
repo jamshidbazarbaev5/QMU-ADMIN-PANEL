@@ -9,7 +9,7 @@ import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { useNavigate } from 'react-router-dom'
 import { fetchWithAuth, getAuthHeader } from '../api/api'
-import { Pagination } from '../components/ui/Pagination'
+// import { Pagination } from '../components/ui/Pagination'
 
 interface AgencyTranslation {
   name: string
@@ -58,6 +58,8 @@ export function AgencyPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [pageSize] = useState(10)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrevious, setHasPrevious] = useState(false)
 
   const fetchAgencies = async () => {
     try {
@@ -73,7 +75,14 @@ export function AgencyPage() {
         : []
       
       setAgencies(sortedAgencies)
-      setTotalPages(Math.ceil(data.count / pageSize))
+      setHasNext(!!data.next)
+      setHasPrevious(!!data.previous)
+      
+      // Calculate total pages from count
+      const calculatedPages = Math.ceil(data.count / pageSize)
+      // If there's a next page but we're at calculated last page, add one more
+      const actualPages = data.next && currentPage >= calculatedPages ? currentPage + 1 : calculatedPages
+      setTotalPages(actualPages)
     } catch (error) {
       console.error('Error fetching agencies:', error)
     }
@@ -223,11 +232,27 @@ export function AgencyPage() {
         )}
       />
 
-      <Pagination 
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-gray-600">
+          Page {currentPage} of {totalPages}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setCurrentPage(prev => prev - 1)}
+            disabled={!hasPrevious}
+            variant="outline"
+          >
+            Previous
+          </Button>
+          <Button
+            onClick={() => setCurrentPage(prev => prev + 1)}
+            disabled={!hasNext}
+            variant="outline"
+          >
+            Next
+          </Button>
+        </div>
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
